@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/Cesar409-dot/Bruvifit/blob/main/BruViFit.png" alt="Bruvifit" width="100%">
+  <img src="https://github.com/Cesar409-dot/Bruvifit/blob/develop/branchDevelop.png" alt="Bruvifit" width="100%">
 </p>
 
 ## Branches
