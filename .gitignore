@@ -1,0 +1,67 @@
+# ==========================================
+# BRUVIFIT - Git Ignore
+# ==========================================
+
+# ---------- Java / Spring Boot ----------
+
+# Maven
+backend/**/target/
+backend/**/.mvn/timing.properties
+
+# Spring Boot
+backend/**/application-local.properties
+backend/**/application-dev.properties
+backend/**/application-prod.properties
+
+# Logs
+backend/**/*.log
+
+
+# ---------- Node / React / Vite ----------
+
+# Dependencies
+frontend/**/node_modules/
+
+# Build
+frontend/**/dist/
+frontend/**/build/
+
+# Vite
+frontend/**/.vite/
+
+# Environment variables
+frontend/**/.env
+frontend/**/.env.local
+frontend/**/.env.development.local
+frontend/**/.env.test.local
+frontend/**/.env.production.local
+
+# Logs
+frontend/**/*.log
+frontend/**/npm-debug.log*
+frontend/**/yarn-debug.log*
+frontend/**/yarn-error.log*
+frontend/**/pnpm-debug.log*
+
+
+# ---------- IDE ----------
+
+.vscode/
+.idea/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+
+# ---------- OS ----------
+
+.DS_Store
+Thumbs.db
+
+
+# ---------- Temporary ----------
+
+*.tmp
+*.temp
