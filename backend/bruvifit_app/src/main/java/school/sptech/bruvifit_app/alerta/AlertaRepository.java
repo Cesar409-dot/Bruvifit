@@ -1,4 +1,6 @@
 package school.sptech.bruvifit_app.alerta;
 
-public interface AlertaRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AlertaRepository extends JpaRepository<Alerta, Integer> {
 }
