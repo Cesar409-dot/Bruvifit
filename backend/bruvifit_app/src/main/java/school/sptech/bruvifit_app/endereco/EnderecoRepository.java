@@ -1,4 +1,6 @@
 package school.sptech.bruvifit_app.endereco;
 
-public interface EnderecoRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface EnderecoRepository extends JpaRepository<Endereco, Integer> {
 }
