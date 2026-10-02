@@ -1,4 +1,4 @@
 package school.sptech.bruvifit_app.pedido.response;
 
-public class FornecedorResponse {
+public class PedidoResponse {
 }
