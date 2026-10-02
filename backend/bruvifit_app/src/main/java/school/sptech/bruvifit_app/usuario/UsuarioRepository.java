@@ -1,4 +1,6 @@
 package school.sptech.bruvifit_app.usuario;
 
-public interface UsuarioRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 }
