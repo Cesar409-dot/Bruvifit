@@ -27,8 +27,10 @@ public class EnderecoController {
         List<EnderecoResponse> enderecoResponse = new ArrayList<>();
 
         for (Endereco e : enderecos) {
+
             EnderecoResponse respostaDaVez = new EnderecoResponse(
                     e.getId(),
+                    e.getClienteId(),
                     e.getCep(),
                     e.getLogradouro(),
                     e.getNumero(),
@@ -52,7 +54,9 @@ public class EnderecoController {
         if (enderecoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
         } else {
+
             Endereco enderecoASerMostrado = enderecoEncontrado.get();
+
             return ResponseEntity.status(200).body(enderecoASerMostrado);
         }
     }
@@ -63,6 +67,7 @@ public class EnderecoController {
 
         Endereco enderecoParaCadastro = new Endereco();
 
+        enderecoParaCadastro.setClienteId(enderecoRequest.getClienteId());
         enderecoParaCadastro.setCep(enderecoRequest.getCep());
         enderecoParaCadastro.setLogradouro(enderecoRequest.getLogradouro());
         enderecoParaCadastro.setNumero(enderecoRequest.getNumero());
@@ -89,6 +94,7 @@ public class EnderecoController {
 
         Endereco enderecoParaAtualizar = optEndereco.get();
 
+        enderecoParaAtualizar.setClienteId(enderecoRequest.getClienteId());
         enderecoParaAtualizar.setCep(enderecoRequest.getCep());
         enderecoParaAtualizar.setLogradouro(enderecoRequest.getLogradouro());
         enderecoParaAtualizar.setNumero(enderecoRequest.getNumero());
@@ -103,14 +109,16 @@ public class EnderecoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Endereco> deletar(@PathVariable Integer id) {
 
         Optional<Endereco> enderecoEncontrado = repository.findById(id);
 
         if (enderecoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
         } else {
+
             repository.deleteById(id);
+
             return ResponseEntity.status(204).build();
         }
     }

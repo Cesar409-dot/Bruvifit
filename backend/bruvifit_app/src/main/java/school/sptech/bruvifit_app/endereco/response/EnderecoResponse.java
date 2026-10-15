@@ -3,6 +3,7 @@ package school.sptech.bruvifit_app.endereco.response;
 public class EnderecoResponse {
 
     private Integer id;
+    private Integer clienteId;
     private String cep;
     private String logradouro;
     private Integer numero;
@@ -11,8 +12,9 @@ public class EnderecoResponse {
     private String cidade;
     private String estado;
 
-    public EnderecoResponse(Integer id, String cep, String logradouro, Integer numero, String complemento, String bairro, String cidade, String estado) {
+    public EnderecoResponse(Integer id, Integer clienteId, String cep, String logradouro, Integer numero, String complemento, String bairro, String cidade, String estado) {
         this.id = id;
+        this.clienteId = clienteId;
         this.cep = cep;
         this.logradouro = logradouro;
         this.numero = numero;
@@ -24,6 +26,10 @@ public class EnderecoResponse {
 
     public Integer getId() {
         return id;
+    }
+
+    public Integer getClienteId() {
+        return clienteId;
     }
 
     public String getCep() {
