@@ -1,5 +1,6 @@
 package school.sptech.bruvifit_app.endereco.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -8,30 +9,29 @@ public class EnderecoRequest {
     @NotNull
     private Integer clienteId;
 
-    @NotNull
+    @NotBlank
     @Size(min = 8, max = 9)
     private String cep;
 
-    @NotNull
-    @Size(min = 3, max = 150)
+    @NotBlank
+    @Size(min = 2, max = 150)
     private String logradouro;
 
     @NotNull
-    @Size(min = 1, max = 20)
-    private String numero;
+    private Integer numero;
 
     @Size(max = 100)
     private String complemento;
 
-    @NotNull
+    @NotBlank
     @Size(min = 2, max = 100)
     private String bairro;
 
-    @NotNull
+    @NotBlank
     @Size(min = 2, max = 100)
     private String cidade;
 
-    @NotNull
+    @NotBlank
     @Size(min = 2, max = 2)
     private String estado;
 
@@ -59,11 +59,11 @@ public class EnderecoRequest {
         this.logradouro = logradouro;
     }
 
-    public String getNumero() {
+    public Integer getNumero() {
         return numero;
     }
 
-    public void setNumero(String numero) {
+    public void setNumero(Integer numero) {
         this.numero = numero;
     }
 
