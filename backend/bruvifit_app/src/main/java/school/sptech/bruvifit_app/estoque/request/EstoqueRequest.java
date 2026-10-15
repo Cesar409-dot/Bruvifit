@@ -1,61 +1,35 @@
 package school.sptech.bruvifit_app.estoque.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
-import java.time.LocalDateTime;
 
 public class EstoqueRequest {
 
     @NotNull
-    @Size(max = 45)
-    private String tipo;
+    @Min(0)
+    private Integer quantidadeAtual;
 
     @NotNull
-    private Integer quantidade;
-
-    @NotNull
-    private Integer saldoPos;
-
-    @NotNull
-    private LocalDateTime dataMovimentacao;
+    @Min(0)
+    private Integer quantidadeMinima;
 
     @NotNull
     private Integer produtoId;
 
-    @NotNull
-    private Integer pedidoId;
-
-    public String getTipo() {
-        return tipo;
+    public Integer getQuantidadeAtual() {
+        return quantidadeAtual;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setQuantidadeAtual(Integer quantidadeAtual) {
+        this.quantidadeAtual = quantidadeAtual;
     }
 
-    public Integer getQuantidade() {
-        return quantidade;
+    public Integer getQuantidadeMinima() {
+        return quantidadeMinima;
     }
 
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
-    }
-
-    public Integer getSaldoPos() {
-        return saldoPos;
-    }
-
-    public void setSaldoPos(Integer saldoPos) {
-        this.saldoPos = saldoPos;
-    }
-
-    public LocalDateTime getDataMovimentacao() {
-        return dataMovimentacao;
-    }
-
-    public void setDataMovimentacao(LocalDateTime dataMovimentacao) {
-        this.dataMovimentacao = dataMovimentacao;
+    public void setQuantidadeMinima(Integer quantidadeMinima) {
+        this.quantidadeMinima = quantidadeMinima;
     }
 
     public Integer getProdutoId() {
@@ -64,13 +38,5 @@ public class EstoqueRequest {
 
     public void setProdutoId(Integer produtoId) {
         this.produtoId = produtoId;
-    }
-
-    public Integer getPedidoId() {
-        return pedidoId;
-    }
-
-    public void setPedidoId(Integer pedidoId) {
-        this.pedidoId = pedidoId;
     }
 }

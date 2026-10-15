@@ -12,22 +12,19 @@ public class Endereco {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer clienteId;
     private String cep;
     private String logradouro;
-    private String numero;
+    private Integer numero;
     private String complemento;
     private String bairro;
     private String cidade;
     private String estado;
 
     public Endereco() {
-
     }
 
-    public Endereco(Integer id, Integer clienteId, String cep, String logradouro, String numero, String complemento, String bairro, String cidade, String estado) {
+    public Endereco(Integer id, String cep, String logradouro, Integer numero, String complemento, String bairro, String cidade, String estado) {
         this.id = id;
-        this.clienteId = clienteId;
         this.cep = cep;
         this.logradouro = logradouro;
         this.numero = numero;
@@ -43,14 +40,6 @@ public class Endereco {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Integer getClienteId() {
-        return clienteId;
-    }
-
-    public void setClienteId(Integer clienteId) {
-        this.clienteId = clienteId;
     }
 
     public String getCep() {
@@ -69,11 +58,11 @@ public class Endereco {
         this.logradouro = logradouro;
     }
 
-    public String getNumero() {
+    public Integer getNumero() {
         return numero;
     }
 
-    public void setNumero(String numero) {
+    public void setNumero(Integer numero) {
         this.numero = numero;
     }
 
