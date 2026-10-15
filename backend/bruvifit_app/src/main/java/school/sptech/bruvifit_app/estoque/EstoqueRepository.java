@@ -1,4 +1,6 @@
 package school.sptech.bruvifit_app.estoque;
 
-public interface EstoqueRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface EstoqueRepository extends JpaRepository<Estoque, Integer> {
 }
