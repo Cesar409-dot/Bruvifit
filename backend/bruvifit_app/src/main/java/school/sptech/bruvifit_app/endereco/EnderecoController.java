@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.endereco.request.EnderecoRequest;
 import school.sptech.bruvifit_app.endereco.response.EnderecoResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,49 +13,26 @@ import java.util.Optional;
 @RequestMapping("/enderecos")
 public class EnderecoController {
 
-    private final EnderecoRepository repository;
+    private final EnderecoService service;
 
-    public EnderecoController(EnderecoRepository repository) {
-        this.repository = repository;
+    public EnderecoController(EnderecoService service) {
+        this.service = service;
     }
 
     @GetMapping
     public ResponseEntity<List<EnderecoResponse>> listar() {
-
-        List<Endereco> enderecos = repository.findAll();
-        List<EnderecoResponse> enderecoResponse = new ArrayList<>();
-
-        for (Endereco e : enderecos) {
-
-            EnderecoResponse respostaDaVez = new EnderecoResponse(
-                    e.getId(),
-                    e.getClienteId(),
-                    e.getCep(),
-                    e.getLogradouro(),
-                    e.getNumero(),
-                    e.getComplemento(),
-                    e.getBairro(),
-                    e.getCidade(),
-                    e.getEstado()
-            );
-
-            enderecoResponse.add(respostaDaVez);
-        }
-
+        List<EnderecoResponse> enderecoResponse = service.listar();
         return ResponseEntity.status(200).body(enderecoResponse);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Endereco> buscarPorId(@PathVariable Integer id) {
-
-        Optional<Endereco> enderecoEncontrado = repository.findById(id);
+        Optional<Endereco> enderecoEncontrado = service.buscarPorId(id);
 
         if (enderecoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
         } else {
-
             Endereco enderecoASerMostrado = enderecoEncontrado.get();
-
             return ResponseEntity.status(200).body(enderecoASerMostrado);
         }
     }
@@ -64,20 +40,7 @@ public class EnderecoController {
     @PostMapping
     public ResponseEntity<Endereco> cadastrar(
             @Valid @RequestBody EnderecoRequest enderecoRequest) {
-
-        Endereco enderecoParaCadastro = new Endereco();
-
-        enderecoParaCadastro.setClienteId(enderecoRequest.getClienteId());
-        enderecoParaCadastro.setCep(enderecoRequest.getCep());
-        enderecoParaCadastro.setLogradouro(enderecoRequest.getLogradouro());
-        enderecoParaCadastro.setNumero(enderecoRequest.getNumero());
-        enderecoParaCadastro.setComplemento(enderecoRequest.getComplemento());
-        enderecoParaCadastro.setBairro(enderecoRequest.getBairro());
-        enderecoParaCadastro.setCidade(enderecoRequest.getCidade());
-        enderecoParaCadastro.setEstado(enderecoRequest.getEstado());
-
-        Endereco registro = repository.save(enderecoParaCadastro);
-
+        Endereco registro = service.cadastrar(enderecoRequest);
         return ResponseEntity.status(201).body(registro);
     }
 
@@ -85,40 +48,23 @@ public class EnderecoController {
     public ResponseEntity<Endereco> atualizar(
             @Valid @RequestBody EnderecoRequest enderecoRequest,
             @PathVariable Integer id) {
-
-        Optional<Endereco> optEndereco = repository.findById(id);
+        Optional<Endereco> optEndereco = service.atualizar(id, enderecoRequest);
 
         if (optEndereco.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        Endereco enderecoParaAtualizar = optEndereco.get();
-
-        enderecoParaAtualizar.setClienteId(enderecoRequest.getClienteId());
-        enderecoParaAtualizar.setCep(enderecoRequest.getCep());
-        enderecoParaAtualizar.setLogradouro(enderecoRequest.getLogradouro());
-        enderecoParaAtualizar.setNumero(enderecoRequest.getNumero());
-        enderecoParaAtualizar.setComplemento(enderecoRequest.getComplemento());
-        enderecoParaAtualizar.setBairro(enderecoRequest.getBairro());
-        enderecoParaAtualizar.setCidade(enderecoRequest.getCidade());
-        enderecoParaAtualizar.setEstado(enderecoRequest.getEstado());
-
-        Endereco registro = repository.save(enderecoParaAtualizar);
-
+        Endereco registro = optEndereco.get();
         return ResponseEntity.status(200).body(registro);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Endereco> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
+        boolean deletado = service.deletar(id);
 
-        Optional<Endereco> enderecoEncontrado = repository.findById(id);
-
-        if (enderecoEncontrado.isEmpty()) {
+        if (!deletado) {
             return ResponseEntity.status(404).build();
         } else {
-
-            repository.deleteById(id);
-
             return ResponseEntity.status(204).build();
         }
     }
