@@ -1,3 +1,4 @@
+
 package school.sptech.bruvifit_app.estoque;
 
 import jakarta.validation.Valid;
@@ -6,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.estoque.request.EstoqueRequest;
 import school.sptech.bruvifit_app.estoque.response.EstoqueResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,64 +14,37 @@ import java.util.Optional;
 @RequestMapping("/estoques")
 public class EstoqueController {
 
-    private final EstoqueRepository repository;
+    private final EstoqueService service;
 
-    public EstoqueController(EstoqueRepository repository) {
-        this.repository = repository;
+    public EstoqueController(EstoqueService service) {
+        this.service = service;
     }
 
     @GetMapping
     public ResponseEntity<List<EstoqueResponse>> listar() {
-
-        List<Estoque> estoques = repository.findAll();
-        List<EstoqueResponse> estoqueResponse = new ArrayList<>();
-
-        for (Estoque e : estoques) {
-
-            EstoqueResponse respostaDaVez =
-                    new EstoqueResponse(
-                            e.getId(),
-                            e.getTipo(),
-                            e.getQuantidade(),
-                            e.getSaldoPos(),
-                            e.getDataMovimentacao(),
-                            e.getProdutoId(),
-                            e.getPedidoId()
-                    );
-
-            estoqueResponse.add(respostaDaVez);
-        }
-
-        return ResponseEntity.status(200).body(estoqueResponse);
+        return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Estoque> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<Estoque> buscarPorId(
+            @PathVariable Integer id) {
 
-        Optional<Estoque> estoqueEncontrado = repository.findById(id);
+        Optional<Estoque> estoqueEncontrado =
+                service.buscarPorId(id);
 
         if (estoqueEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
-        } else {
-            Estoque estoqueASerMostrado = estoqueEncontrado.get();
-            return ResponseEntity.status(200).body(estoqueASerMostrado);
         }
+
+        return ResponseEntity.status(200)
+                .body(estoqueEncontrado.get());
     }
 
     @PostMapping
     public ResponseEntity<Estoque> cadastrar(
             @Valid @RequestBody EstoqueRequest estoqueRequest) {
 
-        Estoque estoqueParaCadastro = new Estoque();
-
-        estoqueParaCadastro.setTipo(estoqueRequest.getTipo());
-        estoqueParaCadastro.setQuantidade(estoqueRequest.getQuantidade());
-        estoqueParaCadastro.setSaldoPos(estoqueRequest.getSaldoPos());
-        estoqueParaCadastro.setDataMovimentacao(estoqueRequest.getDataMovimentacao());
-        estoqueParaCadastro.setProdutoId(estoqueRequest.getProdutoId());
-        estoqueParaCadastro.setPedidoId(estoqueRequest.getPedidoId());
-
-        Estoque registro = repository.save(estoqueParaCadastro);
+        Estoque registro = service.cadastrar(estoqueRequest);
 
         return ResponseEntity.status(201).body(registro);
     }
@@ -81,36 +54,27 @@ public class EstoqueController {
             @Valid @RequestBody EstoqueRequest estoqueRequest,
             @PathVariable Integer id) {
 
-        Optional<Estoque> optEstoque = repository.findById(id);
+        Optional<Estoque> estoqueAtualizado =
+                service.atualizar(id, estoqueRequest);
 
-        if (optEstoque.isEmpty()) {
+        if (estoqueAtualizado.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        Estoque estoqueParaAtualizar = optEstoque.get();
-
-        estoqueParaAtualizar.setTipo(estoqueRequest.getTipo());
-        estoqueParaAtualizar.setQuantidade(estoqueRequest.getQuantidade());
-        estoqueParaAtualizar.setSaldoPos(estoqueRequest.getSaldoPos());
-        estoqueParaAtualizar.setDataMovimentacao(estoqueRequest.getDataMovimentacao());
-        estoqueParaAtualizar.setProdutoId(estoqueRequest.getProdutoId());
-        estoqueParaAtualizar.setPedidoId(estoqueRequest.getPedidoId());
-
-        Estoque registro = repository.save(estoqueParaAtualizar);
-
-        return ResponseEntity.status(200).body(registro);
+        return ResponseEntity.status(200)
+                .body(estoqueAtualizado.get());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Estoque> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(
+            @PathVariable Integer id) {
 
-        Optional<Estoque> estoqueEncontrado = repository.findById(id);
+        boolean deletado = service.deletar(id);
 
-        if (estoqueEncontrado.isEmpty()) {
+        if (!deletado) {
             return ResponseEntity.status(404).build();
-        } else {
-            repository.deleteById(id);
-            return ResponseEntity.status(204).build();
         }
+
+        return ResponseEntity.status(204).build();
     }
 }
