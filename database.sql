@@ -5,11 +5,13 @@ CREATE DATABASE IF NOT EXISTS bruvifit
 USE bruvifit;
 
 CREATE TABLE usuario (
-    id INT NOT NULL AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
     email VARCHAR(45) NOT NULL,
+    cpf VARCHAR(45) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id)
+    criadoEm TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    atualizadoEm TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE cliente (
@@ -23,17 +25,18 @@ CREATE TABLE cliente (
 );
 
 CREATE TABLE endereco (
-    id INT NOT NULL AUTO_INCREMENT,
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+     cliente_id INT NOT NULL,
+    CONSTRAINT fk_endereco_cliente
+        FOREIGN KEY (cliente_id) REFERENCES cliente (id),
     cep VARCHAR(45),
+	rua VARCHAR(200),
     logradouro VARCHAR(45),
     numero VARCHAR(45),
-    cidade VARCHAR(45),
-    uf VARCHAR(45),
     complemento VARCHAR(45),
-    cliente_id INT NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_endereco_cliente
-        FOREIGN KEY (cliente_id) REFERENCES cliente (id)
+    bairro VARCHAR(45),
+    cidade VARCHAR(45),
+    estado VARCHAR(45)
 );
 
 CREATE TABLE fornecedor (
@@ -103,7 +106,7 @@ CREATE TABLE produto_fornecedor (
         FOREIGN KEY (produto_id) REFERENCES produto (id)
 );
 
-CREATE TABLE movimentacao_estoque (
+CREATE TABLE estoque (
     id INT NOT NULL AUTO_INCREMENT,
     tipo VARCHAR(45),
     quantidade INT NOT NULL,
@@ -118,7 +121,7 @@ CREATE TABLE movimentacao_estoque (
         FOREIGN KEY (pedido_id) REFERENCES pedido (id)
 );
 
-CREATE TABLE movimentacao_financeira (
+CREATE TABLE financeiro (
     id INT NOT NULL AUTO_INCREMENT,
     tipo VARCHAR(45),
     categoria VARCHAR(45),
@@ -128,16 +131,15 @@ CREATE TABLE movimentacao_financeira (
     situacao VARCHAR(45),
     pedido_id INT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_movimentacao_financeira_pedido
+    CONSTRAINT fk_movimentacao_financeiro_pedido
         FOREIGN KEY (pedido_id) REFERENCES pedido (id)
 );
 
 CREATE TABLE alerta (
-    id INT NOT NULL AUTO_INCREMENT,
-    tipo VARCHAR(45),
-    mensagem VARCHAR(45),
-    gerado_em DATETIME,
-    enviado_em DATETIME,
-    situacao VARCHAR(45),
-    PRIMARY KEY (id)
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    titulo VARCHAR(45),
+    descricao VARCHAR(200),
+    nivel VARCHAR(45),
+    criadoEm DATETIME,
+    ativo VARCHAR(45)
 );
