@@ -19,73 +19,73 @@ public class EnderecoService {
 
     public List<EnderecoResponse> listar() {
         List<Endereco> enderecos = repository.findAll();
-        List<EnderecoResponse> enderecoResponse = new ArrayList<>();
+        List<EnderecoResponse> respostas = new ArrayList<>();
 
-        for (Endereco e : enderecos) {
-            EnderecoResponse respostaDaVez = new EnderecoResponse(
-                    e.getId(),
-                    e.getClienteId(),
-                    e.getCep(),
-                    e.getLogradouro(),
-                    e.getNumero(),
-                    e.getComplemento(),
-                    e.getBairro(),
-                    e.getCidade(),
-                    e.getEstado()
+        for (Endereco endereco : enderecos) {
+            EnderecoResponse resposta = new EnderecoResponse(
+                    endereco.getId(),
+                    endereco.getClienteId(),
+                    endereco.getCep(),
+                    endereco.getRua(),
+                    endereco.getNumero(),
+                    endereco.getComplemento(),
+                    endereco.getBairro(),
+                    endereco.getCidade(),
+                    endereco.getEstado()
             );
 
-            enderecoResponse.add(respostaDaVez);
+            respostas.add(resposta);
         }
 
-        return enderecoResponse;
+        return respostas;
     }
 
     public Optional<Endereco> buscarPorId(Integer id) {
         return repository.findById(id);
     }
 
-    public Endereco cadastrar(EnderecoRequest enderecoRequest) {
-        Endereco enderecoParaCadastro = new Endereco();
+    public Endereco cadastrar(EnderecoRequest request) {
+        Endereco endereco = new Endereco();
 
-        enderecoParaCadastro.setClienteId(enderecoRequest.getClienteId());
-        enderecoParaCadastro.setCep(enderecoRequest.getCep());
-        enderecoParaCadastro.setLogradouro(enderecoRequest.getLogradouro());
-        enderecoParaCadastro.setNumero(enderecoRequest.getNumero());
-        enderecoParaCadastro.setComplemento(enderecoRequest.getComplemento());
-        enderecoParaCadastro.setBairro(enderecoRequest.getBairro());
-        enderecoParaCadastro.setCidade(enderecoRequest.getCidade());
-        enderecoParaCadastro.setEstado(enderecoRequest.getEstado());
+        endereco.setClienteId(request.getClienteId());
+        endereco.setCep(request.getCep());
+        endereco.setRua(request.getRua());
+        endereco.setNumero(request.getNumero());
+        endereco.setComplemento(request.getComplemento());
+        endereco.setBairro(request.getBairro());
+        endereco.setCidade(request.getCidade());
+        endereco.setEstado(request.getEstado());
 
-        return repository.save(enderecoParaCadastro);
+        return repository.save(endereco);
     }
 
-    public Optional<Endereco> atualizar(Integer id, EnderecoRequest enderecoRequest) {
-        Optional<Endereco> optEndereco = repository.findById(id);
+    public Optional<Endereco> atualizar(Integer id, EnderecoRequest request) {
+        Optional<Endereco> enderecoEncontrado = repository.findById(id);
 
-        if (optEndereco.isEmpty()) {
+        if (enderecoEncontrado.isEmpty()) {
             return Optional.empty();
         }
 
-        Endereco enderecoParaAtualizar = optEndereco.get();
+        Endereco endereco = enderecoEncontrado.get();
 
-        enderecoParaAtualizar.setClienteId(enderecoRequest.getClienteId());
-        enderecoParaAtualizar.setCep(enderecoRequest.getCep());
-        enderecoParaAtualizar.setLogradouro(enderecoRequest.getLogradouro());
-        enderecoParaAtualizar.setNumero(enderecoRequest.getNumero());
-        enderecoParaAtualizar.setComplemento(enderecoRequest.getComplemento());
-        enderecoParaAtualizar.setBairro(enderecoRequest.getBairro());
-        enderecoParaAtualizar.setCidade(enderecoRequest.getCidade());
-        enderecoParaAtualizar.setEstado(enderecoRequest.getEstado());
+        endereco.setClienteId(request.getClienteId());
+        endereco.setCep(request.getCep());
+        endereco.setRua(request.getRua());
+        endereco.setNumero(request.getNumero());
+        endereco.setComplemento(request.getComplemento());
+        endereco.setBairro(request.getBairro());
+        endereco.setCidade(request.getCidade());
+        endereco.setEstado(request.getEstado());
 
-        Endereco registro = repository.save(enderecoParaAtualizar);
-        return Optional.of(registro);
+        return Optional.of(repository.save(endereco));
     }
 
     public boolean deletar(Integer id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return true;
+        if (!repository.existsById(id)) {
+            return false;
         }
-        return false;
+
+        repository.deleteById(id);
+        return true;
     }
 }

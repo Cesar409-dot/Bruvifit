@@ -1,35 +1,54 @@
 package school.sptech.bruvifit_app.endereco;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "endereco")
 public class Endereco {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "cliente_id")
     private Integer clienteId;
+
     private String cep;
-    private String logradouro;
+
+    @Column(name = "logradouro")
+    private String rua;
+
     private String numero;
     private String complemento;
     private String bairro;
     private String cidade;
+
+    @Column(name = "uf")
     private String estado;
 
     public Endereco() {
-
     }
 
-    public Endereco(Integer id, Integer clienteId, String cep, String logradouro, String numero, String complemento, String bairro, String cidade, String estado) {
+    public Endereco(
+            Integer id,
+            Integer clienteId,
+            String cep,
+            String rua,
+            String numero,
+            String complemento,
+            String bairro,
+            String cidade,
+            String estado) {
+
         this.id = id;
         this.clienteId = clienteId;
         this.cep = cep;
-        this.logradouro = logradouro;
+        this.rua = rua;
         this.numero = numero;
         this.complemento = complemento;
         this.bairro = bairro;
@@ -61,12 +80,20 @@ public class Endereco {
         this.cep = cep;
     }
 
+    public String getRua() {
+        return rua;
+    }
+
+    public void setRua(String rua) {
+        this.rua = rua;
+    }
+
     public String getLogradouro() {
-        return logradouro;
+        return rua;
     }
 
     public void setLogradouro(String logradouro) {
-        this.logradouro = logradouro;
+        this.rua = logradouro;
     }
 
     public String getNumero() {

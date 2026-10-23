@@ -21,41 +21,41 @@ public class EnderecoController {
 
     @GetMapping
     public ResponseEntity<List<EnderecoResponse>> listar() {
-        List<EnderecoResponse> enderecoResponse = service.listar();
-        return ResponseEntity.status(200).body(enderecoResponse);
+        return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Endereco> buscarPorId(@PathVariable Integer id) {
-        Optional<Endereco> enderecoEncontrado = service.buscarPorId(id);
+        Optional<Endereco> endereco = service.buscarPorId(id);
 
-        if (enderecoEncontrado.isEmpty()) {
+        if (endereco.isEmpty()) {
             return ResponseEntity.status(404).build();
-        } else {
-            Endereco enderecoASerMostrado = enderecoEncontrado.get();
-            return ResponseEntity.status(200).body(enderecoASerMostrado);
         }
+
+        return ResponseEntity.status(200).body(endereco.get());
     }
 
     @PostMapping
     public ResponseEntity<Endereco> cadastrar(
-            @Valid @RequestBody EnderecoRequest enderecoRequest) {
-        Endereco registro = service.cadastrar(enderecoRequest);
-        return ResponseEntity.status(201).body(registro);
+            @Valid @RequestBody EnderecoRequest request) {
+
+        Endereco endereco = service.cadastrar(request);
+
+        return ResponseEntity.status(201).body(endereco);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Endereco> atualizar(
-            @Valid @RequestBody EnderecoRequest enderecoRequest,
-            @PathVariable Integer id) {
-        Optional<Endereco> optEndereco = service.atualizar(id, enderecoRequest);
+            @PathVariable Integer id,
+            @Valid @RequestBody EnderecoRequest request) {
 
-        if (optEndereco.isEmpty()) {
+        Optional<Endereco> endereco = service.atualizar(id, request);
+
+        if (endereco.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        Endereco registro = optEndereco.get();
-        return ResponseEntity.status(200).body(registro);
+        return ResponseEntity.status(200).body(endereco.get());
     }
 
     @DeleteMapping("/{id}")
@@ -64,8 +64,8 @@ public class EnderecoController {
 
         if (!deletado) {
             return ResponseEntity.status(404).build();
-        } else {
-            return ResponseEntity.status(204).build();
         }
+
+        return ResponseEntity.status(204).build();
     }
 }
