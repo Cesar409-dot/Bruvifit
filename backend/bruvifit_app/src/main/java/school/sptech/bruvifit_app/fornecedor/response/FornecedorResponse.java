@@ -4,14 +4,20 @@ public class FornecedorResponse {
 
     private Integer id;
     private String nome;
-    private String cnjp;
+    private String cnpj;
     private String contato;
     private String email;
 
-    public FornecedorResponse(Integer id, String nome, String cnjp, String contato, String email) {
+    public FornecedorResponse(
+            Integer id,
+            String nome,
+            String cnpj,
+            String contato,
+            String email) {
+
         this.id = id;
         this.nome = nome;
-        this.cnjp = cnjp;
+        this.cnpj = cnpj;
         this.contato = contato;
         this.email = email;
     }
@@ -24,8 +30,8 @@ public class FornecedorResponse {
         return nome;
     }
 
-    public String getCnjp() {
-        return cnjp;
+    public String getCnpj() {
+        return cnpj;
     }
 
     public String getContato() {

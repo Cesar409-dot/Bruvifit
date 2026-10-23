@@ -12,7 +12,7 @@ public class FornecedorRequest {
 
     @NotNull
     @Size(min = 14, max = 18)
-    private String cnjp;
+    private String cnpj;
 
     @NotNull
     @Size(min = 8, max = 45)
@@ -31,12 +31,12 @@ public class FornecedorRequest {
         this.nome = nome;
     }
 
-    public String getCnjp() {
-        return cnjp;
+    public String getCnpj() {
+        return cnpj;
     }
 
-    public void setCnjp(String cnjp) {
-        this.cnjp = cnjp;
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 
     public String getContato() {

@@ -13,7 +13,7 @@ public class Fornecedor {
     private Integer id;
 
     private String nome;
-    private String cnjp;
+    private String cnpj;
     private String contato;
     private String email;
 
@@ -21,10 +21,10 @@ public class Fornecedor {
 
     }
 
-    public Fornecedor(Integer id, String nome, String cnjp, String contato, String email) {
+    public Fornecedor(Integer id, String nome, String cnpj, String contato, String email) {
         this.id = id;
         this.nome = nome;
-        this.cnjp = cnjp;
+        this.cnpj = cnpj;
         this.contato = contato;
         this.email = email;
     }
@@ -45,12 +45,12 @@ public class Fornecedor {
         this.nome = nome;
     }
 
-    public String getCnjp() {
-        return cnjp;
+    public String getCnpj() {
+        return cnpj;
     }
 
-    public void setCnjp(String cnjp) {
-        this.cnjp = cnjp;
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 
     public String getContato() {
