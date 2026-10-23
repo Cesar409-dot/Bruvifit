@@ -26,7 +26,7 @@ public class FornecedorService {
             FornecedorResponse respostaDaVez = new FornecedorResponse(
                     fornecedor.getId(),
                     fornecedor.getNome(),
-                    fornecedor.getCnjp(),
+                    fornecedor.getCnpj(),
                     fornecedor.getContato(),
                     fornecedor.getEmail()
             );
@@ -51,7 +51,7 @@ public class FornecedorService {
         Fornecedor fornecedorParaCadastro = new Fornecedor();
 
         fornecedorParaCadastro.setNome(fornecedorRequest.getNome());
-        fornecedorParaCadastro.setCnjp(fornecedorRequest.getCnjp());
+        fornecedorParaCadastro.setCnpj(fornecedorRequest.getCnpj());
         fornecedorParaCadastro.setContato(fornecedorRequest.getContato());
         fornecedorParaCadastro.setEmail(fornecedorRequest.getEmail());
 
@@ -73,7 +73,7 @@ public class FornecedorService {
         Fornecedor fornecedorParaAtualizar = fornecedorEncontrado.get();
 
         fornecedorParaAtualizar.setNome(fornecedorRequest.getNome());
-        fornecedorParaAtualizar.setCnjp(fornecedorRequest.getCnjp());
+        fornecedorParaAtualizar.setCnpj(fornecedorRequest.getCnpj());
         fornecedorParaAtualizar.setContato(fornecedorRequest.getContato());
         fornecedorParaAtualizar.setEmail(fornecedorRequest.getEmail());
 
