@@ -13,22 +13,22 @@ public class EnderecoRequest {
     private String cep;
 
     @NotNull
-    @Size(min = 3, max = 150)
-    private String logradouro;
+    @Size(min = 3, max = 45)
+    private String rua;
 
     @NotNull
     @Size(min = 1, max = 20)
     private String numero;
 
-    @Size(max = 100)
+    @Size(max = 45)
     private String complemento;
 
     @NotNull
-    @Size(min = 2, max = 100)
+    @Size(min = 2, max = 45)
     private String bairro;
 
     @NotNull
-    @Size(min = 2, max = 100)
+    @Size(min = 2, max = 45)
     private String cidade;
 
     @NotNull
@@ -51,12 +51,20 @@ public class EnderecoRequest {
         this.cep = cep;
     }
 
+    public String getRua() {
+        return rua;
+    }
+
+    public void setRua(String rua) {
+        this.rua = rua;
+    }
+
     public String getLogradouro() {
-        return logradouro;
+        return rua;
     }
 
     public void setLogradouro(String logradouro) {
-        this.logradouro = logradouro;
+        this.rua = logradouro;
     }
 
     public String getNumero() {

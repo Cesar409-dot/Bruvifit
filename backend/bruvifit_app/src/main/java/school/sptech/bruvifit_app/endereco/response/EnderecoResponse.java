@@ -5,18 +5,28 @@ public class EnderecoResponse {
     private Integer id;
     private Integer clienteId;
     private String cep;
-    private String logradouro;
+    private String rua;
     private String numero;
     private String complemento;
     private String bairro;
     private String cidade;
     private String estado;
 
-    public EnderecoResponse(Integer id, Integer clienteId, String cep, String logradouro, String numero, String complemento, String bairro, String cidade, String estado) {
+    public EnderecoResponse(
+            Integer id,
+            Integer clienteId,
+            String cep,
+            String rua,
+            String numero,
+            String complemento,
+            String bairro,
+            String cidade,
+            String estado) {
+
         this.id = id;
         this.clienteId = clienteId;
         this.cep = cep;
-        this.logradouro = logradouro;
+        this.rua = rua;
         this.numero = numero;
         this.complemento = complemento;
         this.bairro = bairro;
@@ -36,8 +46,8 @@ public class EnderecoResponse {
         return cep;
     }
 
-    public String getLogradouro() {
-        return logradouro;
+    public String getRua() {
+        return rua;
     }
 
     public String getNumero() {
