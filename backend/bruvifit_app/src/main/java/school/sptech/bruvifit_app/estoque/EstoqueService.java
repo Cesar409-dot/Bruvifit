@@ -1,7 +1,7 @@
 
 package school.sptech.bruvifit_app.estoque;
 
-import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.estoque.request.EstoqueRequest;
 import school.sptech.bruvifit_app.estoque.response.EstoqueResponse;
 
@@ -46,6 +46,11 @@ public class EstoqueService {
 
     public Estoque cadastrar(EstoqueRequest estoqueRequest) {
 
+        // Verifica se o produto existe
+        if (estoqueRequest.getProdutoId() != null && !repository.existsById(estoqueRequest.getProdutoId())) {
+            throw new IllegalArgumentException("Produto não encontrado");
+        }
+
         Estoque estoque = new Estoque();
 
         estoque.setTipo(estoqueRequest.getTipo());
@@ -56,6 +61,11 @@ public class EstoqueService {
         );
         estoque.setProdutoId(estoqueRequest.getProdutoId());
         estoque.setPedidoId(estoqueRequest.getPedidoId());
+
+        // Valida quantidade não pode ser negativa
+        if (estoqueRequest.getQuantidade() != null && estoqueRequest.getQuantidade() < 0) {
+            throw new IllegalArgumentException("Quantidade não pode ser negativa");
+        }
 
         return repository.save(estoque);
     }
