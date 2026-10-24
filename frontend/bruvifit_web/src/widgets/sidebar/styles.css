@@ -15,10 +15,6 @@
 .brand {
   width: 184px;
   height: 144px;
-  padding: 12px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--canvas);
 }
 
 .brand img {

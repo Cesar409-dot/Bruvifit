@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { demoProducts } from '../model/demo-products.js'
 import styles from './index.module.css'
 import addIcon from '../../../shared/assets/figma-products/2fd53.svg'
@@ -43,6 +43,23 @@ export function ProductsPage() {
     stock: 'Todos',
   })
   const [page, setPage] = useState(1)
+  const [viewingId, setViewingId] = useState(null)
+
+  const viewedProduct = useMemo(
+    () => products.find((product) => product.id === viewingId) ?? null,
+    [products, viewingId],
+  )
+
+  useEffect(() => {
+    if (viewingId === null) return undefined
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setViewingId(null)
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [viewingId])
 
   const filteredProducts = useMemo(
     () => products.filter((product) => {
@@ -94,10 +111,6 @@ export function ProductsPage() {
           Novo produto
         </Button>
       </section>
-
-      <p className={styles.demoNotice} role="status">
-        Dados demonstrativos locais: alterações não são salvas e se perdem ao sair da página ou recarregá-la.
-      </p>
 
       <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
@@ -203,7 +216,7 @@ export function ProductsPage() {
                       <Button
                         variant="icon"
                         aria-label={`Visualizar ${product.name}`}
-                        onClick={() => window.alert(`${product.name}\n${product.category} · ${currency.format(product.price)}`)}
+                        onClick={() => setViewingId(product.id)}
                       >
                         <img src={viewIcon} alt="" />
                       </Button>
@@ -264,6 +277,88 @@ export function ProductsPage() {
       <footer className={styles.footer}>
         BruVi Fit · Demonstração local · Dados temporários desta página.
       </footer>
+
+      {viewedProduct && (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => setViewingId(null)}
+        >
+          <section
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-view-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.modalHeading}>
+              <div>
+                <h2 id="product-view-title">{viewedProduct.name}</h2>
+                <p className={styles.modalSubtitle}>
+                  {viewedProduct.category} · {currency.format(viewedProduct.price)}
+                </p>
+              </div>
+              <span className={styles.badge}>{viewedProduct.status}</span>
+            </div>
+
+            <dl className={styles.modalGrid}>
+              <div>
+                <dt>SKU</dt>
+                <dd>{viewedProduct.sku}</dd>
+              </div>
+              <div>
+                <dt>Categoria</dt>
+                <dd>{viewedProduct.category}</dd>
+              </div>
+              <div>
+                <dt>Preço de custo</dt>
+                <dd>{currency.format(viewedProduct.custo)}</dd>
+              </div>
+              <div>
+                <dt>Preço de venda</dt>
+                <dd>{currency.format(viewedProduct.price)}</dd>
+              </div>
+              <div>
+                <dt>Estoque atual</dt>
+                <dd>
+                  {viewedProduct.stock}
+                  {viewedProduct.stock === 0 ? ' • Sem estoque' : ' unidades'}
+                </dd>
+              </div>
+              <div>
+                <dt>Estoque mínimo</dt>
+                <dd>{viewedProduct.minimo}</dd>
+              </div>
+              <div>
+                <dt>Tamanho</dt>
+                <dd>{viewedProduct.tamanho}</dd>
+              </div>
+              <div>
+                <dt>Cor</dt>
+                <dd>{viewedProduct.cor}</dd>
+              </div>
+            </dl>
+
+            <p className={styles.modalNote}>
+              Dados demonstrativos locais: alterações não são salvas nesta visualização.
+              Use o lápis da listagem para editar o produto.
+            </p>
+
+            <div className={styles.modalActions}>
+              <Button variant="secondary" autoFocus onClick={() => setViewingId(null)}>
+                Fechar
+              </Button>
+              <Button onClick={() => {
+                setViewingId(null)
+                window.location.hash = `/produtos/${viewedProduct.id}`
+              }}
+              >
+                Editar produto
+              </Button>
+            </div>
+          </section>
+        </div>
+      )}
 
     </main>
   )

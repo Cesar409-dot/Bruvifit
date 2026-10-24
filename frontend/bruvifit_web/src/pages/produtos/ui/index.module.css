@@ -308,6 +308,8 @@
 
 .modal {
   width: min(100%, 520px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   padding: 28px;
   border-radius: 14px;
   background: var(--white);
@@ -321,17 +323,60 @@
   margin-top: 24px;
 }
 
+.modalHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modalSubtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .modalGrid {
-  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  margin-top: 24px;
+}
+
+.modalGrid > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.modalGrid dt {
+  color: var(--muted);
+  font: 700 12px/1.4 'Manrope:Bold', sans-serif;
+}
+
+.modalGrid dd {
+  margin: 0;
+  color: var(--ink);
+  font: 400 14px/1.5 'Manrope:Regular', sans-serif;
+}
+
+.modalNote {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 6px;
+  margin-top: 22px;
 }
 
 @media (max-width: 1024px) {
