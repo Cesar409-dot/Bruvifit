@@ -1,67 +1,115 @@
 .app-shell {
-  min-height: 100vh;
-}
-
-.app-shell__main {
-  min-height: 100vh;
-  margin-left: 252px;
-}
-
-.app-shell__topbar {
-  position: sticky;
-  z-index: 1;
-  top: 0;
   display: flex;
-  min-height: 72px;
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.workspace {
+  width: calc(100% - 244px);
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 244px;
+}
+
+.topbar {
+  display: flex;
+  height: 80px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 36px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  padding: 0 40px;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+  color: var(--muted);
+  font-size: 13px;
 }
 
-.app-shell__section-label {
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-}
-
-.app-shell__profile {
-  display: inline-flex;
+.profile {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--color-text);
-  font-size: 0.875rem;
-  font-weight: 600;
+  gap: 18px;
+  color: var(--green);
+  font-family: 'Manrope:Bold', sans-serif;
+}
+
+.profile a {
+  color: inherit;
   text-decoration: none;
 }
 
-.app-shell__avatar {
+.notification {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.notification img {
+  width: 20px;
+  height: 20px;
+}
+
+.avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border-radius: 50%;
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-weight: 700;
+  background: #d9a8a0;
+  color: var(--ink);
+  font: 700 12px 'Montserrat:Bold', sans-serif;
 }
 
-.app-shell__content {
-  padding: 40px 36px;
+.workspace-content {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 28px;
+  padding: 40px;
 }
 
-@media (max-width: 760px) {
-  .app-shell__main {
-    margin-left: 0;
-    padding-bottom: 76px;
+@media (max-width: 1024px) {
+  .workspace {
+    width: calc(100% - 210px);
+    margin-left: 210px;
   }
 
-  .app-shell__topbar {
-    min-height: 60px;
-    padding: 0 20px;
+  .workspace-content,
+  .topbar {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    display: block;
   }
 
-  .app-shell__content {
-    padding: 28px 20px;
+  .workspace {
+    width: 100%;
+    margin: 0;
+  }
+
+  .topbar {
+    height: 64px;
+    padding: 0 16px;
+  }
+
+  .topbar > span,
+  .profile strong {
+    display: none;
+  }
+
+  .profile {
+    margin-left: auto;
+  }
+
+  .workspace-content {
+    gap: 20px;
+    padding: 24px 16px;
   }
 }

@@ -1,17 +1,28 @@
 import { modules } from '../../shared/config/modules.js'
 import './styles.css'
+import dashboardIcon from '../../shared/assets/figma-products/3cbb5.svg'
+import productsIcon from '../../shared/assets/figma-products/ac10a.svg'
+import inventoryIcon from '../../shared/assets/figma-products/53f57.svg'
+import salesIcon from '../../shared/assets/figma-products/7acdd.svg'
+import clientsIcon from '../../shared/assets/figma-products/8f122.svg'
+import suppliersIcon from '../../shared/assets/figma-products/f8595.svg'
+import financeIcon from '../../shared/assets/figma-products/ae6b1.svg'
+import reportsIcon from '../../shared/assets/figma-products/05fd8.svg'
+import employeesIcon from '../../shared/assets/figma-products/7702e.svg'
+import settingsIcon from '../../shared/assets/figma-products/874fb.svg'
+import brandLogo from '../../shared/assets/figma-products/07b20.png'
 
-const navSymbols = {
-  '/dashboard': '⌂',
-  '/produtos': '◈',
-  '/estoque': '▤',
-  '/vendas': '↗',
-  '/clientes': '◎',
-  '/fornecedores': '◇',
-  '/financeiro': '＄',
-  '/relatorios': '▥',
-  '/funcionarios': '♙',
-  '/configuracao': '⚙',
+const navIcons = {
+  '/dashboard': dashboardIcon,
+  '/produtos': productsIcon,
+  '/estoque': inventoryIcon,
+  '/vendas': salesIcon,
+  '/clientes': clientsIcon,
+  '/fornecedores': suppliersIcon,
+  '/financeiro': financeIcon,
+  '/relatorios': reportsIcon,
+  '/funcionarios': employeesIcon,
+  '/configuracao': settingsIcon,
 }
 
 export function Sidebar({ currentPath }) {
@@ -19,28 +30,30 @@ export function Sidebar({ currentPath }) {
 
   return (
     <aside className="sidebar" aria-label="Navegação principal">
-      <a className="sidebar__brand" href="#/dashboard" aria-label="Bruvifit, início">
-        <span className="sidebar__brand-mark" aria-hidden="true">B</span>
-        <span>
-          <strong>BRUVIFIT</strong>
-          <small>Gestão da loja</small>
-        </span>
+      <a className="brand" href="#/dashboard" aria-label="BruVi Fit, início">
+        <img src={brandLogo} alt="BruVi Fit" />
       </a>
-      <p className="sidebar__caption">MENU PRINCIPAL</p>
-      <nav className="sidebar__nav">
+      <span className="eyebrow">SISTEMA INTERNO</span>
+      <nav aria-label="Módulos">
         {navigationRoutes.map((route) => (
           <a
-            className={`sidebar__link${currentPath === route.path ? ' is-active' : ''}`}
+            className={`nav-item${currentPath === route.path ? ' active' : ''}`}
             href={`#${route.path}`}
             key={route.path}
             aria-current={currentPath === route.path ? 'page' : undefined}
           >
-            <span className="sidebar__icon" aria-hidden="true">{navSymbols[route.path]}</span>
-            <span>{route.label}</span>
+            <img src={navIcons[route.path]} alt="" />
+            <span>{route.path === '/configuracao' ? 'Configurações' : route.label}</span>
           </a>
         ))}
       </nav>
-      <a className="sidebar__access" href="#/acesso">Acesso e autenticação</a>
+      <div className="account-card">
+        <strong>Ana Costa</strong>
+        <span>Administradora</span>
+        <button type="button" onClick={() => window.alert('Sessão encerrada com segurança.')}>
+          Sair do sistema ↗
+        </button>
+      </div>
     </aside>
   )
 }

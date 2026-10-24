@@ -1,148 +1,136 @@
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  z-index: 2;
+  z-index: 10;
   display: flex;
-  width: 252px;
+  width: 244px;
   flex-direction: column;
-  padding: 26px 16px 18px;
-  border-right: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.sidebar__brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 8px 28px;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.sidebar__brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 13px;
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 800;
-}
-
-.sidebar__brand strong,
-.sidebar__brand small {
-  display: block;
-}
-
-.sidebar__brand strong {
-  font-size: 0.9rem;
-  letter-spacing: 0.12em;
-}
-
-.sidebar__brand small {
-  margin-top: 3px;
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-}
-
-.sidebar__caption {
-  margin: 0 10px 10px;
-  color: var(--color-text-subtle);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-}
-
-.sidebar__nav {
-  display: grid;
-  gap: 4px;
+  gap: 26px;
+  padding: 28px 24px;
   overflow-y: auto;
+  background: var(--green);
+  color: var(--white);
 }
 
-.sidebar__link {
+.brand {
+  width: 184px;
+  height: 144px;
+  padding: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--canvas);
+}
+
+.brand img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.eyebrow {
+  color: var(--sage);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sidebar nav {
   display: flex;
-  min-height: 42px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  height: 44px;
+  flex: 0 0 auto;
   align-items: center;
   gap: 12px;
-  padding: 0 11px;
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  font-weight: 550;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--white);
+  text-align: left;
   text-decoration: none;
-  transition: color 140ms ease, background-color 140ms ease;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 180ms ease;
 }
 
-.sidebar__link:hover {
-  background: var(--color-background);
-  color: var(--color-text);
+.nav-item:hover,
+.nav-item.active {
+  background: var(--green-hover);
 }
 
-.sidebar__link.is-active {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-weight: 700;
+.nav-item.active {
+  font-family: 'Manrope:Bold', sans-serif;
 }
 
-.sidebar__icon {
-  display: grid;
-  width: 22px;
-  place-items: center;
-  font-size: 1.05rem;
+.nav-item img {
+  width: 19px;
+  height: 19px;
 }
 
-.sidebar__access {
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: auto;
-  padding: 13px 10px 3px;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  text-decoration: none;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--green-dark);
+  font-size: 12px;
 }
 
-.sidebar__access:hover {
-  color: var(--color-accent);
+.account-card strong {
+  color: var(--white);
+  font: 700 14px/1.5 'Manrope:Bold', sans-serif;
 }
 
-@media (max-width: 760px) {
+.account-card span,
+.account-card button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sage);
+  text-align: left;
+}
+
+.account-card button {
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
   .sidebar {
-    inset: auto 0 0;
-    width: auto;
-    height: 68px;
-    flex-direction: row;
-    align-items: center;
-    padding: 0 8px;
-    border-top: 1px solid var(--color-border);
-    border-right: 0;
-    overflow-x: auto;
+    width: 210px;
+    padding: 24px 16px;
   }
 
-  .sidebar__brand,
-  .sidebar__caption,
-  .sidebar__access {
+  .brand {
+    width: 178px;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    gap: 12px;
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+
+  .brand,
+  .eyebrow,
+  .account-card {
     display: none;
   }
 
-  .sidebar__nav {
-    display: flex;
-    width: 100%;
-    overflow: visible;
+  .sidebar nav {
+    flex-direction: row;
+    overflow-x: auto;
   }
 
-  .sidebar__link {
-    min-width: 64px;
-    min-height: 56px;
-    flex: 1 0 64px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    padding: 4px;
-    font-size: 0.65rem;
-  }
-
-  .sidebar__icon {
-    font-size: 1rem;
+  .nav-item {
+    flex: 0 0 auto;
   }
 }

@@ -1,0 +1,266 @@
+.createPage {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 28px;
+  color: var(--ink);
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.title,
+.sectionTitle {
+  font-family: 'Montserrat:Bold', sans-serif;
+}
+
+.title {
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.actions button {
+  padding: 12px 18px;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  font: 700 14px 'Manrope:Bold', sans-serif;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgb(23 63 53 / 12%);
+}
+
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.secondary {
+  border-color: var(--line) !important;
+  background: var(--white);
+  color: var(--green);
+}
+
+.primary {
+  background: var(--green);
+  color: var(--white);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--green-hover);
+}
+
+.apiNotice {
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.formCard {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+}
+
+.sectionTitle {
+  margin-bottom: 20px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.formGrid + .formGrid {
+  margin-top: 18px;
+}
+
+.thirds {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #444;
+  font: 700 13px/1.5 'Manrope:Bold', sans-serif;
+}
+
+.control {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: none;
+  background-color: var(--white);
+  color: var(--ink);
+  font: 400 14px/1.5 'Manrope:Regular', sans-serif;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.control:focus {
+  border-color: var(--green-hover);
+  box-shadow: 0 0 0 3px rgb(40 92 79 / 9%);
+}
+
+select.control {
+  appearance: none;
+  background-image: url('../../../../shared/assets/figma-products/5fb7f.svg');
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.notices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.notice {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--mint);
+}
+
+.rose {
+  background: #f7eeeb;
+}
+
+.notice img {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.notice h3 {
+  color: var(--green);
+  font: 700 14px/1.5 'Manrope:Bold', sans-serif;
+}
+
+.notice p {
+  margin-top: 4px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 20;
+  display: flex;
+  max-width: min(620px, calc(100vw - 32px));
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--green);
+  color: var(--white);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 20%);
+  font-size: 14px;
+}
+
+.toastError {
+  background: #8b2f24;
+}
+
+.toastLink,
+.toastClose {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.toastLink {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.toastClose {
+  font-size: 20px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .headingRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    flex: 1;
+  }
+
+  .formGrid,
+  .thirds,
+  .notices {
+    grid-template-columns: 1fr;
+  }
+
+  .formCard {
+    padding: 18px;
+  }
+
+  .toast {
+    right: 16px;
+    bottom: 16px;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+  }
+}

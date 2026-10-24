@@ -1,5 +1,7 @@
 import { DashboardPage } from '../../pages/dashboard/ui/index.jsx'
 import { ProductsPage } from '../../pages/produtos/ui/index.jsx'
+import { ProductCreatePage } from '../../pages/produtos/cadastro/ui/index.jsx'
+import { ProductDetailPage } from '../../pages/produtos/detalhe/ui/index.jsx'
 import { InventoryPage } from '../../pages/estoque/ui/index.jsx'
 import { SalesPage } from '../../pages/vendas/ui/index.jsx'
 import { ClientsPage } from '../../pages/clientes/ui/index.jsx'
@@ -23,7 +25,19 @@ const pageByPath = {
   '/configuracao': SettingsPage,
 }
 
-export const moduleRoutes = modules.map((module) => ({
-  ...module,
-  component: pageByPath[module.path],
-}))
+export const moduleRoutes = [
+  ...modules.map((module) => ({
+    ...module,
+    component: pageByPath[module.path],
+  })),
+  {
+    path: '/produtos/novo',
+    label: 'Produtos',
+    component: ProductCreatePage,
+  },
+  {
+    path: '/produtos/:id',
+    label: 'Produtos',
+    component: ProductDetailPage,
+  },
+]

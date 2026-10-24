@@ -4,7 +4,7 @@
 
 .access-page {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100vh - 160px);
   place-items: center;
   padding: 24px;
   background: var(--color-background);
