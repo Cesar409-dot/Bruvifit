@@ -28,6 +28,12 @@ public class AlertaService {
     }
 
     public Alerta cadastrar(AlertaRequest request) {
+        // Validação do nível do alerta
+        String nivel = request.getNivel();
+        if (nivel == null || (!nivel.equals("ALTO") && !nivel.equals("MEDIO") && !nivel.equals("BAIXO"))) {
+            throw new IllegalArgumentException("Nível de alerta inválido. Use: ALTO, MEDIO ou BAIXO");
+        }
+
         Alerta alerta = new Alerta();
 
         alerta.setTitulo(request.getTitulo());
@@ -41,6 +47,12 @@ public class AlertaService {
 
     public Alerta atualizar(Integer id, AlertaRequest request) {
         Alerta alerta = buscarPorId(id);
+
+        // Validação do nível do alerta
+        String nivel = request.getNivel();
+        if (nivel == null || (!nivel.equals("ALTO") && !nivel.equals("MEDIO") && !nivel.equals("BAIXO"))) {
+            throw new IllegalArgumentException("Nível de alerta inválido. Use: ALTO, MEDIO ou BAIXO");
+        }
 
         alerta.setTitulo(request.getTitulo());
         alerta.setDescricao(request.getDescricao());
