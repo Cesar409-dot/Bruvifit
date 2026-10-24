@@ -7,7 +7,10 @@ import './styles.css'
 
 function getCurrentRoute() {
   const path = window.location.hash.replace(/^#/, '') || '/dashboard'
-  return moduleRoutes.find((route) => route.path === path) ?? moduleRoutes[0]
+  const selected = moduleRoutes.find((route) => route.path === path)
+    ?? moduleRoutes.find((route) => path.startsWith(`${route.path}/`))
+    ?? moduleRoutes[0]
+  return { ...selected, currentPath: path }
 }
 
 export default function App() {
@@ -30,7 +33,7 @@ export default function App() {
     <>
       <Sidebar currentPath={route.path} />
       <MainLayout>
-        <Page />
+        <Page key={route.currentPath} />
       </MainLayout>
     </>
   )
