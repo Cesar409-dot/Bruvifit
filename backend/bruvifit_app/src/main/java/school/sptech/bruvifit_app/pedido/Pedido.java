@@ -1,31 +1,47 @@
 package school.sptech.bruvifit_app.pedido;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "pedido")
 public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
+    @Column(name = "data_pedido")
     private LocalDateTime dataPedido;
+
+    @Column(name = "status", length = 45)
     private String status;
+
+    @Column(name = "valor_total", precision = 10, scale = 2)
     private BigDecimal valorTotal;
+
+    @Column(name = "forma_pagamento", length = 45)
     private String formaPagamento;
+
+    @Column(name = "prazo_pagamento")
     private LocalDate prazoPagamento;
+
+    @Column(name = "cliente_id", nullable = false)
     private Integer clienteId;
+
+    @Column(name = "usuario_id", nullable = false)
     private Integer usuarioId;
 
     public Pedido() {
-
     }
 
     public Pedido(Integer id, LocalDateTime dataPedido, String status, BigDecimal valorTotal, String formaPagamento, LocalDate prazoPagamento, Integer clienteId, Integer usuarioId) {
