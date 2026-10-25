@@ -1,27 +1,39 @@
 package school.sptech.bruvifit_app.cliente;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "cliente")
 public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
+    @Column(name = "nome", length = 45, nullable = false)
     private String nome;
+
+    @Column(name = "telefone", length = 45)
     private String telefone;
+
+    @Column(name = "email", length = 45)
     private String email;
+
+    @Column(name = "criado_em")
     private LocalDateTime criadoEm;
+
+    @Column(name = "ativo")
     private Boolean ativo;
 
     public Cliente() {
-
     }
 
     public Cliente(Integer id, String nome, String telefone, String email, LocalDateTime criadoEm, Boolean ativo) {

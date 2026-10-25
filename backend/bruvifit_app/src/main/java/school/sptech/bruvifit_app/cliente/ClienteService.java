@@ -2,11 +2,13 @@
 package school.sptech.bruvifit_app.cliente;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import school.sptech.bruvifit_app.cliente.ClienteMapper;
 import school.sptech.bruvifit_app.cliente.request.ClienteRequest;
 import school.sptech.bruvifit_app.cliente.response.ClienteResponse;
+import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,66 +22,40 @@ public class ClienteService {
     }
 
     public List<ClienteResponse> listar() {
-        List<Cliente> clientes = repository.findAll();
-        List<ClienteResponse> respostas = new ArrayList<>();
-
-        for (Cliente c : clientes) {
-            ClienteResponse resposta = new ClienteResponse(
-                    c.getId(),
-                    c.getNome(),
-                    c.getTelefone(),
-                    c.getEmail(),
-                    c.getAtivo()
-            );
-
-            respostas.add(resposta);
-        }
-
-        return respostas;
+        return repository.findAll().stream()
+                .map(ClienteMapper::toResponse)
+                .toList();
     }
 
     public Optional<Cliente> buscarPorId(Integer id) {
         return repository.findById(id);
     }
 
+    @Transactional
     public Cliente cadastrar(ClienteRequest clienteRequest) {
-        Cliente cliente = new Cliente();
-
-        cliente.setNome(clienteRequest.getNome());
-        cliente.setTelefone(clienteRequest.getTelefone());
-        cliente.setEmail(clienteRequest.getEmail());
+        if (repository.existsByEmail(clienteRequest.getEmail())) {
+            throw new ConflitoDeDadosException("E-mail já cadastrado");
+        }
+        Cliente cliente = ClienteMapper.toEntity(clienteRequest);
         cliente.setCriadoEm(LocalDateTime.now());
         cliente.setAtivo(true);
-
         return repository.save(cliente);
     }
 
-    public Optional<Cliente> atualizar(
-            Integer id,
-            ClienteRequest clienteRequest) {
-
-        Optional<Cliente> optCliente = repository.findById(id);
-
-        if (optCliente.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Cliente cliente = optCliente.get();
-
-        cliente.setNome(clienteRequest.getNome());
-        cliente.setTelefone(clienteRequest.getTelefone());
-        cliente.setEmail(clienteRequest.getEmail());
-
-        return Optional.of(repository.save(cliente));
+    @Transactional
+    public Optional<Cliente> atualizar(Integer id, ClienteRequest clienteRequest) {
+        return repository.findById(id)
+                .map(cliente -> {
+                    ClienteMapper.updateEntity(cliente, clienteRequest);
+                    return repository.save(cliente);
+                });
     }
 
+    @Transactional
     public boolean deletar(Integer id) {
-        Optional<Cliente> cliente = repository.findById(id);
-
-        if (cliente.isEmpty()) {
+        if (!repository.existsById(id)) {
             return false;
         }
-
         repository.deleteById(id);
         return true;
     }
