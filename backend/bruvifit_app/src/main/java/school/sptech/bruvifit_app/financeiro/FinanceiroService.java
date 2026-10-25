@@ -1,7 +1,9 @@
 package school.sptech.bruvifit_app.financeiro;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.financeiro.request.FinanceiroRequest;
 import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
 
@@ -19,87 +21,77 @@ public class FinanceiroService {
     }
 
     public List<FinanceiroResponse> listar() {
-        List<Financeiro> movimentacoes = repository.findAll();
-        List<FinanceiroResponse> movimentacoesResponse = new ArrayList<>();
+        List<Financeiro> financeiros = repository.findAll();
+        List<FinanceiroResponse> financeiroResponse = new ArrayList<>();
 
-        for (Financeiro movimentacao : movimentacoes) {
-            FinanceiroResponse respostaDaVez = new FinanceiroResponse(
-                    movimentacao.getId(),
-                    movimentacao.getTipo(),
-                    movimentacao.getCategoria(),
-                    movimentacao.getValor(),
-                    movimentacao.getDataCompetencia(),
-                    movimentacao.getDataRecebimento(),
-                    movimentacao.getSituacao(),
-                    movimentacao.getPedidoId()
-            );
+        for (Financeiro f : financeiros) {
+            FinanceiroResponse respostaDaVez =
+                    new FinanceiroResponse(
+                            f.getId(),
+                            f.getTipo(),
+                            f.getCategoria(),
+                            f.getValor(),
+                            f.getDataCompetencia(),
+                            f.getDataRecebimento(),
+                            f.getSituacao(),
+                            f.getPedidoId()
+                    );
 
-            movimentacoesResponse.add(respostaDaVez);
+            financeiroResponse.add(respostaDaVez);
         }
 
-        return movimentacoesResponse;
+        return financeiroResponse;
     }
 
-    public ResponseEntity<Financeiro> buscarPorId(Integer id) {
-        Optional<Financeiro> movimentacaoEncontrada = repository.findById(id);
+    public Optional<Financeiro> buscarPorId(Integer id) {
+        return repository.findById(id);
+    }
 
-        if (movimentacaoEncontrada.isEmpty()) {
-            return ResponseEntity.status(404).build();
+    @Transactional
+    public Financeiro cadastrar(FinanceiroRequest financeiroRequest) {
+        Financeiro financeiroParaCadastro = new Financeiro();
+
+        financeiroParaCadastro.setTipo(financeiroRequest.getTipo());
+        financeiroParaCadastro.setCategoria(financeiroRequest.getCategoria());
+        financeiroParaCadastro.setValor(financeiroRequest.getValor());
+        financeiroParaCadastro.setDataCompetencia(financeiroRequest.getDataCompetencia());
+        financeiroParaCadastro.setDataRecebimento(financeiroRequest.getDataRecebimento());
+        financeiroParaCadastro.setSituacao(financeiroRequest.getSituacao());
+        financeiroParaCadastro.setPedidoId(financeiroRequest.getPedidoId());
+
+        return repository.save(financeiroParaCadastro);
+    }
+
+    @Transactional
+    public Optional<Financeiro> atualizar(Integer id, FinanceiroRequest financeiroRequest) {
+        Optional<Financeiro> optFinanceiro = repository.findById(id);
+
+        if (optFinanceiro.isEmpty()) {
+            return Optional.empty();
         }
 
-        return ResponseEntity.status(200).body(movimentacaoEncontrada.get());
+        Financeiro financeiroParaAtualizar = optFinanceiro.get();
+
+        financeiroParaAtualizar.setTipo(financeiroRequest.getTipo());
+        financeiroParaAtualizar.setCategoria(financeiroRequest.getCategoria());
+        financeiroParaAtualizar.setValor(financeiroRequest.getValor());
+        financeiroParaAtualizar.setDataCompetencia(financeiroRequest.getDataCompetencia());
+        financeiroParaAtualizar.setDataRecebimento(financeiroRequest.getDataRecebimento());
+        financeiroParaAtualizar.setSituacao(financeiroRequest.getSituacao());
+        financeiroParaAtualizar.setPedidoId(financeiroRequest.getPedidoId());
+
+        return Optional.of(repository.save(financeiroParaAtualizar));
     }
 
-    public ResponseEntity<Financeiro> cadastrar(FinanceiroRequest financeiroRequest) {
-        Financeiro movimentacaoParaCadastro = new Financeiro();
+    @Transactional
+    public boolean deletar(Integer id) {
+        Optional<Financeiro> financeiroEncontrado = repository.findById(id);
 
-        movimentacaoParaCadastro.setTipo(financeiroRequest.getTipo());
-        movimentacaoParaCadastro.setCategoria(financeiroRequest.getCategoria());
-        movimentacaoParaCadastro.setValor(financeiroRequest.getValor());
-        movimentacaoParaCadastro.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        movimentacaoParaCadastro.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        movimentacaoParaCadastro.setSituacao(financeiroRequest.getSituacao());
-        movimentacaoParaCadastro.setPedidoId(financeiroRequest.getPedidoId());
-
-        Financeiro movimentacaoCadastrada = repository.save(movimentacaoParaCadastro);
-
-        return ResponseEntity.status(201).body(movimentacaoCadastrada);
-    }
-
-    public ResponseEntity<Financeiro> atualizar(
-            Integer id,
-            FinanceiroRequest financeiroRequest) {
-
-        Optional<Financeiro> movimentacaoEncontrada = repository.findById(id);
-
-        if (movimentacaoEncontrada.isEmpty()) {
-            return ResponseEntity.status(404).build();
-        }
-
-        Financeiro movimentacaoParaAtualizar = movimentacaoEncontrada.get();
-
-        movimentacaoParaAtualizar.setTipo(financeiroRequest.getTipo());
-        movimentacaoParaAtualizar.setCategoria(financeiroRequest.getCategoria());
-        movimentacaoParaAtualizar.setValor(financeiroRequest.getValor());
-        movimentacaoParaAtualizar.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        movimentacaoParaAtualizar.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        movimentacaoParaAtualizar.setSituacao(financeiroRequest.getSituacao());
-        movimentacaoParaAtualizar.setPedidoId(financeiroRequest.getPedidoId());
-
-        Financeiro movimentacaoAtualizada = repository.save(movimentacaoParaAtualizar);
-
-        return ResponseEntity.status(200).body(movimentacaoAtualizada);
-    }
-
-    public ResponseEntity<Void> deletar(Integer id) {
-        Optional<Financeiro> movimentacaoEncontrada = repository.findById(id);
-
-        if (movimentacaoEncontrada.isEmpty()) {
-            return ResponseEntity.status(404).build();
+        if (financeiroEncontrado.isEmpty()) {
+            return false;
         }
 
         repository.deleteById(id);
-
-        return ResponseEntity.status(204).build();
+        return true;
     }
 }

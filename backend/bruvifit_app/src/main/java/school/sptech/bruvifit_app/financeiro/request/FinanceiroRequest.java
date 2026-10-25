@@ -1,5 +1,6 @@
 package school.sptech.bruvifit_app.financeiro.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -9,11 +10,11 @@ import java.time.LocalDate;
 
 public class FinanceiroRequest {
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String tipo;
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String categoria;
 
@@ -26,11 +27,10 @@ public class FinanceiroRequest {
 
     private LocalDate dataRecebimento;
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String situacao;
 
-    @NotNull
     private Integer pedidoId;
 
     public String getTipo() {

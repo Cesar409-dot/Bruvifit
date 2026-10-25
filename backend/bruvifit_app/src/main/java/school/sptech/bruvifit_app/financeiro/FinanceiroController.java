@@ -7,6 +7,7 @@ import school.sptech.bruvifit_app.financeiro.request.FinanceiroRequest;
 import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/financeiros")
@@ -20,31 +21,51 @@ public class FinanceiroController {
 
     @GetMapping
     public ResponseEntity<List<FinanceiroResponse>> listar() {
-        List<FinanceiroResponse> movimentacoes = service.listar();
-
-        return ResponseEntity.status(200).body(movimentacoes);
+        return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Financeiro> buscarPorId(@PathVariable Integer id) {
-        return service.buscarPorId(id);
+        Optional<Financeiro> financeiroEncontrado = service.buscarPorId(id);
+
+        if (financeiroEncontrado.isEmpty()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.status(200).body(financeiroEncontrado.get());
     }
 
     @PostMapping
     public ResponseEntity<Financeiro> cadastrar(
             @Valid @RequestBody FinanceiroRequest financeiroRequest) {
-        return service.cadastrar(financeiroRequest);
+
+        Financeiro financeiro = service.cadastrar(financeiroRequest);
+
+        return ResponseEntity.status(201).body(financeiro);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Financeiro> atualizar(
-            @PathVariable Integer id,
-            @Valid @RequestBody FinanceiroRequest financeiroRequest) {
-        return service.atualizar(id, financeiroRequest);
+            @Valid @RequestBody FinanceiroRequest financeiroRequest,
+            @PathVariable Integer id) {
+
+        Optional<Financeiro> financeiroAtualizado = service.atualizar(id, financeiroRequest);
+
+        if (financeiroAtualizado.isEmpty()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.status(200).body(financeiroAtualizado.get());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Integer id) {
-        return service.deletar(id);
+        boolean deletado = service.deletar(id);
+
+        if (!deletado) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.status(204).build();
     }
 }
