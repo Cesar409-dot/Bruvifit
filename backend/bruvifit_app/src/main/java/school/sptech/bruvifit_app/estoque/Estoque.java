@@ -1,28 +1,42 @@
 package school.sptech.bruvifit_app.estoque;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "estoque")
 public class Estoque {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
+    @Column(name = "tipo", length = 45)
     private String tipo;
+
+    @Column(name = "quantidade", nullable = false)
     private Integer quantidade;
+
+    @Column(name = "saldo_pos")
     private Integer saldoPos;
+
+    @Column(name = "data_movimentacao")
     private LocalDateTime dataMovimentacao;
+
+    @Column(name = "produto_id", nullable = false)
     private Integer produtoId;
+
+    @Column(name = "pedido_id")
     private Integer pedidoId;
 
     public Estoque() {
-
     }
 
     public Estoque(Integer id, String tipo, Integer quantidade, Integer saldoPos, LocalDateTime dataMovimentacao, Integer produtoId, Integer pedidoId) {
