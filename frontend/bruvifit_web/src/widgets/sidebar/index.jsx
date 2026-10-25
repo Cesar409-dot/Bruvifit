@@ -33,7 +33,6 @@ export function Sidebar({ currentPath }) {
       <a className="brand" href="#/dashboard" aria-label="BruVi Fit, início">
         <img src={brandLogo} alt="BruVi Fit" />
       </a>
-      <span className="eyebrow">SISTEMA INTERNO</span>
       <nav aria-label="Módulos">
         {navigationRoutes.map((route) => (
           <a
@@ -50,7 +49,7 @@ export function Sidebar({ currentPath }) {
       <div className="account-card">
         <strong>Ana Costa</strong>
         <span>Administradora</span>
-        <button type="button" onClick={() => window.alert('Sessão encerrada com segurança.')}>
+        <button type="button" className="logout-button" onClick={() => window.alert('Sessão encerrada com segurança.')}>
           Sair do sistema ↗
         </button>
       </div>

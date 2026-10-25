@@ -128,42 +128,44 @@ export function ProductsPage() {
 
       <section className={styles.panel} aria-labelledby="product-filters-title">
         <h2 id="product-filters-title">Busca e filtros</h2>
-        <div className={styles.filters}>
-          <Field label="Pesquisar">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && applyFilters()}
-              placeholder="Buscar produto..."
-            />
-          </Field>
-          <Field label="Categoria">
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
-              <option>Todas</option>
-              {[...new Set(products.map((product) => product.category))].map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Status">
-            <select value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option>Todos</option>
-              <option>Ativo</option>
-              <option>Inativo</option>
-            </select>
-          </Field>
-          <Field label="Estoque">
-            <select value={stock} onChange={(event) => setStock(event.target.value)}>
-              <option>Todos</option>
-              <option>Normal</option>
-              <option>Baixo</option>
-              <option>Sem estoque</option>
-            </select>
-          </Field>
-        </div>
-        <div className={styles.panelActions}>
-          <Button variant="secondary" onClick={resetFilters}>Limpar filtros</Button>
-          <Button onClick={applyFilters}>Buscar</Button>
+        <div className={styles.filtersLayout}>
+          <div className={styles.filters}>
+            <Field label="Pesquisar">
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && applyFilters()}
+                placeholder="Buscar produto..."
+              />
+            </Field>
+            <Field label="Categoria">
+              <select value={category} onChange={(event) => setCategory(event.target.value)}>
+                <option>Todas</option>
+                {[...new Set(products.map((product) => product.category))].map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Status">
+              <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                <option>Todos</option>
+                <option>Ativo</option>
+                <option>Inativo</option>
+              </select>
+            </Field>
+            <Field label="Estoque">
+              <select value={stock} onChange={(event) => setStock(event.target.value)}>
+                <option>Todos</option>
+                <option>Normal</option>
+                <option>Baixo</option>
+                <option>Sem estoque</option>
+              </select>
+            </Field>
+          </div>
+          <div className={styles.panelActions}>
+            <Button variant="secondary" onClick={resetFilters}>Limpar filtros</Button>
+            <Button onClick={applyFilters}>Buscar</Button>
+          </div>
         </div>
       </section>
 
@@ -293,6 +295,7 @@ export function ProductsPage() {
           >
             <div className={styles.modalHeading}>
               <div>
+                <span className={styles.modalEyebrow}>Detalhes do produto</span>
                 <h2 id="product-view-title">{viewedProduct.name}</h2>
                 <p className={styles.modalSubtitle}>
                   {viewedProduct.category} · {currency.format(viewedProduct.price)}
@@ -301,48 +304,67 @@ export function ProductsPage() {
               <span className={styles.badge}>{viewedProduct.status}</span>
             </div>
 
-            <dl className={styles.modalGrid}>
-              <div>
-                <dt>SKU</dt>
-                <dd>{viewedProduct.sku}</dd>
-              </div>
-              <div>
-                <dt>Categoria</dt>
-                <dd>{viewedProduct.category}</dd>
-              </div>
-              <div>
-                <dt>Preço de custo</dt>
-                <dd>{currency.format(viewedProduct.custo)}</dd>
-              </div>
-              <div>
-                <dt>Preço de venda</dt>
-                <dd>{currency.format(viewedProduct.price)}</dd>
-              </div>
-              <div>
-                <dt>Estoque atual</dt>
-                <dd>
-                  {viewedProduct.stock}
-                  {viewedProduct.stock === 0 ? ' • Sem estoque' : ' unidades'}
-                </dd>
-              </div>
-              <div>
-                <dt>Estoque mínimo</dt>
-                <dd>{viewedProduct.minimo}</dd>
-              </div>
-              <div>
-                <dt>Tamanho</dt>
-                <dd>{viewedProduct.tamanho}</dd>
-              </div>
-              <div>
-                <dt>Cor</dt>
-                <dd>{viewedProduct.cor}</dd>
-              </div>
-            </dl>
+            <div className={styles.modalBody}>
+              <section className={styles.modalSection} aria-labelledby="modal-identification-title">
+                <h3 id="modal-identification-title" className={styles.modalSectionTitle}>
+                  Identificação
+                </h3>
+                <dl className={styles.modalGrid}>
+                  <div>
+                    <dt>SKU</dt>
+                    <dd>{viewedProduct.sku}</dd>
+                  </div>
+                  <div>
+                    <dt>Categoria</dt>
+                    <dd>{viewedProduct.category}</dd>
+                  </div>
+                  <div>
+                    <dt>Tamanho</dt>
+                    <dd>{viewedProduct.tamanho}</dd>
+                  </div>
+                  <div>
+                    <dt>Cor</dt>
+                    <dd>{viewedProduct.cor}</dd>
+                  </div>
+                </dl>
+              </section>
 
-            <p className={styles.modalNote}>
-              Dados demonstrativos locais: alterações não são salvas nesta visualização.
-              Use o lápis da listagem para editar o produto.
-            </p>
+              <section className={styles.modalSection} aria-labelledby="modal-commercial-title">
+                <h3 id="modal-commercial-title" className={styles.modalSectionTitle}>
+                  Informações comerciais
+                </h3>
+                <dl className={styles.modalGrid}>
+                  <div>
+                    <dt>Preço de custo</dt>
+                    <dd>{currency.format(viewedProduct.custo)}</dd>
+                  </div>
+                  <div>
+                    <dt>Preço de venda</dt>
+                    <dd>{currency.format(viewedProduct.price)}</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section className={styles.modalSection} aria-labelledby="modal-stock-title">
+                <h3 id="modal-stock-title" className={styles.modalSectionTitle}>
+                  Preços e estoque
+                </h3>
+                <dl className={styles.modalGrid}>
+                  <div>
+                    <dt>Estoque atual</dt>
+                    <dd>
+                      {viewedProduct.stock}
+                      {viewedProduct.stock === 0 ? ' • Sem estoque' : ' unidades'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Estoque mínimo</dt>
+                    <dd>{viewedProduct.minimo}</dd>
+                  </div>
+                </dl>
+              </section>
+
+            </div>
 
             <div className={styles.modalActions}>
               <Button variant="secondary" autoFocus onClick={() => setViewingId(null)}>

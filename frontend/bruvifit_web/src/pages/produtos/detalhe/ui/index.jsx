@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { demoCategories, getDemoProductById } from '../../model/demo-products.js'
 import styles from './index.module.css'
 
@@ -12,6 +12,8 @@ function buildFormState(product) {
     status: product.status,
   }
 }
+
+const goToProducts = () => { window.location.hash = '/produtos' }
 
 function Field({ label, hint, children }) {
   return (
@@ -51,7 +53,18 @@ function ProductDetailNotFound({ id, isValidId }) {
 
 function ProductDetailForm({ product }) {
   const [form, setForm] = useState(() => buildFormState(product))
-  const [banner, setBanner] = useState(null)
+  const [alert, setAlert] = useState(null)
+
+  useEffect(() => {
+    if (!alert) return undefined
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setAlert(null)
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [alert])
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -59,22 +72,19 @@ function ProductDetailForm({ product }) {
 
   function save(event) {
     event.preventDefault()
-    setBanner({
+    setAlert({
       tone: 'success',
-      text: 'Alterações aplicadas nesta tela · dados demonstrativos locais, nada foi gravado.',
+      title: 'Alterações aplicadas nesta tela',
+      text: 'Dados demonstrativos locais · nada foi gravado.',
     })
-  }
-
-  function discardChanges() {
-    setForm(buildFormState(product))
-    setBanner({ tone: 'neutral', text: 'Alterações descartadas.' })
   }
 
   function confirmDeactivation() {
     setForm((current) => ({ ...current, status: 'Inativo' }))
-    setBanner({
+    setAlert({
       tone: 'neutral',
-      text: `${form.name || 'O produto'} foi marcado como Inativo nesta tela (demonstrativo, nada foi gravado).`,
+      title: 'Inativação aplicada nesta tela',
+      text: `${form.name || 'O produto'} foi marcado como Inativo. É apenas demonstrativo local; nada foi gravado.`,
     })
   }
 
@@ -85,41 +95,8 @@ function ProductDetailForm({ product }) {
           <h1 className={styles.title}>{form.name || 'Produto'}</h1>
           <p className={styles.subtitle}>Produtos / {form.sku || '—'} / Detalhe e edição</p>
         </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondary} onClick={discardChanges}>
-            Cancelar
-          </button>
-          <button type="submit" form="product-detail-form" className={styles.primary}>
-            Salvar alterações
-          </button>
-        </div>
+
       </div>
-
-      <p className={styles.demoNotice} role="status">
-        Dados demonstrativos locais: as alterações desta tela não são gravadas e se perdem ao sair
-        da página ou recarregá-la.
-      </p>
-
-      {banner && (
-        <div
-          className={`${styles.banner} ${
-            banner.tone === 'success'
-              ? styles.bannerSuccess
-              : styles.bannerNeutral
-          }`}
-          role="status"
-        >
-          <span>{banner.text}</span>
-          <button
-            type="button"
-            className={styles.bannerClose}
-            onClick={() => setBanner(null)}
-            aria-label="Fechar"
-          >
-            ×
-          </button>
-        </div>
-      )}
 
       <form id="product-detail-form" onSubmit={save}>
         <section className={styles.formCard} aria-labelledby="product-info-title">
@@ -166,6 +143,7 @@ function ProductDetailForm({ product }) {
                 required
               />
             </Field>
+
           </div>
 
           <div className={`${styles.formGrid} ${styles.thirds}`}>
@@ -202,6 +180,14 @@ function ProductDetailForm({ product }) {
           <p className={styles.formFootnote}>
             O SKU deve ser único. Preço e estoque mínimo não podem ser negativos.
           </p>
+          <div className={styles.actions}>
+            <button type="button" className={styles.secondary} onClick={goToProducts}>
+              Cancelar
+            </button>
+            <button type="submit" form="product-detail-form" className={styles.primary}>
+              Salvar alterações
+            </button>
+          </div>
         </section>
       </form>
 
@@ -235,13 +221,13 @@ function ProductDetailForm({ product }) {
       </section>
 
       <section className={`${styles.formCard} ${styles.dangerCard}`} aria-labelledby="deactivation-title">
-        <h2 id="deactivation-title" className={styles.sectionTitle}>Confirmar inativação</h2>
+        <h2 id="deactivation-title" className={styles.sectionTitle}>Inativar produto</h2>
         <p className={styles.dangerText}>
           Inativar {form.name || 'este produto'}? O produto deixará de aparecer em novas vendas.
           Vendas anteriores, movimentações e vínculos serão preservados; o saldo não será apagado.
         </p>
         <div className={styles.dangerActions}>
-          <button type="button" className={styles.secondary} onClick={() => setBanner(null)}>
+          <button type="button" className={styles.secondary} onClick={() => setAlert(null)}>
             Cancelar
           </button>
           <button type="button" className={styles.primary} onClick={confirmDeactivation}>
@@ -251,6 +237,43 @@ function ProductDetailForm({ product }) {
       </section>
 
       <footer className={styles.footer}>BruVi Fit · Gestão interna · Dados protegidos e histórico preservado</footer>
+
+      {alert && (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => setAlert(null)}
+        >
+          <section
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-alert-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.modalHeading}>
+              <div>
+                <span className={styles.modalEyebrow}>Alerta local</span>
+                <h2 id="product-alert-title">{alert.title}</h2>
+                <p className={styles.modalSubtitle}>{alert.text}</p>
+              </div>
+              <span className={styles.modalBadge}>{alert.tone === 'success' ? 'Registro local' : 'Aviso local'}</span>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalText}>
+                Esta ação usa dados demonstrativos apenas nesta tela. Ao fechar, você continua no formulário atual.
+              </p>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.primary} autoFocus onClick={() => setAlert(null)}>
+                Entendi
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

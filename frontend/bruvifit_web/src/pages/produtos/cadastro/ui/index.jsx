@@ -96,19 +96,8 @@ export function ProductCreatePage() {
           <h1 className={styles.title}>Novo produto</h1>
           <p className={styles.subtitle}>Cadastre um novo produto · * Campos obrigatórios</p>
         </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondary} onClick={returnToProducts} disabled={isSaving}>
-            Cancelar
-          </button>
-          <button type="submit" form="product-form" className={styles.primary} disabled={isSaving}>
-            {isSaving ? 'Cadastrando…' : 'Cadastrar'}
-          </button>
-        </div>
-      </div>
 
-      <p className={styles.apiNotice}>
-        A API atual não possui campos para descrição, categoria ou status. Eles permanecem na interface, mas não serão gravados. A API também não garante SKU único.
-      </p>
+      </div>
 
       <form id="product-form" onSubmit={submit}>
         <section className={styles.formCard} aria-labelledby="product-info-title">
@@ -152,23 +141,14 @@ export function ProductCreatePage() {
           </button>
         </div>
       )}
-
-      <div className={styles.notices}>
-        <article className={styles.notice}>
-          <img src={infoIcon} alt="" />
-          <div>
-            <h3>Validações</h3>
-            <p>SKU único: cada combinação de tamanho e cor deve ter um SKU exclusivo. Preços e quantidades não podem ser negativos. Estoque inicial não representa compra; é o saldo inicial do produto.</p>
-          </div>
-        </article>
-        <article className={`${styles.notice} ${styles.rose}`}>
-          <img src={infoIcon} alt="" />
-          <div>
-            <h3>Fluxo após salvar</h3>
-            <p>Salvar → Detalhe do produto (edição) → Listagem de produtos. Cancelar → Listagem de produtos.</p>
-          </div>
-        </article>
-      </div>
+        <div className={styles.actions}>
+          <button type="button" className={styles.secondary} onClick={returnToProducts} disabled={isSaving}>
+            Cancelar
+          </button>
+          <button type="submit" form="product-form" className={styles.primary} disabled={isSaving}>
+            {isSaving ? 'Cadastrando…' : 'Cadastrar'}
+          </button>
+        </div>
 
       <footer className={styles.footer}>BruVi Fit · Gestão interna · Dados protegidos e histórico preservado</footer>
     </main>

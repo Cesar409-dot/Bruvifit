@@ -12,6 +12,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .title,
@@ -34,6 +35,8 @@
 .actions {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .actions button {
@@ -120,6 +123,85 @@
   cursor: pointer;
   font-size: 20px;
   line-height: 1;
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(11 41 35 / 55%);
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  display: flex;
+  width: min(100%, 660px);
+  max-height: min(520px, calc(100dvh - 40px));
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: 0 18px 60px rgb(11 41 35 / 20%);
+}
+
+.modalHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 28px 20px;
+  background: var(--green);
+  color: var(--white);
+}
+
+.modalEyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--sage);
+  font: 700 11px/1.4 'Manrope:Bold', sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.modalHeading h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.modalSubtitle {
+  margin-top: 5px;
+  color: var(--sage);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.modalBadge {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 15%);
+  color: var(--white);
+  font: 700 12px/1 'Manrope:Bold', sans-serif;
+}
+
+.modalBody {
+  padding: 22px 28px 26px;
+}
+
+.modalText {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 28px 24px;
 }
 
 .formCard {
@@ -288,6 +370,72 @@ select.control {
   line-height: 1.5;
 }
 
+@media (max-width: 1024px) {
+  .detailPage {
+    gap: 24px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .formCard {
+    padding: 22px;
+  }
+
+  .formGrid {
+    gap: 16px 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .detailPage {
+    gap: 20px;
+  }
+
+  .headingRow {
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    flex: 1 1 180px;
+  }
+
+  .formCard {
+    padding: 20px;
+  }
+
+  .formGrid,
+  .thirds {
+    grid-template-columns: 1fr;
+  }
+
+  .variationTable {
+    min-width: 560px;
+  }
+
+  .dangerActions {
+    flex-direction: column;
+  }
+
+  .dangerActions .secondary,
+  .dangerActions .primary {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .headingRow {
     align-items: flex-start;
@@ -303,12 +451,8 @@ select.control {
   }
 
   .actions button {
-    flex: 1;
-  }
-
-  .formGrid,
-  .thirds {
-    grid-template-columns: 1fr;
+    flex: 1 1 100%;
+    width: 100%;
   }
 
   .formCard {
@@ -319,5 +463,95 @@ select.control {
     align-items: flex-start;
     gap: 10px;
     font-size: 13px;
+  }
+
+  .tableScroll {
+    margin-right: -18px;
+    margin-left: -18px;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .variationTable {
+    min-width: 520px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detailPage {
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .actions button,
+  .dangerActions .secondary,
+  .dangerActions .primary {
+    min-height: 44px;
+    padding: 11px 14px;
+  }
+
+  .formCard {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .control {
+    min-height: 44px;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  .sectionTitle {
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+
+  .demoNotice,
+  .banner,
+  .formFootnote,
+  .tableNote,
+  .dangerText,
+  .footer,
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .variationTable {
+    min-width: 480px;
+    font-size: 12px;
+  }
+
+  .variationTable th,
+  .variationTable td {
+    padding: 12px 14px;
+  }
+
+  .modalBackdrop {
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .modalHeading {
+    padding: 20px 20px 16px;
+  }
+
+  .modalBody {
+    padding: 18px 20px 22px;
+  }
+
+  .modalActions {
+    padding: 0 20px 20px;
+  }
+
+  .footer {
+    padding-top: 10px;
+    text-align: center;
   }
 }

@@ -5,21 +5,42 @@
   display: flex;
   width: 244px;
   flex-direction: column;
-  gap: 26px;
-  padding: 28px 24px;
+  gap: 20px;
+  padding: 24px;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--green);
   color: var(--white);
+  scrollbar-width: thin;
+  scrollbar-color: var(--green-hover) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--green-hover);
 }
 
 .brand {
-  width: 184px;
-  height: 144px;
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
 }
 
 .brand img {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  max-width: 100%;
+  height: 104px;
   object-fit: contain;
 }
 
@@ -37,6 +58,7 @@
 
 .nav-item {
   display: flex;
+  min-width: 0;
   height: 44px;
   flex: 0 0 auto;
   align-items: center;
@@ -49,6 +71,13 @@
   font-size: 14px;
   cursor: pointer;
   transition: background 180ms ease;
+}
+
+.nav-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-item:hover,
@@ -67,6 +96,7 @@
 
 .account-card {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 6px;
   margin-top: auto;
@@ -94,14 +124,34 @@
   cursor: pointer;
 }
 
+.account-card .logout-button {
+  color: #e39a9a;
+  transition: color 180ms ease, background-color 180ms ease, outline-color 180ms ease;
+}
+
+.account-card .logout-button:hover {
+  background: rgb(180 57 57 / 16%);
+  color: #ffd9d9;
+}
+
+.account-card .logout-button:active {
+  background: rgb(165 49 49 / 24%);
+  color: #fff;
+}
+
+.account-card .logout-button:focus-visible {
+  outline: 3px solid rgb(197 70 70 / 48%);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     width: 210px;
-    padding: 24px 16px;
+    padding: 20px 16px;
   }
 
-  .brand {
-    width: 178px;
+  .brand img {
+    height: 88px;
   }
 }
 
@@ -123,7 +173,13 @@
 
   .sidebar nav {
     flex-direction: row;
+    gap: 8px;
     overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebar nav::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-item {

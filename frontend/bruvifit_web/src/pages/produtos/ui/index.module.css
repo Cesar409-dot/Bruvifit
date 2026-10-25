@@ -150,7 +150,17 @@
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(150px, 1fr));
+  align-items: end;
+  gap: 20px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.filtersLayout {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
   gap: 20px;
 }
 
@@ -184,7 +194,10 @@
 
 .panelActions {
   display: flex;
+  align-items: center;
   gap: 12px;
+  flex: none;
+  flex-wrap: wrap;
 }
 
 .tableScroll {
@@ -307,10 +320,11 @@
 }
 
 .modal {
-  width: min(100%, 520px);
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  padding: 28px;
+  display: flex;
+  width: min(100%, 700px);
+  max-height: min(760px, calc(100dvh - 40px));
+  flex-direction: column;
+  overflow: hidden;
   border-radius: 14px;
   background: var(--white);
   box-shadow: 0 18px 60px rgb(11 41 35 / 20%);
@@ -325,48 +339,90 @@
 
 .modalHeading {
   display: flex;
+  flex: none;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
+  padding: 24px 28px 20px;
+  background: var(--green);
+  color: var(--white);
+}
+
+.modalEyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--sage);
+  font: 700 11px/1.4 'Manrope:Bold', sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.modalHeading h2 {
+  font-size: 22px;
+  overflow-wrap: anywhere;
 }
 
 .modalSubtitle {
-  margin-top: 6px;
-  color: var(--muted);
+  margin-top: 5px;
+  color: var(--sage);
   font-size: 13px;
   line-height: 1.5;
 }
 
+.modalBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 28px 20px;
+  overscroll-behavior: contain;
+}
+
+.modalSection {
+  padding-top: 18px;
+}
+
+.modalSection + .modalSection {
+  margin-top: 17px;
+  border-top: 1px solid var(--line);
+}
+
+.modalSectionTitle {
+  margin: 0 0 10px;
+  color: var(--green);
+  font: 700 13px/1.4 'Manrope:Bold', sans-serif;
+}
+
 .modalGrid {
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  margin: 0;
 }
 
 .modalGrid > div {
   display: flex;
   min-width: 0;
-  flex-direction: column;
-  gap: 5px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfcfa;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgb(220 228 222 / 65%);
 }
 
 .modalGrid dt {
   color: var(--muted);
-  font: 700 12px/1.4 'Manrope:Bold', sans-serif;
+  font: 600 12px/1.45 'Manrope:Regular', sans-serif;
 }
 
 .modalGrid dd {
   margin: 0;
   color: var(--ink);
-  font: 400 14px/1.5 'Manrope:Regular', sans-serif;
+  overflow-wrap: anywhere;
+  text-align: right;
+  font: 700 13px/1.45 'Manrope:Bold', sans-serif;
 }
 
 .modalNote {
-  margin-top: 18px;
+  margin: 16px 0 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
@@ -374,22 +430,47 @@
 
 .modalActions {
   display: flex;
+  flex: none;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 22px;
+  padding: 14px 28px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--white);
 }
 
 @media (max-width: 1024px) {
-  .filters,
+  .filtersLayout {
+    flex-wrap: wrap;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .panelActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
+  .filtersLayout {
+    gap: 14px;
+  }
+
   .filters {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .panelActions {
+    width: 100%;
   }
 
   .metrics {
@@ -429,9 +510,44 @@
     width: 100%;
   }
 
-  .metrics,
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .panelActions .button {
+    width: 100%;
+  }
+
+  .modalBackdrop {
+    padding: 12px;
+  }
+
+  .modal {
+    width: min(100%, 520px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .modalHeading {
+    padding: 20px 20px 16px;
+  }
+
+  .modalBody {
+    padding: 0 20px 16px;
+  }
+
+  .modalActions {
+    padding: 12px 20px 16px;
+  }
+}
+
+@media (max-width: 440px) {
+  .modalHeading h2 {
+    font-size: 19px;
+  }
+
   .modalGrid {
     grid-template-columns: 1fr;
+    gap: 2px;
   }
 
   .modalActions {
