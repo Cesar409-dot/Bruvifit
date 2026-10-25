@@ -27,22 +27,20 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Integer id) {
         return service.buscarPorId(id);
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> cadastrar(
+    public ResponseEntity<UsuarioResponse> cadastrar(
             @Valid @RequestBody UsuarioRequest usuarioRequest) {
-
         return service.cadastrar(usuarioRequest);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizar(
+    public ResponseEntity<UsuarioResponse> atualizar(
             @PathVariable Integer id,
             @Valid @RequestBody UsuarioRequest usuarioRequest) {
-
         return service.atualizar(id, usuarioRequest);
     }
 

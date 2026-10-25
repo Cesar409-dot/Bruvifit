@@ -1,24 +1,26 @@
+
 package school.sptech.bruvifit_app.usuario.request;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UsuarioRequest {
 
-    @NotNull
-    @Size(min = 3, max = 100)
+    @NotBlank
+    @Size(min = 3, max = 45)
     private String nome;
 
-    @NotNull
+    @NotBlank
     @Email
+    @Size(max = 45)
     private String email;
 
-    @NotNull
+    @NotBlank
     @Size(min = 11, max = 14)
     private String cpf;
 
-    @NotNull
+    @NotBlank
     @Size(min = 6, max = 100)
     private String senhaHash;
 

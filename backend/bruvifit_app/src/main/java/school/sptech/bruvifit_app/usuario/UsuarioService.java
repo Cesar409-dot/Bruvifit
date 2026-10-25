@@ -1,8 +1,11 @@
 
 package school.sptech.bruvifit_app.usuario;
 
+import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.usuario.request.UsuarioRequest;
 import school.sptech.bruvifit_app.usuario.response.UsuarioResponse;
 
@@ -15,9 +18,11 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository repository) {
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UsuarioResponse> listar() {
@@ -39,32 +44,59 @@ public class UsuarioService {
         return usuariosResponse;
     }
 
-    public ResponseEntity<Usuario> buscarPorId(Integer id) {
+    public ResponseEntity<UsuarioResponse> buscarPorId(Integer id) {
         Optional<Usuario> usuarioEncontrado = repository.findById(id);
 
         if (usuarioEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        return ResponseEntity.status(200).body(usuarioEncontrado.get());
+        Usuario usuario = usuarioEncontrado.get();
+
+        UsuarioResponse resposta = new UsuarioResponse(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getCpf()
+        );
+
+        return ResponseEntity.status(200).body(resposta);
     }
 
-    public ResponseEntity<Usuario> cadastrar(UsuarioRequest usuarioRequest) {
+    @Transactional
+    public ResponseEntity<UsuarioResponse> cadastrar(UsuarioRequest usuarioRequest) {
+        if (repository.existsByEmail(usuarioRequest.getEmail())) {
+            throw new ConflitoDeDadosException("E-mail já cadastrado");
+        }
+        if (repository.existsByCpf(usuarioRequest.getCpf())) {
+            throw new ConflitoDeDadosException("CPF já cadastrado");
+        }
+
         Usuario usuarioParaCadastro = new Usuario();
 
         usuarioParaCadastro.setNome(usuarioRequest.getNome());
         usuarioParaCadastro.setEmail(usuarioRequest.getEmail());
         usuarioParaCadastro.setCpf(usuarioRequest.getCpf());
-        usuarioParaCadastro.setSenhaHash(usuarioRequest.getSenhaHash());
+        usuarioParaCadastro.setSenhaHash(passwordEncoder.encode(usuarioRequest.getSenhaHash()));
         usuarioParaCadastro.setCriadoEm(LocalDateTime.now());
         usuarioParaCadastro.setAtualizadoEm(LocalDateTime.now());
+        usuarioParaCadastro.setAtivo(true);
+        usuarioParaCadastro.setAprovado(true);
 
         Usuario usuarioCadastrado = repository.save(usuarioParaCadastro);
 
-        return ResponseEntity.status(201).body(usuarioCadastrado);
+        UsuarioResponse resposta = new UsuarioResponse(
+                usuarioCadastrado.getId(),
+                usuarioCadastrado.getNome(),
+                usuarioCadastrado.getEmail(),
+                usuarioCadastrado.getCpf()
+        );
+
+        return ResponseEntity.status(201).body(resposta);
     }
 
-    public ResponseEntity<Usuario> atualizar(
+    @Transactional
+    public ResponseEntity<UsuarioResponse> atualizar(
             Integer id,
             UsuarioRequest usuarioRequest) {
 
@@ -76,17 +108,32 @@ public class UsuarioService {
 
         Usuario usuarioParaAtualizar = usuarioEncontrado.get();
 
+        if (repository.existsByEmailAndIdNot(usuarioRequest.getEmail(), id)) {
+            throw new ConflitoDeDadosException("E-mail já cadastrado");
+        }
+        if (repository.existsByCpfAndIdNot(usuarioRequest.getCpf(), id)) {
+            throw new ConflitoDeDadosException("CPF já cadastrado");
+        }
+
         usuarioParaAtualizar.setNome(usuarioRequest.getNome());
         usuarioParaAtualizar.setEmail(usuarioRequest.getEmail());
         usuarioParaAtualizar.setCpf(usuarioRequest.getCpf());
-        usuarioParaAtualizar.setSenhaHash(usuarioRequest.getSenhaHash());
+        usuarioParaAtualizar.setSenhaHash(passwordEncoder.encode(usuarioRequest.getSenhaHash()));
         usuarioParaAtualizar.setAtualizadoEm(LocalDateTime.now());
 
         Usuario usuarioAtualizado = repository.save(usuarioParaAtualizar);
 
-        return ResponseEntity.status(200).body(usuarioAtualizado);
+        UsuarioResponse resposta = new UsuarioResponse(
+                usuarioAtualizado.getId(),
+                usuarioAtualizado.getNome(),
+                usuarioAtualizado.getEmail(),
+                usuarioAtualizado.getCpf()
+        );
+
+        return ResponseEntity.status(200).body(resposta);
     }
 
+    @Transactional
     public ResponseEntity<Void> deletar(Integer id) {
         Optional<Usuario> usuarioEncontrado = repository.findById(id);
 
