@@ -1,8 +1,10 @@
 package school.sptech.bruvifit_app.endereco;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.endereco.request.EnderecoRequest;
 import school.sptech.bruvifit_app.endereco.response.EnderecoResponse;
+import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class EnderecoService {
                     endereco.getClienteId(),
                     endereco.getCep(),
                     endereco.getRua(),
+                    endereco.getLogradouro(),
                     endereco.getNumero(),
                     endereco.getComplemento(),
                     endereco.getBairro(),
@@ -44,12 +47,17 @@ public class EnderecoService {
         return repository.findById(id);
     }
 
+    @Transactional
     public Endereco cadastrar(EnderecoRequest request) {
+        if (request.getClienteId() != null && !repository.existsById(request.getClienteId())) {
+            throw new ConflitoDeDadosException("Cliente não encontrado");
+        }
         Endereco endereco = new Endereco();
 
         endereco.setClienteId(request.getClienteId());
         endereco.setCep(request.getCep());
         endereco.setRua(request.getRua());
+        endereco.setLogradouro(request.getLogradouro());
         endereco.setNumero(request.getNumero());
         endereco.setComplemento(request.getComplemento());
         endereco.setBairro(request.getBairro());
@@ -59,6 +67,7 @@ public class EnderecoService {
         return repository.save(endereco);
     }
 
+    @Transactional
     public Optional<Endereco> atualizar(Integer id, EnderecoRequest request) {
         Optional<Endereco> enderecoEncontrado = repository.findById(id);
 
@@ -68,9 +77,14 @@ public class EnderecoService {
 
         Endereco endereco = enderecoEncontrado.get();
 
+        if (request.getClienteId() != null && !repository.existsById(request.getClienteId())) {
+            throw new ConflitoDeDadosException("Cliente não encontrado");
+        }
+
         endereco.setClienteId(request.getClienteId());
         endereco.setCep(request.getCep());
         endereco.setRua(request.getRua());
+        endereco.setLogradouro(request.getLogradouro());
         endereco.setNumero(request.getNumero());
         endereco.setComplemento(request.getComplemento());
         endereco.setBairro(request.getBairro());
@@ -80,6 +94,7 @@ public class EnderecoService {
         return Optional.of(repository.save(endereco));
     }
 
+    @Transactional
     public boolean deletar(Integer id) {
         if (!repository.existsById(id)) {
             return false;

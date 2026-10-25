@@ -1,30 +1,46 @@
 package school.sptech.bruvifit_app.financeiro;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "financeiro")
 public class Financeiro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
+    @Column(name = "tipo", length = 45)
     private String tipo;
+
+    @Column(name = "categoria", length = 45)
     private String categoria;
+
+    @Column(name = "valor", precision = 10, scale = 2, nullable = false)
     private BigDecimal valor;
+
+    @Column(name = "data_competencia")
     private LocalDate dataCompetencia;
+
+    @Column(name = "data_recebimento")
     private LocalDate dataRecebimento;
+
+    @Column(name = "situacao", length = 45)
     private String situacao;
+
+    @Column(name = "pedido_id")
     private Integer pedidoId;
 
     public Financeiro() {
-
     }
 
     public Financeiro(Integer id, String tipo, String categoria, BigDecimal valor, LocalDate dataCompetencia, LocalDate dataRecebimento, String situacao, Integer pedidoId) {

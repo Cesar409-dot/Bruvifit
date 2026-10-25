@@ -1,5 +1,6 @@
 package school.sptech.bruvifit_app.estoque.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -7,7 +8,7 @@ import java.time.LocalDateTime;
 
 public class EstoqueRequest {
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String tipo;
 
@@ -23,7 +24,6 @@ public class EstoqueRequest {
     @NotNull
     private Integer produtoId;
 
-    @NotNull
     private Integer pedidoId;
 
     public String getTipo() {

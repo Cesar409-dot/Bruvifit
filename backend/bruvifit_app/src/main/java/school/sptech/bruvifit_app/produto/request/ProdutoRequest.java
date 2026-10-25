@@ -3,14 +3,14 @@ package school.sptech.bruvifit_app.produto.request;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
 public class ProdutoRequest {
 
-    @NotNull
+    @NotBlank
     @Size(min = 1, max = 45)
     private String nome;
 

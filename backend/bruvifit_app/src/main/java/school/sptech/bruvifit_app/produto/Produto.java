@@ -15,12 +15,13 @@ public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
-    @Column(name = "nome", length = 45)
+    @Column(name = "nome", length = 45, nullable = false)
     private String nome;
 
-    @Column(name = "sku", length = 45)
+    @Column(name = "sku", length = 45, unique = true)
     private String sku;
 
     @Column(name = "tamanho", length = 45)
@@ -44,8 +45,8 @@ public class Produto {
     @Column(name = "estoque_minimo")
     private Integer estoqueMinimo;
 
-    @Column(name = "ativo")
-    private Boolean ativo;
+    @Column(name = "ativo", nullable = false)
+    private Boolean ativo = true;
 
     public Produto() {
     }

@@ -1,24 +1,24 @@
 package school.sptech.bruvifit_app.fornecedor.request;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class FornecedorRequest {
 
-    @NotNull
+    @NotBlank
     @Size(min = 3, max = 45)
     private String nome;
 
-    @NotNull
+    @NotBlank
     @Size(min = 14, max = 18)
     private String cnpj;
 
-    @NotNull
+    @NotBlank
     @Size(min = 8, max = 45)
     private String contato;
 
-    @NotNull
+    @NotBlank
     @Email
     @Size(max = 45)
     private String email;

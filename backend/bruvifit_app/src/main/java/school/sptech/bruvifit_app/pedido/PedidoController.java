@@ -3,10 +3,10 @@ package school.sptech.bruvifit_app.pedido;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest;
 import school.sptech.bruvifit_app.pedido.request.PedidoRequest;
 import school.sptech.bruvifit_app.pedido.response.PedidoResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,68 +14,44 @@ import java.util.Optional;
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    private final PedidoRepository repository;
+    private final PedidoService service;
 
-    public PedidoController(PedidoRepository repository) {
-        this.repository = repository;
+    public PedidoController(PedidoService service) {
+        this.service = service;
     }
 
     @GetMapping
     public ResponseEntity<List<PedidoResponse>> listar() {
-
-        List<Pedido> pedidos = repository.findAll();
-        List<PedidoResponse> pedidoResponse = new ArrayList<>();
-
-        for (Pedido p : pedidos) {
-
-            PedidoResponse respostaDaVez =
-                    new PedidoResponse(
-                            p.getId(),
-                            p.getDataPedido(),
-                            p.getStatus(),
-                            p.getValorTotal(),
-                            p.getFormaPagamento(),
-                            p.getPrazoPagamento(),
-                            p.getClienteId(),
-                            p.getUsuarioId()
-                    );
-
-            pedidoResponse.add(respostaDaVez);
-        }
-
-        return ResponseEntity.status(200).body(pedidoResponse);
+        return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Pedido> buscarPorId(@PathVariable Integer id) {
-
-        Optional<Pedido> pedidoEncontrado = repository.findById(id);
+        Optional<Pedido> pedidoEncontrado = service.buscarPorId(id);
 
         if (pedidoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
-        } else {
-            Pedido pedidoASerMostrado = pedidoEncontrado.get();
-            return ResponseEntity.status(200).body(pedidoASerMostrado);
         }
+
+        return ResponseEntity.status(200).body(pedidoEncontrado.get());
     }
 
     @PostMapping
     public ResponseEntity<Pedido> cadastrar(
             @Valid @RequestBody PedidoRequest pedidoRequest) {
 
-        Pedido pedidoParaCadastro = new Pedido();
+        Pedido pedido = service.cadastrar(pedidoRequest);
 
-        pedidoParaCadastro.setDataPedido(pedidoRequest.getDataPedido());
-        pedidoParaCadastro.setStatus(pedidoRequest.getStatus());
-        pedidoParaCadastro.setValorTotal(pedidoRequest.getValorTotal());
-        pedidoParaCadastro.setFormaPagamento(pedidoRequest.getFormaPagamento());
-        pedidoParaCadastro.setPrazoPagamento(pedidoRequest.getPrazoPagamento());
-        pedidoParaCadastro.setClienteId(pedidoRequest.getClienteId());
-        pedidoParaCadastro.setUsuarioId(pedidoRequest.getUsuarioId());
+        return ResponseEntity.status(201).body(pedido);
+    }
 
-        Pedido registro = repository.save(pedidoParaCadastro);
+    @PostMapping("/com-itens")
+    public ResponseEntity<Pedido> cadastrarComItens(
+            @Valid @RequestBody PedidoComItensRequest request) {
 
-        return ResponseEntity.status(201).body(registro);
+        Pedido pedido = service.cadastrarComItens(request);
+
+        return ResponseEntity.status(201).body(pedido);
     }
 
     @PutMapping("/{id}")
@@ -83,37 +59,34 @@ public class PedidoController {
             @Valid @RequestBody PedidoRequest pedidoRequest,
             @PathVariable Integer id) {
 
-        Optional<Pedido> optPedido = repository.findById(id);
+        Optional<Pedido> pedidoAtualizado = service.atualizar(id, pedidoRequest);
 
-        if (optPedido.isEmpty()) {
+        if (pedidoAtualizado.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        Pedido pedidoParaAtualizar = optPedido.get();
+        return ResponseEntity.status(200).body(pedidoAtualizado.get());
+    }
 
-        pedidoParaAtualizar.setDataPedido(pedidoRequest.getDataPedido());
-        pedidoParaAtualizar.setStatus(pedidoRequest.getStatus());
-        pedidoParaAtualizar.setValorTotal(pedidoRequest.getValorTotal());
-        pedidoParaAtualizar.setFormaPagamento(pedidoRequest.getFormaPagamento());
-        pedidoParaAtualizar.setPrazoPagamento(pedidoRequest.getPrazoPagamento());
-        pedidoParaAtualizar.setClienteId(pedidoRequest.getClienteId());
-        pedidoParaAtualizar.setUsuarioId(pedidoRequest.getUsuarioId());
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelar(@PathVariable Integer id) {
+        boolean cancelado = service.cancelarPedido(id);
 
-        Pedido registro = repository.save(pedidoParaAtualizar);
+        if (!cancelado) {
+            return ResponseEntity.status(404).build();
+        }
 
-        return ResponseEntity.status(200).body(registro);
+        return ResponseEntity.status(200).build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Pedido> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
+        boolean deletado = service.deletar(id);
 
-        Optional<Pedido> pedidoEncontrado = repository.findById(id);
-
-        if (pedidoEncontrado.isEmpty()) {
+        if (!deletado) {
             return ResponseEntity.status(404).build();
-        } else {
-            repository.deleteById(id);
-            return ResponseEntity.status(204).build();
         }
+
+        return ResponseEntity.status(204).build();
     }
 }

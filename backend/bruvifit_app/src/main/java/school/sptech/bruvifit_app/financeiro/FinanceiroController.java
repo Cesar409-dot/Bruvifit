@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.financeiro.request.FinanceiroRequest;
 import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,68 +13,35 @@ import java.util.Optional;
 @RequestMapping("/financeiros")
 public class FinanceiroController {
 
-    private final FinanceiroRepository repository;
+    private final FinanceiroService service;
 
-    public FinanceiroController(FinanceiroRepository repository) {
-        this.repository = repository;
+    public FinanceiroController(FinanceiroService service) {
+        this.service = service;
     }
 
     @GetMapping
     public ResponseEntity<List<FinanceiroResponse>> listar() {
-
-        List<Financeiro> financeiros = repository.findAll();
-        List<FinanceiroResponse> financeiroResponse = new ArrayList<>();
-
-        for (Financeiro f : financeiros) {
-
-            FinanceiroResponse respostaDaVez =
-                    new FinanceiroResponse(
-                            f.getId(),
-                            f.getTipo(),
-                            f.getCategoria(),
-                            f.getValor(),
-                            f.getDataCompetencia(),
-                            f.getDataRecebimento(),
-                            f.getSituacao(),
-                            f.getPedidoId()
-                    );
-
-            financeiroResponse.add(respostaDaVez);
-        }
-
-        return ResponseEntity.status(200).body(financeiroResponse);
+        return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Financeiro> buscarPorId(@PathVariable Integer id) {
-
-        Optional<Financeiro> financeiroEncontrado = repository.findById(id);
+        Optional<Financeiro> financeiroEncontrado = service.buscarPorId(id);
 
         if (financeiroEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
-        } else {
-            Financeiro financeiroASerMostrado = financeiroEncontrado.get();
-            return ResponseEntity.status(200).body(financeiroASerMostrado);
         }
+
+        return ResponseEntity.status(200).body(financeiroEncontrado.get());
     }
 
     @PostMapping
     public ResponseEntity<Financeiro> cadastrar(
             @Valid @RequestBody FinanceiroRequest financeiroRequest) {
 
-        Financeiro financeiroParaCadastro = new Financeiro();
+        Financeiro financeiro = service.cadastrar(financeiroRequest);
 
-        financeiroParaCadastro.setTipo(financeiroRequest.getTipo());
-        financeiroParaCadastro.setCategoria(financeiroRequest.getCategoria());
-        financeiroParaCadastro.setValor(financeiroRequest.getValor());
-        financeiroParaCadastro.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        financeiroParaCadastro.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        financeiroParaCadastro.setSituacao(financeiroRequest.getSituacao());
-        financeiroParaCadastro.setPedidoId(financeiroRequest.getPedidoId());
-
-        Financeiro registro = repository.save(financeiroParaCadastro);
-
-        return ResponseEntity.status(201).body(registro);
+        return ResponseEntity.status(201).body(financeiro);
     }
 
     @PutMapping("/{id}")
@@ -83,37 +49,23 @@ public class FinanceiroController {
             @Valid @RequestBody FinanceiroRequest financeiroRequest,
             @PathVariable Integer id) {
 
-        Optional<Financeiro> optFinanceiro = repository.findById(id);
+        Optional<Financeiro> financeiroAtualizado = service.atualizar(id, financeiroRequest);
 
-        if (optFinanceiro.isEmpty()) {
+        if (financeiroAtualizado.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
-        Financeiro financeiroParaAtualizar = optFinanceiro.get();
-
-        financeiroParaAtualizar.setTipo(financeiroRequest.getTipo());
-        financeiroParaAtualizar.setCategoria(financeiroRequest.getCategoria());
-        financeiroParaAtualizar.setValor(financeiroRequest.getValor());
-        financeiroParaAtualizar.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        financeiroParaAtualizar.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        financeiroParaAtualizar.setSituacao(financeiroRequest.getSituacao());
-        financeiroParaAtualizar.setPedidoId(financeiroRequest.getPedidoId());
-
-        Financeiro registro = repository.save(financeiroParaAtualizar);
-
-        return ResponseEntity.status(200).body(registro);
+        return ResponseEntity.status(200).body(financeiroAtualizado.get());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Financeiro> deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
+        boolean deletado = service.deletar(id);
 
-        Optional<Financeiro> financeiroEncontrado = repository.findById(id);
-
-        if (financeiroEncontrado.isEmpty()) {
+        if (!deletado) {
             return ResponseEntity.status(404).build();
-        } else {
-            repository.deleteById(id);
-            return ResponseEntity.status(204).build();
         }
+
+        return ResponseEntity.status(204).build();
     }
 }

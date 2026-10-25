@@ -2,6 +2,7 @@
 package school.sptech.bruvifit_app.estoque;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.estoque.request.EstoqueRequest;
 import school.sptech.bruvifit_app.estoque.response.EstoqueResponse;
 
@@ -44,7 +45,18 @@ public class EstoqueService {
         return repository.findById(id);
     }
 
+    @Transactional
     public Estoque cadastrar(EstoqueRequest estoqueRequest) {
+
+        // Validar que quantidade é positiva
+        if (estoqueRequest.getQuantidade() == null || estoqueRequest.getQuantidade() <= 0) {
+            throw new IllegalArgumentException("Quantidade deve ser maior que zero");
+        }
+
+        // Para saída, validar que não deixa estoque negativo
+        if ("SAIDA".equalsIgnoreCase(estoqueRequest.getTipo()) && estoqueRequest.getSaldoPos() != null && estoqueRequest.getSaldoPos() < 0) {
+            throw new IllegalArgumentException("Saldo pós-movimentação não pode ser negativo para saída");
+        }
 
         Estoque estoque = new Estoque();
 
@@ -60,6 +72,7 @@ public class EstoqueService {
         return repository.save(estoque);
     }
 
+    @Transactional
     public Optional<Estoque> atualizar(
             Integer id,
             EstoqueRequest estoqueRequest
@@ -73,6 +86,16 @@ public class EstoqueService {
 
         Estoque estoque = optEstoque.get();
 
+        // Validar que quantidade é positiva
+        if (estoqueRequest.getQuantidade() == null || estoqueRequest.getQuantidade() <= 0) {
+            throw new IllegalArgumentException("Quantidade deve ser maior que zero");
+        }
+
+        // Para saída, validar que não deixa estoque negativo
+        if ("SAIDA".equalsIgnoreCase(estoqueRequest.getTipo()) && estoqueRequest.getSaldoPos() != null && estoqueRequest.getSaldoPos() < 0) {
+            throw new IllegalArgumentException("Saldo pós-movimentação não pode ser negativo para saída");
+        }
+
         estoque.setTipo(estoqueRequest.getTipo());
         estoque.setQuantidade(estoqueRequest.getQuantidade());
         estoque.setSaldoPos(estoqueRequest.getSaldoPos());
@@ -85,6 +108,7 @@ public class EstoqueService {
         return Optional.of(repository.save(estoque));
     }
 
+    @Transactional
     public boolean deletar(Integer id) {
 
         Optional<Estoque> estoque = repository.findById(id);

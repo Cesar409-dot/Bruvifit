@@ -1,5 +1,6 @@
 package school.sptech.bruvifit_app.pedido.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -13,7 +14,7 @@ public class PedidoRequest {
     @NotNull
     private LocalDateTime dataPedido;
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String status;
 
@@ -21,7 +22,7 @@ public class PedidoRequest {
     @Positive
     private BigDecimal valorTotal;
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     private String formaPagamento;
 

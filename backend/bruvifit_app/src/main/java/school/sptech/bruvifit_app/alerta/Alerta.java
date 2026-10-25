@@ -1,24 +1,36 @@
 package school.sptech.bruvifit_app.alerta;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "alerta")
 public class Alerta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "titulo", length = 45)
     private String titulo;
+
+    @Column(name = "descricao", length = 200)
     private String descricao;
+
+    @Column(name = "nivel", length = 45)
     private String nivel;
+
+    @Column(name = "criadoEm")
     private LocalDateTime criadoEm;
-    private Boolean ativo;
+
+    @Column(name = "ativo", nullable = false)
+    private Boolean ativo = true;
 
     public Alerta() {
     }
