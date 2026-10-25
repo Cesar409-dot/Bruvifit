@@ -2,10 +2,12 @@ package school.sptech.bruvifit_app.fornecedor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
+import school.sptech.bruvifit_app.fornecedor.FornecedorMapper;
 import school.sptech.bruvifit_app.fornecedor.request.FornecedorRequest;
 import school.sptech.bruvifit_app.fornecedor.response.FornecedorResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,78 +21,58 @@ public class FornecedorService {
     }
 
     public List<FornecedorResponse> listar() {
-        List<Fornecedor> fornecedores = repository.findAll();
-        List<FornecedorResponse> fornecedoresResponse = new ArrayList<>();
-
-        for (Fornecedor fornecedor : fornecedores) {
-            FornecedorResponse respostaDaVez = new FornecedorResponse(
-                    fornecedor.getId(),
-                    fornecedor.getNome(),
-                    fornecedor.getCnpj(),
-                    fornecedor.getContato(),
-                    fornecedor.getEmail()
-            );
-
-            fornecedoresResponse.add(respostaDaVez);
-        }
-
-        return fornecedoresResponse;
+        return repository.findAll().stream()
+                .map(FornecedorMapper::toResponse)
+                .toList();
     }
 
     public ResponseEntity<Fornecedor> buscarPorId(Integer id) {
-        Optional<Fornecedor> fornecedorEncontrado = repository.findById(id);
-
-        if (fornecedorEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).build();
-        }
-
-        return ResponseEntity.status(200).body(fornecedorEncontrado.get());
+        return repository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Transactional
     public ResponseEntity<Fornecedor> cadastrar(FornecedorRequest fornecedorRequest) {
-        Fornecedor fornecedorParaCadastro = new Fornecedor();
-
-        fornecedorParaCadastro.setNome(fornecedorRequest.getNome());
-        fornecedorParaCadastro.setCnpj(fornecedorRequest.getCnpj());
-        fornecedorParaCadastro.setContato(fornecedorRequest.getContato());
-        fornecedorParaCadastro.setEmail(fornecedorRequest.getEmail());
-
-        Fornecedor fornecedorCadastrado = repository.save(fornecedorParaCadastro);
-
+        if (repository.existsByCnpj(fornecedorRequest.getCnpj())) {
+            throw new ConflitoDeDadosException("CNPJ já cadastrado");
+        }
+        if (repository.existsByEmail(fornecedorRequest.getEmail())) {
+            throw new ConflitoDeDadosException("E-mail já cadastrado");
+        }
+        Fornecedor fornecedor = FornecedorMapper.toEntity(fornecedorRequest);
+        fornecedor.setAtivo(true);
+        Fornecedor fornecedorCadastrado = repository.save(fornecedor);
         return ResponseEntity.status(201).body(fornecedorCadastrado);
     }
 
-    public ResponseEntity<Fornecedor> atualizar(
-            Integer id,
-            FornecedorRequest fornecedorRequest) {
-
-        Optional<Fornecedor> fornecedorEncontrado = repository.findById(id);
-
-        if (fornecedorEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).build();
-        }
-
-        Fornecedor fornecedorParaAtualizar = fornecedorEncontrado.get();
-
-        fornecedorParaAtualizar.setNome(fornecedorRequest.getNome());
-        fornecedorParaAtualizar.setCnpj(fornecedorRequest.getCnpj());
-        fornecedorParaAtualizar.setContato(fornecedorRequest.getContato());
-        fornecedorParaAtualizar.setEmail(fornecedorRequest.getEmail());
-
-        Fornecedor fornecedorAtualizado = repository.save(fornecedorParaAtualizar);
-
-        return ResponseEntity.status(200).body(fornecedorAtualizado);
+    @Transactional
+    public ResponseEntity<Fornecedor> atualizar(Integer id, FornecedorRequest fornecedorRequest) {
+        return repository.findById(id)
+                .map(fornecedor -> {
+                    // Validar CNPJ único (permitindo manter o mesmo valor)
+                    if (fornecedor.getCnpj() != null && !fornecedor.getCnpj().equals(fornecedorRequest.getCnpj())
+                            && repository.existsByCnpj(fornecedorRequest.getCnpj())) {
+                        throw new ConflitoDeDadosException("CNPJ já cadastrado");
+                    }
+                    // Validar e-mail único (permitindo manter o mesmo valor)
+                    if (fornecedor.getEmail() != null && !fornecedor.getEmail().equals(fornecedorRequest.getEmail())
+                            && repository.existsByEmail(fornecedorRequest.getEmail())) {
+                        throw new ConflitoDeDadosException("E-mail já cadastrado");
+                    }
+                    FornecedorMapper.updateEntity(fornecedor, fornecedorRequest);
+                    fornecedor.setAtivo(true);
+                    return ResponseEntity.ok(repository.save(fornecedor));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Transactional
     public ResponseEntity<Void> deletar(Integer id) {
-        Optional<Fornecedor> fornecedorEncontrado = repository.findById(id);
-
-        if (fornecedorEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).build();
+        if (!repository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
-
         repository.deleteById(id);
-
-        return ResponseEntity.status(204).build();
+        return ResponseEntity.noContent().build();
     }
 }
