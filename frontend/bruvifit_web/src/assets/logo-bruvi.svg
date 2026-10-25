@@ -1,0 +1,14 @@
+<svg width="104" height="72" viewBox="0 0 104 72" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#F7F6F3">
+    <rect x="51.25" y="0" width="1.5" height="72"/>
+    <rect x="16" y="33" width="4" height="6"/>
+    <rect x="22" y="31" width="4" height="10"/>
+    <rect x="28" y="28" width="4" height="16"/>
+    <rect x="34" y="30" width="4" height="12"/>
+    <text x="52" y="40" font-family="'Montserrat', sans-serif" font-weight="700" font-size="13" letter-spacing="0.18em" text-anchor="middle">BRUVI</text>
+    <rect x="66" y="30" width="4" height="12"/>
+    <rect x="72" y="28" width="4" height="16"/>
+    <rect x="78" y="31" width="4" height="10"/>
+    <rect x="84" y="33" width="4" height="6"/>
+  </g>
+</svg>

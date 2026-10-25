@@ -1,0 +1,17 @@
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-largura) 1fr;
+  min-height: 100vh;
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  padding: var(--espaco-32) var(--espaco-48) var(--espaco-48);
+  background: var(--cor-fundo);
+}

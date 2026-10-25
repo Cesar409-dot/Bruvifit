@@ -1,0 +1,110 @@
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--cor-primaria);
+  color: var(--cor-texto-sobre-escuro);
+  display: flex;
+  flex-direction: column;
+  padding: var(--espaco-24) var(--espaco-16);
+}
+
+.logoWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--espaco-24);
+}
+
+.overline {
+  margin: 0 var(--espaco-8) var(--espaco-12);
+  font-family: var(--fonte-corpo);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-texto-sobre-escuro-suave);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+  height: 44px;
+  padding: 0 var(--espaco-12);
+  border-radius: var(--raio-input);
+  color: var(--cor-texto-sobre-escuro);
+  font-family: var(--fonte-corpo);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.link:hover {
+  background: var(--cor-primaria-hover);
+}
+
+.active {
+  background: var(--cor-acento);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.userCard {
+  margin-top: auto;
+  background: var(--cor-primaria-hover);
+  border: 1px solid rgba(247, 246, 243, 0.08);
+  border-radius: var(--raio-card);
+  padding: var(--espaco-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userName {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.userRole {
+  font-family: var(--fonte-corpo);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--cor-texto-sobre-escuro-suave);
+}
+
+.logout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  background: transparent;
+  border: none;
+  color: var(--cor-texto-sobre-escuro-suave);
+  font-family: var(--fonte-corpo);
+  font-weight: 500;
+  font-size: 12px;
+  padding: 0;
+  text-align: left;
+}
+
+.logout:hover {
+  text-decoration: underline;
+}
