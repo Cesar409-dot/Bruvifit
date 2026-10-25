@@ -18,17 +18,28 @@ public class Endereco {
     @Column(name = "cliente_id")
     private Integer clienteId;
 
+    @Column(name = "cep", length = 45)
     private String cep;
 
-    @Column(name = "logradouro")
+    @Column(name = "rua", length = 200)
     private String rua;
 
+    @Column(name = "logradouro", length = 45)
+    private String logradouro;
+
+    @Column(name = "numero", length = 45)
     private String numero;
+
+    @Column(name = "complemento", length = 45)
     private String complemento;
+
+    @Column(name = "bairro", length = 45)
     private String bairro;
+
+    @Column(name = "cidade", length = 45)
     private String cidade;
 
-    @Column(name = "uf")
+    @Column(name = "estado", length = 45)
     private String estado;
 
     public Endereco() {
@@ -39,6 +50,7 @@ public class Endereco {
             Integer clienteId,
             String cep,
             String rua,
+            String logradouro,
             String numero,
             String complemento,
             String bairro,
@@ -49,6 +61,7 @@ public class Endereco {
         this.clienteId = clienteId;
         this.cep = cep;
         this.rua = rua;
+        this.logradouro = logradouro;
         this.numero = numero;
         this.complemento = complemento;
         this.bairro = bairro;
@@ -89,11 +102,11 @@ public class Endereco {
     }
 
     public String getLogradouro() {
-        return rua;
+        return logradouro;
     }
 
     public void setLogradouro(String logradouro) {
-        this.rua = logradouro;
+        this.logradouro = logradouro;
     }
 
     public String getNumero() {

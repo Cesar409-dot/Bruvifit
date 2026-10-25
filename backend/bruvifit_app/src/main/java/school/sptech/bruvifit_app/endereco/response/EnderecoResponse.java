@@ -6,6 +6,7 @@ public class EnderecoResponse {
     private Integer clienteId;
     private String cep;
     private String rua;
+    private String logradouro;
     private String numero;
     private String complemento;
     private String bairro;
@@ -17,6 +18,7 @@ public class EnderecoResponse {
             Integer clienteId,
             String cep,
             String rua,
+            String logradouro,
             String numero,
             String complemento,
             String bairro,
@@ -27,6 +29,7 @@ public class EnderecoResponse {
         this.clienteId = clienteId;
         this.cep = cep;
         this.rua = rua;
+        this.logradouro = logradouro;
         this.numero = numero;
         this.complemento = complemento;
         this.bairro = bairro;
@@ -48,6 +51,10 @@ public class EnderecoResponse {
 
     public String getRua() {
         return rua;
+    }
+
+    public String getLogradouro() {
+        return logradouro;
     }
 
     public String getNumero() {
