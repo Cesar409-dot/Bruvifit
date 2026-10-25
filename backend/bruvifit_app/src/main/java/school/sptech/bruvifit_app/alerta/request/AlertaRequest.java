@@ -1,19 +1,19 @@
 package school.sptech.bruvifit_app.alerta.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class AlertaRequest {
 
-    @NotNull
-    @Size(min = 3, max = 100)
+    @NotBlank
+    @Size(min = 3, max = 45)
     private String titulo;
 
-    @NotNull
-    @Size(min = 5, max = 255)
+    @NotBlank
+    @Size(min = 5, max = 200)
     private String descricao;
 
-    @NotNull
+    @NotBlank
     private String nivel; // Ej: ALTO, MEDIO, BAIXO
 
     public String getTitulo() {
