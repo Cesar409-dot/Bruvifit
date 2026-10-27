@@ -1,0 +1,5 @@
+.breadcrumb { display: inline-flex; align-items: center; flex-wrap: wrap; font-family: var(--fonte-corpo); font-weight: 400; font-size: 12px; color: var(--cor-texto-secundario); }
+.item { display: inline-flex; align-items: center; }
+.separador { margin: 0 var(--espaco-4); color: var(--cor-texto-secundario); }
+.link { font-weight: 600; color: var(--cor-texto-secundario); }
+.link:hover { text-decoration: underline; }

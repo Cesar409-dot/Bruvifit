@@ -1,0 +1,13 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: var(--espaco-24);
+  row-gap: var(--espaco-16);
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+  margin-top: var(--espaco-16);
+}

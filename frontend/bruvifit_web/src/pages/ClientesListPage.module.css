@@ -1,0 +1,42 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--espaco-24);
+  margin-bottom: var(--espaco-24);
+}
+
+.cardMargin {
+  margin-bottom: var(--espaco-24);
+}
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--espaco-16);
+}
+
+.exibidos {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+.linhasLabel {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.selectPag {
+  height: 36px;
+  padding: 0 var(--espaco-12);
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: 8px;
+  background: var(--cor-superficie);
+  font-size: 13px;
+}
