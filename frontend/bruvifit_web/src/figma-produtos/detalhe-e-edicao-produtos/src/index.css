@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Manrope:Bold';
+  src: url('https://static.figma.com/font/Manrope_wght__1') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Manrope:Regular';
+  src: url('https://static.figma.com/font/Manrope_wght__1') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Montserrat:Bold';
+  src: url('https://static.figma.com/font/Montserrat_wght__2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+@theme {
+  --font-sans: 'Manrope:Regular', sans-serif;
+  --font-montserrat: 'Montserrat:Bold', sans-serif;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #285c4f;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply flex flex-col gap-5 rounded-[14px] border border-[#dde3dc] bg-white p-5 shadow-[0_4px_18px_rgba(23,63,53,0.03)] md:p-6;
+  }
+
+  .section-title {
+    @apply font-montserrat text-lg font-bold leading-tight;
+  }
+
+  .field-row {
+    @apply grid gap-5 md:grid-cols-2;
+  }
+
+  .field {
+    @apply min-h-12 w-full rounded-lg border border-[#dde3dc] bg-white px-3.5 py-3 text-sm font-normal text-[#111] transition hover:border-[#a8c5b8];
+  }
+
+  .button-primary,
+  .button-secondary {
+    @apply rounded-lg border px-[18px] py-3 text-sm font-bold transition;
+  }
+
+  .button-primary {
+    @apply border-[#173f35] bg-[#173f35] text-white hover:bg-[#285c4f];
+  }
+
+  .button-secondary {
+    @apply border-[#dde3dc] bg-white text-[#173f35] hover:bg-[#eaf1ed];
+  }
+}

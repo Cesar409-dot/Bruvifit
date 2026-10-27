@@ -1,0 +1,188 @@
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  display: flex;
+  width: 244px;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--green);
+  color: var(--white);
+  scrollbar-width: thin;
+  scrollbar-color: var(--green-hover) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--green-hover);
+}
+
+.brand {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand img {
+  width: auto;
+  max-width: 100%;
+  height: 104px;
+  object-fit: contain;
+}
+
+.eyebrow {
+  color: var(--sage);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  min-width: 0;
+  height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--white);
+  text-align: left;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.nav-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: var(--green-hover);
+}
+
+.nav-item.active {
+  font-family: 'Manrope:Bold', sans-serif;
+}
+
+.nav-item img {
+  width: 19px;
+  height: 19px;
+}
+
+.account-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--green-dark);
+  font-size: 12px;
+}
+
+.account-card strong {
+  color: var(--white);
+  font: 700 14px/1.5 'Manrope:Bold', sans-serif;
+}
+
+.account-card span,
+.account-card button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sage);
+  text-align: left;
+}
+
+.account-card button {
+  cursor: pointer;
+}
+
+.account-card .logout-button {
+  color: #e39a9a;
+  transition: color 180ms ease, background-color 180ms ease, outline-color 180ms ease;
+}
+
+.account-card .logout-button:hover {
+  background: rgb(180 57 57 / 16%);
+  color: #ffd9d9;
+}
+
+.account-card .logout-button:active {
+  background: rgb(165 49 49 / 24%);
+  color: #fff;
+}
+
+.account-card .logout-button:focus-visible {
+  outline: 3px solid rgb(197 70 70 / 48%);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 210px;
+    padding: 20px 16px;
+  }
+
+  .brand img {
+    height: 88px;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    gap: 12px;
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+
+  .brand,
+  .eyebrow,
+  .account-card {
+    display: none;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebar nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+  }
+}

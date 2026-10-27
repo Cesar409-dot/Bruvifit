@@ -1,0 +1,94 @@
+:root {
+  font-family: 'Manrope:Regular', Manrope, sans-serif;
+  color: #111;
+  background: #f7f6f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --green: #173f35;
+  --green-hover: #285c4f;
+  --green-dark: #0b2923;
+  --mint: #eaf1ed;
+  --sage: #a8c5b8;
+  --canvas: #f7f6f3;
+  --line: #dde3dc;
+  --ink: #111;
+  --muted: #6b746f;
+  --white: #fff;
+  --color-background: var(--canvas);
+  --color-surface: var(--white);
+  --color-text: var(--ink);
+  --color-text-muted: var(--muted);
+  --color-text-subtle: #8a938e;
+  --color-border: var(--line);
+  --color-border-strong: #b8c2ba;
+  --color-accent: var(--green);
+  --color-accent-soft: var(--mint);
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --shadow-card: 0 4px 18px rgb(23 63 53 / 3%);
+  font-optical-sizing: auto;
+}
+
+@font-face {
+  font-family: 'Manrope:Bold';
+  src: url('https://static.figma.com/font/Manrope_wght__1') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope:Regular';
+  src: url('https://static.figma.com/font/Manrope_wght__1') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat:Bold';
+  src: url('https://static.figma.com/font/Montserrat_wght__2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(40 92 79 / 45%);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #dce9e1;
+  color: #0b2923;
+}
