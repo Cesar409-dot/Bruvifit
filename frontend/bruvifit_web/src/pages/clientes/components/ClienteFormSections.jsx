@@ -1,6 +1,6 @@
-import { TextField } from '../ui/TextField.jsx';
-import { SelectField } from '../ui/SelectField.jsx';
-import { Card } from '../ui/Card.jsx';
+import { TextField } from '../../../components/ui/TextField.jsx';
+import { SelectField } from '../../../components/ui/SelectField.jsx';
+import { Card } from '../../../components/ui/Card.jsx';
 import styles from './ClienteFormSections.module.css';
 
 const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];

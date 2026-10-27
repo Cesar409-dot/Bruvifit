@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { TextField } from '../ui/TextField.jsx';
-import { SelectField } from '../ui/SelectField.jsx';
-import { Button } from '../ui/Button.jsx';
+import { TextField } from '../../../components/ui/TextField.jsx';
+import { SelectField } from '../../../components/ui/SelectField.jsx';
+import { Button } from '../../../components/ui/Button.jsx';
 import styles from './ClienteFiltros.module.css';
 
 const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];

@@ -4,7 +4,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 28px;
-  color: var(--ink);
+  color: var(--cor-texto);
 }
 
 .headingRow {
@@ -16,17 +16,17 @@
 
 .title,
 .sectionTitle {
-  font-family: 'Montserrat:Bold', sans-serif;
+  font-family: var(--fonte-titulo);
 }
 
 .title {
   font-size: 32px;
-  line-height: 1.25;
+  line-height: 1.23;
 }
 
 .subtitle {
   margin-top: 8px;
-  color: var(--muted);
+  color: var(--cor-texto-secundario);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -37,12 +37,13 @@
 }
 
 .actions button {
-  padding: 12px 18px;
-  border: 1px solid var(--green);
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid var(--cor-primaria);
   border-radius: 8px;
-  font: 700 14px 'Manrope:Bold', sans-serif;
+  font: 700 14px var(--fonte-corpo), sans-serif;
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .actions button:hover:not(:disabled) {
@@ -56,37 +57,26 @@
 }
 
 .secondary {
-  border-color: var(--line) !important;
-  background: var(--white);
-  color: var(--green);
+  border-color: var(--cor-borda) !important;
+  background: var(--cor-superficie);
+  color: var(--cor-primaria);
 }
 
 .primary {
-  background: var(--green);
-  color: var(--white);
+  background: var(--cor-primaria);
+  color: var(--cor-superficie);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--green-hover);
-}
-
-.apiNotice {
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--green);
-  border-radius: 6px;
-  background: var(--white);
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
+  background: var(--cor-primaria-hover);
 }
 
 .formCard {
   padding: 24px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: var(--white);
-  box-shadow: var(--shadow-card);
+  background: var(--cor-superficie);
+  box-shadow: 0 4px 18px rgb(23 63 53 / 3%);
 }
 
 .sectionTitle {
@@ -115,32 +105,42 @@
   flex-direction: column;
   gap: 7px;
   color: #444;
-  font: 700 13px/1.5 'Manrope:Bold', sans-serif;
+  font: 700 13px/1.5 var(--fonte-corpo), sans-serif;
 }
 
 .control {
   width: 100%;
   min-height: 48px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--cor-borda);
   border-radius: 8px;
   outline: none;
-  background-color: var(--white);
-  color: var(--ink);
-  font: 400 14px/1.5 'Manrope:Regular', sans-serif;
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  font: 400 14px/1.5 var(--fonte-corpo), sans-serif;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .control:focus {
-  border-color: var(--green-hover);
+  border-color: var(--cor-primaria-hover);
   box-shadow: 0 0 0 3px rgb(40 92 79 / 9%);
+}
+
+.control[readonly] {
+  background: #f7f6f3;
+  color: #6b746f;
+}
+
+.controlError {
+  border-color: var(--cor-erro);
 }
 
 select.control {
   appearance: none;
-  background-image: url('../../../../shared/assets/figma-products/5fb7f.svg');
+  background-image: url('/assets/5fb7f.svg');
   background-repeat: no-repeat;
   background-position: right 14px center;
+  padding-right: 40px;
 }
 
 .notices {
@@ -154,7 +154,7 @@ select.control {
   gap: 12px;
   padding: 16px;
   border-radius: 8px;
-  background: var(--mint);
+  background: var(--cor-verde-suave);
 }
 
 .rose {
@@ -168,8 +168,8 @@ select.control {
 }
 
 .notice h3 {
-  color: var(--green);
-  font: 700 14px/1.5 'Manrope:Bold', sans-serif;
+  color: var(--cor-primaria);
+  font: 700 14px/1.5 var(--fonte-corpo), sans-serif;
 }
 
 .notice p {
@@ -179,12 +179,19 @@ select.control {
   line-height: 1.5;
 }
 
-.footer {
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5;
+.hint,
+.fieldError {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.hint {
+  color: var(--cor-texto-secundario);
+}
+
+.fieldError {
+  color: var(--cor-erro);
+  font-weight: 600;
 }
 
 .toast {
@@ -198,10 +205,21 @@ select.control {
   gap: 16px;
   padding: 14px 16px;
   border-radius: 8px;
-  background: var(--green);
-  color: var(--white);
+  background: var(--cor-primaria);
+  color: var(--cor-superficie);
   box-shadow: 0 8px 30px rgb(0 0 0 / 20%);
   font-size: 14px;
+}
+
+.toastText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toastText strong {
+  font-weight: 700;
 }
 
 .toastError {
@@ -259,8 +277,6 @@ select.control {
   .toast {
     right: 16px;
     bottom: 16px;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 13px;
+    max-width: calc(100vw - 32px);
   }
 }

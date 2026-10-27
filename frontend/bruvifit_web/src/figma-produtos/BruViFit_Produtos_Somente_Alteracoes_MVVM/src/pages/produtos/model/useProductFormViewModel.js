@@ -4,7 +4,7 @@ import { emptyProductForm, productToForm, toProduct, validateProduct } from './p
 import { goToProducts, setProductFlash } from './flash.js'
 
 /** ViewModel compartilhada entre cadastro e edição. */
-export function useProductFormViewModel(id = null, repository = productsRepository) {
+export function useProductFormViewModel(id = null, repository = productsRepository, navigateToProducts = null) {
   const edit = id !== null
   const [form, setForm] = useState(emptyProductForm)
   const [product, setProduct] = useState(null)
@@ -55,7 +55,8 @@ export function useProductFormViewModel(id = null, repository = productsReposito
         const saved = await repository.create(payload)
         if (saved.id) {
           setProductFlash(`Produto ${saved.name} cadastrado com sucesso.`)
-          goToProducts(`/${saved.id}`)
+          if (navigateToProducts) navigateToProducts(`/produtos/${saved.id}`)
+          else goToProducts(`/${saved.id}`)
         } else {
           setMessage({ tone: 'success', title: 'Produto salvo', text: 'O cadastro foi registrado. Consulte a listagem para conferir o produto.' })
         }

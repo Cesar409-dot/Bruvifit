@@ -3,16 +3,16 @@ import { Topbar } from './Topbar.jsx';
 import { AppFooter } from './AppFooter.jsx';
 import styles from './AppLayout.module.css';
 
-export function AppLayout({ children }) {
+export function AppLayout({ children, sectionLabel = 'Clientes', showFooter = true }) {
   return (
     <div className={styles.layout}>
       <Sidebar />
       <div className={styles.mainColumn}>
-        <Topbar />
-        <main id="conteudo-principal" className={styles.main}>
+        <Topbar sectionLabel={sectionLabel} />
+        <div id="conteudo-principal" className={styles.main}>
           {children}
-          <AppFooter />
-        </main>
+          {showFooter ? <AppFooter /> : null}
+        </div>
       </div>
     </div>
   );

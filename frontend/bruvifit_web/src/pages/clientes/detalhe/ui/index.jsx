@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Pencil, X } from 'lucide-react';
-import { AppLayout } from '../components/layout/AppLayout.jsx';
-import { PageHeader } from '../components/layout/PageHeader.jsx';
-import { Breadcrumb } from '../components/ui/Breadcrumb.jsx';
-import { Button } from '../components/ui/Button.jsx';
-import { Card } from '../components/ui/Card.jsx';
-import { StatusPanel } from '../components/ui/StatusPanel.jsx';
-import { useClientes } from '../context/ClientesContext.jsx';
-import { formatarData, formatarMoeda } from '../utils/format.js';
-import styles from './ClientePerfilPage.module.css';
+import { PageHeader } from '../../../../components/layout/PageHeader.jsx';
+import { Breadcrumb } from '../../../../components/ui/Breadcrumb.jsx';
+import { Button } from '../../../../components/ui/Button.jsx';
+import { Card } from '../../../../components/ui/Card.jsx';
+import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx';
+import { useClientes } from '../../context/ClientesContext.jsx';
+import { formatarData, formatarMoeda } from '../../../../utils/format.js';
+import styles from './index.module.css';
 
 export function ClientePerfilPage() {
   const { id } = useParams();
@@ -37,8 +36,8 @@ export function ClientePerfilPage() {
   }, [cliente, mostrarPainel]);
 
   if (!cliente) {
-    return (
-      <AppLayout>
+      return (
+        <main className={styles.page}>
         <PageHeader titulo="Cliente não encontrado" subtitulo={<Breadcrumb items={[{ label: 'Clientes', to: '/clientes' }, { label: 'Não encontrado' }]} />} />
         <StatusPanel variante="erro" titulo="Confira o endereço ou volte à lista de clientes.">
           <div className={styles.voltarWrap}>
@@ -47,8 +46,8 @@ export function ClientePerfilPage() {
             </Link>
           </div>
         </StatusPanel>
-      </AppLayout>
-    );
+        </main>
+      );
   }
 
   const inativo = cliente.status === 'inativo';
@@ -66,7 +65,7 @@ export function ClientePerfilPage() {
   };
 
   return (
-    <AppLayout>
+    <main className={styles.page}>
       <PageHeader
         titulo={cliente.nome}
         subtitulo={
@@ -188,6 +187,6 @@ export function ClientePerfilPage() {
           </Card>
         </div>
       ) : null}
-    </AppLayout>
+    </main>
   );
 }

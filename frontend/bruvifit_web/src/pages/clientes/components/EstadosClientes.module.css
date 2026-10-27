@@ -1,0 +1,59 @@
+.cardInner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconTile,
+.iconTileErro {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--cor-superficie-alt);
+}
+
+.iconTileErro {
+  background: var(--cor-rosa-suave);
+}
+
+.overline,
+.overlineErro {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.overlineErro {
+  color: var(--cor-erro);
+}
+
+.h2 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.texto,
+.rodape {
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.botoes {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.campoDemo {
+  max-width: 420px;
+}

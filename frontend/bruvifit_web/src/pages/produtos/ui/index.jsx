@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { demoProducts } from '../model/demo-products.js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
+import { productsRepository, errorMessage, productsMockEnabled } from '../api/products-repository.js'
+import { PRODUCT_STATUS, formatMoney, stockStatus } from '../model/product-model.js'
+import { goToProducts } from '../model/navigation.js'
 import styles from './index.module.css'
-import addIcon from '../../../shared/assets/figma-products/2fd53.svg'
-import viewIcon from '../../../shared/assets/figma-products/31909.svg'
-import editIcon from '../../../shared/assets/figma-products/4da8b.svg'
-import archiveIcon from '../../../shared/assets/figma-products/c05d0.svg'
+
+const addIcon = '/assets/2fd53.svg'
+const viewIcon = '/assets/31909.svg'
+const editIcon = '/assets/4da8b.svg'
+const archiveIcon = '/assets/c05d0.svg'
 
 const pageSize = 5
-const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function Button({ children, variant = 'primary', className = '', type = 'button', ...props }) {
   return (
@@ -31,45 +34,51 @@ function Field({ label, children }) {
 }
 
 export function ProductsPage() {
-  const [products, setProducts] = useState(demoProducts)
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [feedback, setFeedback] = useState(null)
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Todas')
   const [status, setStatus] = useState('Todos')
   const [stock, setStock] = useState('Todos')
-  const [applied, setApplied] = useState({
-    query: '',
-    category: 'Todas',
-    status: 'Todos',
-    stock: 'Todos',
-  })
+  const [applied, setApplied] = useState({ query: '', category: 'Todas', status: 'Todos', stock: 'Todos' })
   const [page, setPage] = useState(1)
   const [viewingId, setViewingId] = useState(null)
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [working, setWorking] = useState(false)
+
+  const loadProducts = useCallback(async () => {
+    setLoading(true)
+    try {
+      const items = await productsRepository.list()
+      setProducts(items)
+      setFeedback(null)
+    } catch (err) {
+      setFeedback({ tone: 'error', title: 'Não foi possível carregar os produtos.', text: errorMessage(err) })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadProducts()
+  }, [loadProducts])
 
   const viewedProduct = useMemo(
     () => products.find((product) => product.id === viewingId) ?? null,
     [products, viewingId],
   )
 
-  useEffect(() => {
-    if (viewingId === null) return undefined
-
-    const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setViewingId(null)
-    }
-
-    window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
-  }, [viewingId])
-
   const filteredProducts = useMemo(
     () => products.filter((product) => {
       const matchesQuery = product.name.toLowerCase().includes(applied.query.toLowerCase())
       const matchesCategory = applied.category === 'Todas' || product.category === applied.category
       const matchesStatus = applied.status === 'Todos' || product.status === applied.status
+      const stockLabel = stockStatus(product)
       const matchesStock = applied.stock === 'Todos'
-        || (applied.stock === 'Normal' && product.stock > 5)
-        || (applied.stock === 'Baixo' && product.stock > 0 && product.stock <= 5)
-        || (applied.stock === 'Sem estoque' && product.stock === 0)
+        || (applied.stock === 'Normal' && stockLabel === 'Normal')
+        || (applied.stock === 'Baixo' && stockLabel === 'Baixo')
+        || (applied.stock === 'Sem estoque' && stockLabel === 'Sem estoque')
 
       return matchesQuery && matchesCategory && matchesStatus && matchesStock
     }),
@@ -79,8 +88,8 @@ export function ProductsPage() {
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
   const currentPage = Math.min(page, pageCount)
   const pageProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const activeCount = products.filter((product) => product.status === 'Ativo').length
-  const lowStockCount = products.filter((product) => product.stock > 0 && product.stock <= 5).length
+  const activeCount = products.filter((product) => product.status === PRODUCT_STATUS.ACTIVE).length
+  const lowStockCount = products.filter((product) => stockStatus(product) === 'Baixo').length
   const inactiveCount = products.length - activeCount
   const firstVisible = filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0
   const lastVisible = Math.min(currentPage * pageSize, filteredProducts.length)
@@ -99,6 +108,36 @@ export function ProductsPage() {
     setPage(1)
   }
 
+  async function toggleStatus(product) {
+    if (working) return
+    setWorking(true)
+    try {
+      const nextStatus = product.status === PRODUCT_STATUS.ACTIVE ? PRODUCT_STATUS.INACTIVE : PRODUCT_STATUS.ACTIVE
+      const saved = await productsRepository.update(product.id, { ...product, status: nextStatus })
+      setProducts((items) => items.map((item) => (item.id === saved.id ? saved : item)))
+      setFeedback({ tone: 'success', title: 'Status atualizado.', text: `${saved.name} agora está ${saved.status.toLowerCase()}.` })
+    } catch (err) {
+      setFeedback({ tone: 'error', title: 'Não foi possível atualizar o status.', text: errorMessage(err) })
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete || working) return
+    setWorking(true)
+    try {
+      const saved = await productsRepository.deactivate(pendingDelete.id)
+      setProducts((items) => items.map((item) => (item.id === saved.id ? saved : item)))
+      setFeedback({ tone: 'success', title: 'Produto inativado.', text: `${saved.name} foi removido da disponibilidade para novas vendas.` })
+      setPendingDelete(null)
+    } catch (err) {
+      setFeedback({ tone: 'error', title: 'Não foi possível inativar o produto.', text: errorMessage(err) })
+    } finally {
+      setWorking(false)
+    }
+  }
+
   return (
     <main className={styles.productsPage}>
       <section className={styles.titleRow}>
@@ -106,11 +145,23 @@ export function ProductsPage() {
           <h1>Produtos</h1>
           <p>Gerencie os produtos cadastrados</p>
         </div>
-        <Button onClick={() => { window.location.hash = '/produtos/novo' }}>
+        <Button onClick={() => goToProducts('/novo')}>
           <img src={addIcon} alt="" />
           Novo produto
         </Button>
       </section>
+
+      {feedback ? (
+        <StatusPanel variante={feedback.tone === 'error' ? 'erro' : 'sucesso'} titulo={feedback.title}>
+          {feedback.text}
+        </StatusPanel>
+      ) : null}
+
+      {productsMockEnabled ? (
+        <p className={styles.demoNotice}>
+          Modo demonstração: as alterações ficam salvas no navegador enquanto o mock estiver ativo.
+        </p>
+      ) : null}
 
       <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
@@ -121,20 +172,24 @@ export function ProductsPage() {
         ].map(([label, value], index) => (
           <article className={index === 0 ? `${styles.metric} ${styles.metricFeatured}` : styles.metric} key={label}>
             <span>{label}</span>
-            <strong>{value}</strong>
+            <strong>{loading ? '—' : value}</strong>
           </article>
         ))}
       </section>
 
       <section className={styles.panel} aria-labelledby="product-filters-title">
         <h2 id="product-filters-title">Busca e filtros</h2>
-        <div className={styles.filtersLayout}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            applyFilters()
+          }}
+        >
           <div className={styles.filters}>
             <Field label="Pesquisar">
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => event.key === 'Enter' && applyFilters()}
                 placeholder="Buscar produto..."
               />
             </Field>
@@ -163,14 +218,19 @@ export function ProductsPage() {
             </Field>
           </div>
           <div className={styles.panelActions}>
-            <Button variant="secondary" onClick={resetFilters}>Limpar filtros</Button>
-            <Button onClick={applyFilters}>Buscar</Button>
+            <Button variant="secondary" type="button" onClick={resetFilters}>Limpar filtros</Button>
+            <Button type="submit">Buscar</Button>
           </div>
-        </div>
+        </form>
       </section>
 
       <section className={`${styles.panel} ${styles.productsPanel}`} aria-labelledby="products-table-title">
         <h2 id="products-table-title">Produtos cadastrados</h2>
+        {loading ? (
+          <StatusPanel variante="info" titulo="Carregando produtos...">
+            Aguarde enquanto buscamos os registros.
+          </StatusPanel>
+        ) : null}
         <div className={styles.tableScroll}>
           <table className={styles.productsTable}>
             <thead>
@@ -188,26 +248,20 @@ export function ProductsPage() {
                 <tr key={product.id}>
                   <td><strong>{product.name}</strong></td>
                   <td>{product.category}</td>
-                  <td><strong>{currency.format(product.price)}</strong></td>
+                  <td><strong>{formatMoney(product.price)}</strong></td>
                   <td>
                     {product.stock}
                     {product.stock === 0
                       ? ' • Sem estoque'
-                      : product.stock <= 8
-                        ? ' • Normal'
-                        : ''}
+                      : ` • ${stockStatus(product)}`}
                   </td>
                   <td>
-                    <span className={styles.badge}>
+                    <span className={`${styles.badge} ${product.status === PRODUCT_STATUS.INACTIVE ? styles.inactiveBadge : ''}`}>
                       <button
                         type="button"
                         className={styles.badgeToggle}
                         aria-label={`Alterar status de ${product.name}`}
-                        onClick={() => setProducts((items) => items.map((item) => (
-                          item.id === product.id
-                            ? { ...item, status: item.status === 'Ativo' ? 'Inativo' : 'Ativo' }
-                            : item
-                        )))}
+                        onClick={() => toggleStatus(product)}
                       >
                         {product.status}
                       </button>
@@ -225,14 +279,14 @@ export function ProductsPage() {
                       <Button
                         variant="icon"
                         aria-label={`Editar ${product.name}`}
-                        onClick={() => { window.location.hash = `/produtos/${product.id}` }}
+                        onClick={() => goToProducts(`/${product.id}`)}
                       >
                         <img src={editIcon} alt="" />
                       </Button>
                       <Button
                         variant="icon"
-                        aria-label={`Arquivar ${product.name}`}
-                        onClick={() => setProducts((items) => items.filter((item) => item.id !== product.id))}
+                        aria-label={`Inativar ${product.name}`}
+                        onClick={() => setPendingDelete(product)}
                       >
                         <img src={archiveIcon} alt="" />
                       </Button>
@@ -280,6 +334,46 @@ export function ProductsPage() {
         BruVi Fit · Demonstração local · Dados temporários desta página.
       </footer>
 
+      {pendingDelete && (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => setPendingDelete(null)}
+        >
+          <section
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-delete-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.modalHeading}>
+              <div>
+                <span className={styles.modalEyebrow}>Confirmação</span>
+                <h2 id="confirm-delete-title">Inativar produto</h2>
+                <p className={styles.modalSubtitle}>{pendingDelete.name}</p>
+              </div>
+              <span className={styles.modalBadge}>Ação irreversível</span>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalNote}>
+                O produto deixará de aparecer em novas vendas, mas histórico e saldo serão preservados.
+              </p>
+            </div>
+
+            <div className={styles.modalActions}>
+              <Button variant="secondary" disabled={working} onClick={() => setPendingDelete(null)}>
+                Cancelar
+              </Button>
+              <Button disabled={working} onClick={() => { void confirmDelete() }}>
+                {working ? 'Inativando...' : 'Confirmar inativação'}
+              </Button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {viewedProduct && (
         <div
           className={styles.modalBackdrop}
@@ -298,7 +392,7 @@ export function ProductsPage() {
                 <span className={styles.modalEyebrow}>Detalhes do produto</span>
                 <h2 id="product-view-title">{viewedProduct.name}</h2>
                 <p className={styles.modalSubtitle}>
-                  {viewedProduct.category} · {currency.format(viewedProduct.price)}
+                  {viewedProduct.category} · {formatMoney(viewedProduct.price)}
                 </p>
               </div>
               <span className={styles.badge}>{viewedProduct.status}</span>
@@ -320,11 +414,11 @@ export function ProductsPage() {
                   </div>
                   <div>
                     <dt>Tamanho</dt>
-                    <dd>{viewedProduct.tamanho}</dd>
+                    <dd>{viewedProduct.tamanho || viewedProduct.size || '—'}</dd>
                   </div>
                   <div>
                     <dt>Cor</dt>
-                    <dd>{viewedProduct.cor}</dd>
+                    <dd>{viewedProduct.cor || viewedProduct.color || '—'}</dd>
                   </div>
                 </dl>
               </section>
@@ -336,11 +430,11 @@ export function ProductsPage() {
                 <dl className={styles.modalGrid}>
                   <div>
                     <dt>Preço de custo</dt>
-                    <dd>{currency.format(viewedProduct.custo)}</dd>
+                    <dd>{formatMoney(viewedProduct.cost)}</dd>
                   </div>
                   <div>
                     <dt>Preço de venda</dt>
-                    <dd>{currency.format(viewedProduct.price)}</dd>
+                    <dd>{formatMoney(viewedProduct.price)}</dd>
                   </div>
                 </dl>
               </section>
@@ -359,21 +453,21 @@ export function ProductsPage() {
                   </div>
                   <div>
                     <dt>Estoque mínimo</dt>
-                    <dd>{viewedProduct.minimo}</dd>
+                    <dd>{viewedProduct.minimum ?? viewedProduct.minimo ?? '—'}</dd>
                   </div>
                 </dl>
               </section>
-
             </div>
 
             <div className={styles.modalActions}>
               <Button variant="secondary" autoFocus onClick={() => setViewingId(null)}>
                 Fechar
               </Button>
-              <Button onClick={() => {
-                setViewingId(null)
-                window.location.hash = `/produtos/${viewedProduct.id}`
-              }}
+              <Button
+                onClick={() => {
+                  setViewingId(null)
+                  goToProducts(`/${viewedProduct.id}`)
+                }}
               >
                 Editar produto
               </Button>
@@ -381,7 +475,6 @@ export function ProductsPage() {
           </section>
         </div>
       )}
-
     </main>
   )
 }

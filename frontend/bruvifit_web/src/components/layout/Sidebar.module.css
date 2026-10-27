@@ -1,53 +1,79 @@
 .sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  display: flex;
+  width: var(--sidebar-largura);
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--cor-primaria);
   color: var(--cor-texto-sobre-escuro);
-  display: flex;
-  flex-direction: column;
-  padding: var(--espaco-24) var(--espaco-16);
+  border-right: 1px solid var(--cor-primaria-hover);
+  scrollbar-width: thin;
+  scrollbar-color: var(--cor-primaria-hover) transparent;
 }
 
-.logoWrapper {
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--cor-primaria-hover);
+}
+
+.brand {
   display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
   justify-content: center;
-  margin-bottom: var(--espaco-24);
+  text-decoration: none;
 }
 
-.overline {
-  margin: 0 var(--espaco-8) var(--espaco-12);
-  font-family: var(--fonte-corpo);
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--cor-texto-sobre-escuro-suave);
+.brand img {
+  width: auto;
+  max-width: 100%;
+  height: 104px;
+  object-fit: contain;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--espaco-4);
+  gap: 6px;
 }
 
 .link {
   display: flex;
-  align-items: center;
-  gap: var(--espaco-12);
+  min-width: 0;
   height: 44px;
-  padding: 0 var(--espaco-12);
-  border-radius: var(--raio-input);
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 8px;
   color: var(--cor-texto-sobre-escuro);
-  font-family: var(--fonte-corpo);
-  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
   font-size: 14px;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .link:hover {
@@ -55,20 +81,24 @@
 }
 
 .active {
-  background: var(--cor-acento);
-  color: #FFFFFF;
-  font-weight: 600;
+  background: var(--cor-primaria-hover);
+  font-family: 'Manrope:Bold', sans-serif;
+}
+
+.link img {
+  width: 19px;
+  height: 19px;
 }
 
 .userCard {
   margin-top: auto;
+  padding: 16px;
+  border-radius: 12px;
   background: var(--cor-primaria-hover);
-  border: 1px solid rgba(247, 246, 243, 0.08);
-  border-radius: var(--raio-card);
-  padding: var(--espaco-16);
+  font-size: 12px;
   display: flex;
   flex-direction: column;
-  gap: var(--espaco-8);
+  gap: 6px;
 }
 
 .userInfo {
@@ -78,33 +108,79 @@
 }
 
 .userName {
-  font-family: var(--fonte-titulo);
-  font-weight: 600;
+  color: var(--cor-texto-sobre-escuro);
   font-size: 14px;
-  color: #FFFFFF;
+  line-height: 1.5;
+  font-family: 'Manrope:Bold', sans-serif;
 }
 
 .userRole {
-  font-family: var(--fonte-corpo);
-  font-weight: 400;
-  font-size: 12px;
   color: var(--cor-texto-sobre-escuro-suave);
 }
 
 .logout {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--espaco-8);
-  background: transparent;
-  border: none;
-  color: var(--cor-texto-sobre-escuro-suave);
-  font-family: var(--fonte-corpo);
-  font-weight: 500;
-  font-size: 12px;
   padding: 0;
+  border: none;
+  font-size: 12px;
+  background: none;
+  color: #e39a9a;
   text-align: left;
+  transition: color 180ms ease, background-color 180ms ease, outline-color 180ms ease;
 }
 
 .logout:hover {
-  text-decoration: underline;
+  background: rgb(180 57 57 / 16%);
+  color: #ffd9d9;
+}
+
+.logout:active {
+  background: rgb(165 49 49 / 24%);
+  color: #fff;
+}
+
+.logout:focus-visible {
+  outline: 3px solid rgb(197 70 70 / 48%);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 210px;
+    padding: 20px 16px;
+  }
+
+  .brand img {
+    height: 88px;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    gap: 12px;
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+
+  .brand,
+  .userCard {
+    display: none;
+  }
+
+  .nav {
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .link {
+    flex: 0 0 auto;
+  }
 }

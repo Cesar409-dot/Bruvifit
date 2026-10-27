@@ -1,18 +1,17 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { AppLayout } from '../components/layout/AppLayout.jsx';
-import { PageHeader } from '../components/layout/PageHeader.jsx';
-import { StatCard } from '../components/ui/StatCard.jsx';
-import { Card } from '../components/ui/Card.jsx';
-import { Button } from '../components/ui/Button.jsx';
-import { ClientesTable } from '../components/clientes/ClientesTable.jsx';
-import { ClienteFiltros } from '../components/clientes/ClienteFiltros.jsx';
-import { Pagination } from '../components/ui/Pagination.jsx';
-import { EstadoVazio } from '../components/clientes/EstadosClientes.jsx';
+import { PageHeader } from '../../../components/layout/PageHeader.jsx';
+import { StatCard } from '../../../components/ui/StatCard.jsx';
+import { Card } from '../../../components/ui/Card.jsx';
+import { Button } from '../../../components/ui/Button.jsx';
+import { ClientesTable } from '../components/ClientesTable.jsx';
+import { ClienteFiltros } from '../components/ClienteFiltros.jsx';
+import { Pagination } from '../../../components/ui/Pagination.jsx';
+import { EstadoVazio } from '../components/EstadosClientes.jsx';
 import { resumoMock } from '../data/clientes.js';
 import { useClientes } from '../context/ClientesContext.jsx';
-import styles from './ClientesListPage.module.css';
+import styles from './index.module.css';
 
 export function ClientesListPage() {
   const { clientes } = useClientes();
@@ -32,7 +31,7 @@ export function ClientesListPage() {
   const temClientes = lista.length > 0;
 
   return (
-    <AppLayout>
+    <main className={styles.page}>
       <PageHeader
         titulo="Clientes"
         subtitulo="Gerencie seus clientes"
@@ -73,6 +72,6 @@ export function ClientesListPage() {
           <EstadoVazio />
         )}
       </Card>
-    </AppLayout>
+    </main>
   );
 }

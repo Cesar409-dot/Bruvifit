@@ -72,7 +72,7 @@ function unwrap(response) { return response.data?.data ?? response.data }
 function asList(result) { return Array.isArray(result) ? result : result?.content ?? result?.items ?? [] }
 export function createApiProductsRepository(client = null) {
   // Carrega o Axios existente somente quando os endpoints reais forem usados.
-  const getClient = async () => client ?? (await import('../../../shared/api/http-client.js')).httpClient
+  const getClient = async () => client ?? (await import('../../../../../../shared/api/http-client.js')).httpClient
   return {
     async list() { return asList(unwrap(await (await getClient()).get('/produtos'))).map(normalizeProduct) },
     async get(id) { return normalizeProduct(unwrap(await (await getClient()).get(`/produtos/${encodeURIComponent(id)}`))) },

@@ -1,13 +1,13 @@
 import { useProductsViewModel } from '../model/useProductsViewModel.js'
 import { formatMoney, stockStatus } from '../model/product-model.js'
-import { goToProducts } from '../model/flash.js'
 import { productsMockEnabled } from '../api/products-repository.js'
 import { ProductAlert, ProductEmpty, ProductLoading } from './components/ProductFeedback.jsx'
 import styles from './index.module.css'
-import addIcon from '../../../shared/assets/figma-products/2fd53.svg'
-import viewIcon from '../../../shared/assets/figma-products/31909.svg'
-import editIcon from '../../../shared/assets/figma-products/4da8b.svg'
-import archiveIcon from '../../../shared/assets/figma-products/c05d0.svg'
+import { useNavigate } from 'react-router-dom'
+import addIcon from '../../../../../../shared/assets/figma-products/2fd53.svg'
+import viewIcon from '../../../../../../shared/assets/figma-products/31909.svg'
+import editIcon from '../../../../../../shared/assets/figma-products/4da8b.svg'
+import archiveIcon from '../../../../../../shared/assets/figma-products/c05d0.svg'
 
 const pageNumbers = (current, total) => {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1)
@@ -23,6 +23,8 @@ function Field({ label, id, children }) {
 
 export function ProductsPage() {
   const vm = useProductsViewModel()
+  const navigate = useNavigate()
+  const goToProducts = (suffix = '') => navigate(`/produtos${suffix}`)
   return <main className={styles.productsPage}>
     <section className={styles.titleRow}>
       <div><h1>Produtos</h1><p>Gerencie os produtos cadastrados</p></div>

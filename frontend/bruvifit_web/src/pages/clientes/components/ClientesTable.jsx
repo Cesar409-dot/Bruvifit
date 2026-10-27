@@ -1,5 +1,5 @@
 import { Eye, Pencil, Archive } from 'lucide-react';
-import { IconButton } from '../ui/IconButton.jsx';
+import { IconButton } from '../../../components/ui/IconButton.jsx';
 import styles from './ClientesTable.module.css';
 
 function getCidadeUf(cliente) {

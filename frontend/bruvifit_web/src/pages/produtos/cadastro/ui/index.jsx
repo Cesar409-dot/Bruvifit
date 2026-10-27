@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { createProduct } from '../api/create-product.js'
-import infoIcon from '../../../../shared/assets/figma-products/a0377.svg'
+import { goToProducts } from '../../model/navigation.js'
 import styles from './index.module.css'
+const infoIcon = '/assets/a0377.svg'
 
 function Field({
   label,
@@ -86,7 +87,7 @@ export function ProductCreatePage() {
   }
 
   function returnToProducts() {
-    window.location.hash = '/produtos'
+    goToProducts()
   }
 
   return (
@@ -98,6 +99,10 @@ export function ProductCreatePage() {
         </div>
 
       </div>
+
+      <p className={styles.demoNotice}>
+        Modo cadastro local: os campos seguem o padrão visual do figma e a gravação continua usando a API atual.
+      </p>
 
       <form id="product-form" onSubmit={submit}>
         <section className={styles.formCard} aria-labelledby="product-info-title">
@@ -120,6 +125,23 @@ export function ProductCreatePage() {
         </section>
       </form>
 
+      <section className={styles.notices} aria-label="Avisos do cadastro">
+        <article className={styles.notice}>
+          <img src={infoIcon} alt="" />
+          <div>
+            <h3>Fluxo após salvar</h3>
+            <p>Salvar → Detalhe do produto (edição) → Listagem de produtos. Cancelar → Listagem de produtos.</p>
+          </div>
+        </article>
+        <article className={`${styles.notice} ${styles.rose}`}>
+          <img src={infoIcon} alt="" />
+          <div>
+            <h3>Observação</h3>
+            <p>O visual segue a pasta figma-produtos; a lógica atual de cadastro foi mantida.</p>
+          </div>
+        </article>
+      </section>
+
       {feedback && (
         <div
           className={`${styles.toast} ${feedback.type === 'error' ? styles.toastError : ''}`}
@@ -141,16 +163,15 @@ export function ProductCreatePage() {
           </button>
         </div>
       )}
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondary} onClick={returnToProducts} disabled={isSaving}>
-            Cancelar
-          </button>
-          <button type="submit" form="product-form" className={styles.primary} disabled={isSaving}>
-            {isSaving ? 'Cadastrando…' : 'Cadastrar'}
-          </button>
-        </div>
+      <div className={styles.actions}>
+        <button type="button" className={styles.secondary} onClick={returnToProducts} disabled={isSaving}>
+          Cancelar
+        </button>
+        <button type="submit" form="product-form" className={styles.primary} disabled={isSaving}>
+          {isSaving ? 'Cadastrando…' : 'Cadastrar'}
+        </button>
+      </div>
 
-      <footer className={styles.footer}>BruVi Fit · Gestão interna · Dados protegidos e histórico preservado</footer>
     </main>
   )
 }

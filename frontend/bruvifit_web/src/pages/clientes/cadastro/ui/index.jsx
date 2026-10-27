@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, UserPlus } from 'lucide-react';
-import { AppLayout } from '../components/layout/AppLayout.jsx';
-import { PageHeader } from '../components/layout/PageHeader.jsx';
-import { Breadcrumb } from '../components/ui/Breadcrumb.jsx';
-import { Button } from '../components/ui/Button.jsx';
-import { DadosPessoaisContato, EnderecoForm } from '../components/clientes/ClienteFormSections.jsx';
-import styles from './ClienteFormPage.module.css';
+import { PageHeader } from '../../../../components/layout/PageHeader.jsx';
+import { Breadcrumb } from '../../../../components/ui/Breadcrumb.jsx';
+import { Button } from '../../../../components/ui/Button.jsx';
+import { DadosPessoaisContato, EnderecoForm } from '../../components/ClienteFormSections.jsx';
+import styles from './index.module.css';
 
 const clienteEdicao = {
   nome: 'João Silva',
@@ -58,7 +57,7 @@ export function ClienteFormPage() {
   const destinoCancelar = modoEdicao ? `/clientes/${id}` : '/clientes';
 
   return (
-    <AppLayout>
+    <main className={styles.page}>
       <PageHeader
         titulo={modoEdicao ? 'Editar cliente' : 'Novo cliente'}
         subtitulo={
@@ -90,6 +89,6 @@ export function ClienteFormPage() {
           </Button>
         </div>
       </form>
-    </AppLayout>
+    </main>
   );
 }

@@ -22,6 +22,18 @@
   --cor-texto-sobre-escuro: #F7F6F3;
   --cor-texto-sobre-escuro-suave: rgba(247, 246, 243, 0.72);
 
+  /* Aliases do padrão figma-produtos */
+  --green: var(--cor-primaria);
+  --green-hover: var(--cor-primaria-hover);
+  --green-dark: #0B2923;
+  --mint: var(--cor-verde-suave);
+  --sage: #A8C5B8;
+  --canvas: var(--cor-fundo);
+  --line: var(--cor-borda-suave);
+  --ink: var(--cor-texto);
+  --muted: var(--cor-texto-secundario);
+  --white: var(--cor-superficie);
+
   /* Espaçamento */
   --espaco-4: 4px;
   --espaco-8: 8px;

@@ -3,11 +3,11 @@ import { Breadcrumb } from '../ui/Breadcrumb.jsx';
 import { iniciais } from '../../utils/format.js';
 import styles from './Topbar.module.css';
 
-export function Topbar() {
+export function Topbar({ sectionLabel = 'Clientes' }) {
   return (
     <header className={styles.topbar}>
       <div className={styles.left}>
-        <Breadcrumb items={[{ label: 'BruVi Fit' }, { label: 'Clientes' }]} />
+        <Breadcrumb items={[{ label: 'BruVi Fit' }, { label: sectionLabel }]} />
       </div>
       <div className={styles.right}>
         <button type="button" className={styles.iconButton} aria-label="Notificações">

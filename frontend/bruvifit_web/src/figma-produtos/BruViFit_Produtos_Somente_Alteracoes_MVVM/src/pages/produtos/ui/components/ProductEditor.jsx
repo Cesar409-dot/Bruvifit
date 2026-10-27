@@ -19,15 +19,16 @@ function Field({ name, label, value, error, onChange, required = false, type = '
   </div>
 }
 
-export function ProductEditor({ vm, flash = null }) {
+export function ProductEditor({ vm, flash = null, onGoToProducts = null }) {
   const { edit, product, form, errors, message, setMessage, loading, saving, update, submit,
     confirmOpen, setConfirmOpen, deactivate } = vm
+  const goToProductsHandler = onGoToProducts || (() => goToProducts())
   const categories = [...new Set([...PRODUCT_CATEGORIES, form.category].filter(Boolean))]
   const colors = [...new Set([...PRODUCT_COLORS, form.color].filter(Boolean))]
   const sizes = [...new Set([...PRODUCT_SIZES, form.size].filter(Boolean))]
   if (edit && loading) return <ProductLoading label="Carregando detalhes do produto..." />
   if (edit && !product) return <div className={styles.editor}>
-    <header className={styles.heading}><div><h1>Produto não encontrado</h1><p>Não foi possível abrir o registro solicitado.</p></div><button className={styles.primary} onClick={() => goToProducts()}>Voltar à listagem</button></header>
+    <header className={styles.heading}><div><h1>Produto não encontrado</h1><p>Não foi possível abrir o registro solicitado.</p></div><button className={styles.primary} onClick={goToProductsHandler}>Voltar à listagem</button></header>
     {message && <ProductAlert tone="error" title={message.title} action={{ label: 'Tentar novamente', onClick: vm.load }}>{message.text}</ProductAlert>}
   </div>
   return <main className={styles.editor}>
@@ -35,7 +36,7 @@ export function ProductEditor({ vm, flash = null }) {
       <div><h1>{edit ? product.name : 'Novo produto'}</h1>
         <p>{edit ? `Produtos / ${product.sku} / Detalhe e edição` : 'Cadastre um novo produto · * Campos obrigatórios'}</p></div>
       <div className={styles.actions}>
-        <button className={styles.secondary} type="button" disabled={saving} onClick={() => goToProducts()}>Cancelar</button>
+        <button className={styles.secondary} type="button" disabled={saving} onClick={goToProductsHandler}>Cancelar</button>
         <button className={styles.primary} type="submit" form="product-editor-form" disabled={saving}>{saving ? 'Salvando...' : edit ? 'Salvar alterações' : 'Cadastrar'}</button>
       </div>
     </header>

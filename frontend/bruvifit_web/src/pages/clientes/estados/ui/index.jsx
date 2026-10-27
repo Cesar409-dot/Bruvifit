@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { Logo } from '../components/ui/Logo.jsx';
-import { Card } from '../components/ui/Card.jsx';
-import { EstadoVazio, EstadoErroForm, EstadoSucesso } from '../components/clientes/EstadosClientes.jsx';
-import { StatusPanel } from '../components/ui/StatusPanel.jsx';
-import { Button } from '../components/ui/Button.jsx';
-import styles from './EstadosClientesPage.module.css';
+import { Card } from '../../../../components/ui/Card.jsx';
+import { EstadoVazio, EstadoErroForm, EstadoSucesso } from '../../components/EstadosClientes.jsx';
+import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx';
+import { Button } from '../../../../components/ui/Button.jsx';
+import { PageHeader } from '../../../../components/layout/PageHeader.jsx';
+import styles from './index.module.css';
 
 export function EstadosClientesPage() {
   useEffect(() => {
@@ -13,18 +13,9 @@ export function EstadosClientesPage() {
   }, []);
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Logo variante="claro" tamanho={72} />
-          <div>
-            <p className={styles.overline}>BRUVI FIT · RESPOSTAS DA INTERFACE</p>
-            <h1 className={styles.titulo}>Clientes — Estados de interface</h1>
-            <p className={styles.subtitulo}>Variantes estáticas independentes · Etapa e destino identificados em cada painel</p>
-          </div>
-        </div>
-      </header>
-      <main className={styles.main}>
+    <main className={styles.page}>
+      <PageHeader titulo="Clientes — Estados de interface" subtitulo="Variantes estáticas independentes · Etapa e destino identificados em cada painel" />
+      <div className={styles.main}>
         <div className={styles.grid}>
           <Card>
             <EstadoVazio />
@@ -46,7 +37,7 @@ export function EstadosClientesPage() {
             </Button>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

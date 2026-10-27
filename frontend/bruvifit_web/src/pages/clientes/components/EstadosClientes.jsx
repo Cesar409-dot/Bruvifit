@@ -1,7 +1,7 @@
 import { Inbox, CircleAlert, CircleCheck } from 'lucide-react';
-import { StatusPanel } from '../ui/StatusPanel.jsx';
-import { Button } from '../ui/Button.jsx';
-import { TextField } from '../ui/TextField.jsx';
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx';
+import { Button } from '../../../components/ui/Button.jsx';
+import { TextField } from '../../../components/ui/TextField.jsx';
 import styles from './EstadosClientes.module.css';
 import { Link } from 'react-router-dom';
 
