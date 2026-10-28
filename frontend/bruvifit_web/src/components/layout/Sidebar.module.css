@@ -5,14 +5,13 @@
   display: flex;
   width: var(--sidebar-largura);
   flex-direction: column;
-  gap: 20px;
-  padding: 24px;
+  gap: 26px;
+  padding: 28px 24px;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--cor-primaria);
   color: var(--cor-texto-sobre-escuro);
-  border-right: 1px solid var(--cor-primaria-hover);
   scrollbar-width: thin;
   scrollbar-color: var(--cor-primaria-hover) transparent;
 }
@@ -37,13 +36,24 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  width: 184px;
+  height: 144px;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--cor-fundo);
 }
 
 .brand img {
-  width: auto;
-  max-width: 100%;
-  height: 104px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+}
+
+.eyebrow {
+  color: var(--cor-texto-sobre-escuro-suave);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .nav {
@@ -146,11 +156,12 @@
 @media (max-width: 1024px) {
   .sidebar {
     width: 210px;
-    padding: 20px 16px;
+    padding: 24px 16px;
   }
 
-  .brand img {
-    height: 88px;
+  .brand {
+    width: 178px;
+    height: 140px;
   }
 }
 
@@ -165,6 +176,7 @@
   }
 
   .brand,
+  .eyebrow,
   .userCard {
     display: none;
   }

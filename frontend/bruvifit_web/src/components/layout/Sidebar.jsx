@@ -31,6 +31,7 @@ export function Sidebar() {
       <NavLink className={styles.brand} to="/dashboard" aria-label="BruVi Fit, início">
         <img src={brandLogo} alt="BruVi Fit" />
       </NavLink>
+      <span className={styles.eyebrow}>SISTEMA INTERNO</span>
       <nav className={styles.nav}>
         {items.map((item) => (
           <NavLink

@@ -10,7 +10,7 @@ import financeIcon from '../../shared/assets/figma-products/ae6b1.svg'
 import reportsIcon from '../../shared/assets/figma-products/05fd8.svg'
 import employeesIcon from '../../shared/assets/figma-products/7702e.svg'
 import settingsIcon from '../../shared/assets/figma-products/874fb.svg'
-import brandLogo from '../../shared/assets/figma-products/logo-bruvifit-branca-sem-fundo.png'
+import brandLogo from '../../shared/assets/figma-products/07b20.png'
 
 const navIcons = {
   '/dashboard': dashboardIcon,
@@ -30,20 +30,24 @@ export function Sidebar({ currentPath }) {
 
   return (
     <aside className="sidebar" aria-label="Navegação principal">
-      <a className="brand" href="#/dashboard" aria-label="BruVi Fit, início">
+      <div className="brand" aria-label="BruVi Fit, início">
         <img src={brandLogo} alt="BruVi Fit" />
-      </a>
+      </div>
+      <span className="eyebrow">SISTEMA INTERNO</span>
       <nav aria-label="Módulos">
         {navigationRoutes.map((route) => (
-          <a
+          <button
             className={`nav-item${currentPath === route.path ? ' active' : ''}`}
-            href={`#${route.path}`}
             key={route.path}
             aria-current={currentPath === route.path ? 'page' : undefined}
+            type="button"
+            onClick={() => {
+              window.location.hash = route.path
+            }}
           >
             <img src={navIcons[route.path]} alt="" />
             <span>{route.path === '/configuracao' ? 'Configurações' : route.label}</span>
-          </a>
+          </button>
         ))}
       </nav>
       <div className="account-card">
