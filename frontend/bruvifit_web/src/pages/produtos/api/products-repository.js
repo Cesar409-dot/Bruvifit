@@ -1,4 +1,5 @@
 import { demoProducts } from '../model/demo-products.js'
+import { httpClient } from '../../../shared/api/http-client.js'
 import { PRODUCT_STATUS, normalizeProduct, toProduct } from '../model/product-model.js'
 
 const STORAGE_KEY = 'bruvifit:produtos:demo:v3'
@@ -106,7 +107,7 @@ export function createDemoProductsRepository(storage = (typeof window !== 'undef
 }
 
 export function createApiProductsRepository(client = null) {
-  const getClient = async () => client ?? (await import('../../../../shared/api/http-client.js')).httpClient
+  const getClient = async () => client ?? httpClient
 
   return {
     async list() {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { errorMessage, productsRepository } from '../../api/products-repository.js'
 import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus } from '../../model/product-model.js'
@@ -48,10 +48,10 @@ function ProductDetailForm({ product }) {
 
   const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm), [form, initialForm])
 
-  const updateField = useCallback((field, value) => {
+  const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
     setFeedback(null)
-  }, [])
+  }
 
   useEffect(() => {
     if (!confirmAction) return undefined
@@ -343,29 +343,34 @@ export function ProductDetailPage({ params }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const loadProduct = useCallback(async () => {
-    if (!isValidId) {
-      setLoading(false)
-      setProduct(null)
-      return
-    }
-
-    setLoading(true)
-    try {
-      const row = await productsRepository.get(id)
-      setProduct(row)
-      setError(null)
-    } catch (err) {
-      setProduct(null)
-      setError(errorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [id, isValidId])
-
   useEffect(() => {
-    void loadProduct()
-  }, [loadProduct])
+    let active = true
+
+    ;(async () => {
+      if (!isValidId) {
+        if (active) {
+          setLoading(false)
+          setProduct(null)
+        }
+        return
+      }
+
+      try {
+        const row = await productsRepository.get(id)
+        if (!active) return
+        setProduct(row)
+        setError(null)
+      } catch (err) {
+        if (!active) return
+        setProduct(null)
+        setError(errorMessage(err))
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+
+    return () => { active = false }
+  }, [id, isValidId])
 
   if (loading) {
     return (

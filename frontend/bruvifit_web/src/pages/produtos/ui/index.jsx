@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import { productsRepository, errorMessage, productsMockEnabled } from '../api/products-repository.js'
 import { PRODUCT_STATUS, formatMoney, stockStatus } from '../model/product-model.js'
@@ -47,22 +47,25 @@ export function ProductsPage() {
   const [pendingDelete, setPendingDelete] = useState(null)
   const [working, setWorking] = useState(false)
 
-  const loadProducts = useCallback(async () => {
-    setLoading(true)
-    try {
-      const items = await productsRepository.list()
-      setProducts(items)
-      setFeedback(null)
-    } catch (err) {
-      setFeedback({ tone: 'error', title: 'Não foi possível carregar os produtos.', text: errorMessage(err) })
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    void loadProducts()
-  }, [loadProducts])
+    let active = true
+
+    ;(async () => {
+      try {
+        const items = await productsRepository.list()
+        if (!active) return
+        setProducts(items)
+        setFeedback(null)
+      } catch (err) {
+        if (!active) return
+        setFeedback({ tone: 'error', title: 'Não foi possível carregar os produtos.', text: errorMessage(err) })
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+
+    return () => { active = false }
+  }, [])
 
   const viewedProduct = useMemo(
     () => products.find((product) => product.id === viewingId) ?? null,
