@@ -34,14 +34,7 @@ function matchRoute(path) {
 
 function getCurrentRoute() {
   const path = window.location.hash.replace(/^#/, '') || '/dashboard'
-<<<<<<< ours
   return matchRoute(path)
-=======
-  const selected = moduleRoutes.find((route) => route.path === path)
-    ?? moduleRoutes.find((route) => path.startsWith(`${route.path}/`))
-    ?? moduleRoutes[0]
-  return { ...selected, currentPath: path }
->>>>>>> theirs
 }
 
 export default function App() {
@@ -58,17 +51,10 @@ export default function App() {
   const currentLabel = route.path === '/configuracao' ? 'Configurações' : route.label
 
   return (
-<<<<<<< ours
     <div className="app-shell">
       <Sidebar currentPath={route.path.startsWith('/produtos/') ? '/produtos' : route.path} />
       <MainLayout currentLabel={currentLabel}>
         <Page params={route.params} />
-=======
-    <>
-      <Sidebar currentPath={route.path} />
-      <MainLayout>
-        <Page key={route.currentPath} />
->>>>>>> theirs
       </MainLayout>
     </div>
   )

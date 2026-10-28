@@ -37,7 +37,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={!(item.to === '/clientes' || item.to === '/produtos')}
+            end={!(item.to === '/clientes' || item.to === '/produtos' || item.to === '/funcionarios')}
             className={({ isActive }) => `${styles.link}${isActive ? ` ${styles.active}` : ''}`}
           >
             <img src={item.icon} alt="" />

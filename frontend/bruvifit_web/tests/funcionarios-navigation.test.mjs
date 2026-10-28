@@ -1,37 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { currentPath, navigate, useLocation, useParams } from '../src/pages/funcionarios/model/navigation.js';
+import { readFileSync } from 'node:fs';
 
-function withWindow(initial, testFn) {
-  const oldWindow = globalThis.window;
-  const stored = new Map();
-  const w = {
-    location: { hash: initial },
-    history: { length: 1, state: null, replaceState(_state, _title, url) { w.location.hash = url; } },
-    sessionStorage: {
-      getItem: (key) => stored.get(key) ?? null,
-      setItem: (key, value) => stored.set(key, value),
-      removeItem: (key) => stored.delete(key),
-    },
-    dispatchEvent() {},
-  };
-  globalThis.window = w;
-  try { testFn(w); } finally { globalThis.window = oldWindow; }
-}
+const rootRouter = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const employeeRouter = readFileSync(new URL('../src/pages/funcionarios/ui/index.jsx', import.meta.url), 'utf8');
+const navigation = readFileSync(new URL('../src/pages/funcionarios/model/navigation.js', import.meta.url), 'utf8');
+const feedback = readFileSync(new URL('../src/pages/funcionarios/ui/components/Feedback.jsx', import.meta.url), 'utf8');
 
-test('Rotas de funcionários usam hash existente e parâmetros', () => {
-  withWindow('#/funcionarios/2/editar', () => {
-    assert.equal(currentPath(), '/funcionarios/2/editar');
-    assert.deepEqual(useParams(), { id: '2' });
-  });
+test('Aplicação principal registra Funcionários em seu BrowserRouter', () => {
+  assert.match(rootRouter, /path="\/funcionarios\/\*" element=\{<EmployeesPage\s*\/>\}/);
+  assert.match(rootRouter, /import \{ EmployeesPage \}/);
+  assert.match(rootRouter, /pathname\.startsWith\('\/funcionarios'\)/);
 });
 
-test('Navegação preserva e remove feedback na rota de destino', () => {
-  withWindow('#/funcionarios/novo', (w) => {
-    navigate('/funcionarios/convite-enviado', { replace: true, state: { employee: { name: 'Marina' } } });
-    assert.equal(w.location.hash, '#/funcionarios/convite-enviado');
-    assert.equal(useLocation().state.employee.name, 'Marina');
-    navigate('/funcionarios', { replace: true });
-    assert.equal(useLocation().state, null);
-  });
+test('Todas as telas de Funcionários estão vinculadas ao roteador existente', () => {
+  for (const p of ['novo', 'convite-enviado', 'estados', ':id/editar', ':id']) {
+    assert.ok(employeeRouter.includes(`path="${p}"`), `rota ausente: ${p}`);
+  }
+  assert.match(employeeRouter, /<Route index element=\{<Listagem/);
+  assert.match(navigation, /from 'react-router-dom'/);
+  assert.match(feedback, /to="\/funcionarios\/novo"/);
+  assert.doesNotMatch(feedback, /href="#\//);
 });

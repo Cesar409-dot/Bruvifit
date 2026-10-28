@@ -28,3 +28,29 @@ test('Demonstração tem dois ativos, um convite e um administrador ativo', () =
   assert.equal(demoEmployees.filter((e) => e.status === STATUS.PENDING).length, 1);
   assert.equal(demoEmployees.filter((e) => e.role === ROLE.ADMIN && e.status === STATUS.ACTIVE).length, 1);
 });
+
+test('Repositório demonstrativo preserva cadastro, edição e regras de desativação', async () => {
+  const { createDemoRepository } = await import('../src/pages/funcionarios/api/funcionariosRepository.js');
+  const store = new Map();
+  const originalStorage = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (key) => store.get(key) ?? null,
+    setItem: (key, value) => store.set(key, value),
+  };
+  try {
+    const repository = createDemoRepository();
+    assert.equal((await repository.list()).length, 3);
+    const created = await repository.createInvite({ name: 'Carlos Mendes', email: 'carlos@bruvifit.com.br', phone: '', address: '', role: ROLE.SELLER });
+    assert.equal(created.status, STATUS.PENDING);
+    await assert.rejects(repository.createInvite({ ...created }), /e-mail pertence/);
+    const updated = await repository.update(created.id, { name: 'Carlos M.', email: created.email, phone: '', address: '', role: ROLE.SELLER });
+    assert.equal(updated.name, 'Carlos M.');
+    await repository.resend(created.id);
+    await assert.rejects(repository.deactivate('1'), /último administrador/);
+    const deactivated = await repository.deactivate('2');
+    assert.equal(deactivated.status, STATUS.INACTIVE);
+    assert.equal((await repository.list()).length, 4);
+  } finally {
+    globalThis.localStorage = originalStorage;
+  }
+});

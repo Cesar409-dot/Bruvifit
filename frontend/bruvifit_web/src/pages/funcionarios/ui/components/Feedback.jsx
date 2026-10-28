@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Icon from './Icons.jsx';
 import { Button, Alert } from './UI.jsx';
 import styles from './Feedback.module.css';
@@ -8,7 +9,7 @@ export function EmptyState({ query = false, onReset }) {
     <h3>{query ? 'Nenhum resultado encontrado' : 'Nenhum convite pendente'}</h3>
     <p>{query ? 'Não há funcionários que correspondam aos filtros selecionados.' : 'Todos os convites foram aceitos ou ainda não há convites enviados. Adicione alguém à equipe quando necessário.'}</p>
     <Alert title="Próximo passo">{query ? 'Limpe os filtros ou altere sua pesquisa.' : 'O convite será enviado por e-mail, sem compartilhar senhas.'}</Alert>
-    {query && onReset ? <Button variant="secondary" onClick={onReset}>Limpar filtros</Button> : <a className={styles.go} href="#/funcionarios/novo">Convidar funcionário</a>}
+    {query && onReset ? <Button variant="secondary" onClick={onReset}>Limpar filtros</Button> : <Link className={styles.go} to="/funcionarios/novo">Convidar funcionário</Link>}
   </div>;
 }
 export function LoadingState({ label = 'Carregando informações...' }) { return <div className={styles.state}><p role="status">{label}</p></div>; }

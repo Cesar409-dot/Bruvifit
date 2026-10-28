@@ -97,7 +97,7 @@ src/pages/funcionarios/
 │   ├── ConviteEnviado.jsx
 │   ├── Estados.jsx
 │   └── components/
-├── model/                # Model + ViewModels (hooks) + navegação hash
+├── model/                # Model + ViewModels (hooks) + navegação React Router
 │   ├── funcionariosModel.js
 │   ├── demoData.js
 │   ├── navigation.js
@@ -109,16 +109,16 @@ src/pages/funcionarios/
     └── funcionariosRepository.js
 ```
 
-O layout global original (Sidebar e MainLayout) foi preservado. O arquivo `src/app/App.jsx` mudou apenas para reconhecer rotas filhas e remontar a view quando o hash muda. Os arquivos das demais páginas não foram alterados. Nenhum React Router foi adicionado.
+O layout global ativo (`src/components/layout`) foi preservado. O arquivo `src/App.jsx` recebeu apenas a rota `/funcionarios/*` e o título da seção. A navegação usa o React Router que já existia no projeto. Os arquivos das demais páginas não foram alterados.
 
 ### Abrir as telas
 
-- `#/funcionarios`: listagem, KPIs, filtros e convites
-- `#/funcionarios/novo`: cadastro e convite
-- `#/funcionarios/2`: detalhes, matriz de permissões, desativação
-- `#/funcionarios/2/editar`: edição
-- `#/funcionarios/convite-enviado`: retorno de convite
-- `#/funcionarios/estados`: galeria de estados para QA
+- `/funcionarios`: listagem, KPIs, filtros e convites
+- `/funcionarios/novo`: cadastro e convite
+- `/funcionarios/2`: detalhes, matriz de permissões, desativação
+- `/funcionarios/2/editar`: edição
+- `/funcionarios/convite-enviado`: retorno de convite
+- `/funcionarios/estados`: galeria de estados para QA
 
 ### Demonstração e API
 
