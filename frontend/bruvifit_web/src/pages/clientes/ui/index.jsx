@@ -17,7 +17,7 @@ export function ClientesListPage() {
   const { clientes } = useClientes();
 
   useEffect(() => {
-    document.title = 'Clientes · BruVi Fit';
+    document.title = 'Clientes · BruViFit';
     window.scrollTo(0, 0);
   }, []);
 
