@@ -10,6 +10,7 @@ import { AppLayout } from './components/layout/AppLayout.jsx';
 import { ProductsPage } from './pages/produtos/ui/index.jsx';
 import { ProductCreatePage } from './pages/produtos/cadastro/ui/index.jsx';
 import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
+import { AccessPage } from './pages/acesso/ui/index.jsx';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,24 +31,34 @@ function Shell({ children }) {
   return <AppLayout sectionLabel={getSectionLabel(pathname)}>{children}</AppLayout>;
 }
 
+function ProtectedRoutes() {
+  return (
+    <Shell>
+      <Routes>
+        <Route path="/clientes" element={<ClientesListPage />} />
+        <Route path="/clientes/novo" element={<ClienteFormPage />} />
+        <Route path="/clientes/:id" element={<ClientePerfilPage />} />
+        <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
+        <Route path="/estados" element={<EstadosClientesPage />} />
+        <Route path="/produtos" element={<ProductsPage />} />
+        <Route path="/produtos/novo" element={<ProductCreatePage />} />
+        <Route path="/produtos/:id" element={<ProductDetailPage />} />
+        <Route path="/:modulo" element={<EmBrevePage />} />
+        <Route path="*" element={<Navigate to="/clientes" replace />} />
+      </Routes>
+    </Shell>
+  );
+}
+
 export default function App() {
   return (
     <ClientesProvider>
       <ScrollToTop />
-      <Shell>
-        <Routes>
-          <Route path="/" element={<Navigate to="/clientes" replace />} />
-          <Route path="/clientes" element={<ClientesListPage />} />
-          <Route path="/clientes/novo" element={<ClienteFormPage />} />
-          <Route path="/clientes/:id" element={<ClientePerfilPage />} />
-          <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
-          <Route path="/estados" element={<EstadosClientesPage />} />
-          <Route path="/produtos" element={<ProductsPage />} />
-          <Route path="/produtos/novo" element={<ProductCreatePage />} />
-          <Route path="/produtos/:id" element={<ProductDetailPage />} />
-          <Route path="/:modulo" element={<EmBrevePage />} />
-        </Routes>
-      </Shell>
+      <Routes>
+        <Route path="/" element={<Navigate to="/acesso" replace />} />
+        <Route path="/acesso" element={<AccessPage />} />
+        <Route path="/*" element={<ProtectedRoutes />} />
+      </Routes>
     </ClientesProvider>
   );
 }
