@@ -1,0 +1,6 @@
+.card { background: var(--cor-superficie); border: 1px solid var(--cor-borda-suave); border-radius: var(--raio-card); box-shadow: var(--sombra-card); padding: var(--espaco-24); }
+.destaque { background: var(--cor-primaria); border: none; }
+.rotulo { font-family: var(--fonte-corpo); font-weight: 400; font-size: 14px; line-height: 1.45; color: var(--cor-texto-secundario); }
+.destaque .rotulo { color: var(--cor-texto-sobre-escuro-suave); }
+.valor { margin-top: var(--espaco-8); font-family: var(--fonte-titulo); font-weight: 700; font-size: 32px; line-height: 1.1; color: var(--cor-texto); }
+.destaque .valor { color: #FFFFFF; }

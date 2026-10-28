@@ -1,0 +1,22 @@
+.layout {
+  min-height: 100vh;
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: var(--sidebar-largura);
+}
+
+.main {
+  flex: 1;
+  padding: var(--espaco-32) var(--espaco-48) var(--espaco-48);
+  background: var(--cor-fundo);
+}
+
+@media (max-width: 720px) {
+  .mainColumn {
+    margin-left: 0;
+  }
+}

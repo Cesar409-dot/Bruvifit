@@ -1,0 +1,36 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--espaco-24);
+  gap: var(--espaco-16);
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+}
+
+.titulo {
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1.2;
+  color: var(--cor-texto);
+}
+
+.subtitulo {
+  margin-top: var(--espaco-8);
+  font-family: var(--fonte-corpo);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cor-texto-secundario);
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+  flex-wrap: wrap;
+}

@@ -1,0 +1,43 @@
+.wrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--cor-borda-suave);
+  text-align: left;
+}
+
+.nomeCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nome {
+  font-weight: 600;
+}
+
+.selo {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--cor-rosa-suave);
+  color: var(--cor-erro);
+  font-size: 12px;
+}
+
+.inativoRow {
+  opacity: 0.75;
+}
+
+.acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

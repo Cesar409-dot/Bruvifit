@@ -1,0 +1,13 @@
+.footer {
+  margin-top: var(--espaco-48);
+  border-top: 1px solid var(--cor-borda-suave);
+  padding: var(--espaco-16) 0;
+}
+
+.text {
+  font-family: var(--fonte-corpo);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--cor-texto-secundario);
+}
