@@ -26,8 +26,9 @@
 
 .brandLogo {
   display: block;
-  width: min(100%, 220px);
+  width: min(100%, 260px);
   height: auto;
+  margin-top: 6px;
 }
 
 .brandCopy {

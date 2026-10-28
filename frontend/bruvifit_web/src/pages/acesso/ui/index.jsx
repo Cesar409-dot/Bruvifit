@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAccessForm } from '../model/use-access-form.js';
-import logo from '../../../assets/logo-bruvi.svg';
+import logo from '../../../shared/assets/figma-products/logo-bruvifit-branca-sem-fundo.png';
 import styles from './index.module.css';
 
 function ArrowIcon() {
