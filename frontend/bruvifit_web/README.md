@@ -81,3 +81,56 @@ O fluxo esperado é `View → ViewModel → Model/API`. A View recebe estado e e
 - Endereços, alertas e outras entidades transversais podem ser compartilhados pelos módulos que precisarem deles.
 
 Os slices de domínio são criados em `entities/` quando suas telas ou ações começarem a consumi-los, evitando modelos duplicados entre módulos.
+
+## Funcionários — implementação MVVM integrada
+
+O módulo foi implementado sob `src/pages/funcionarios`, conforme a estrutura real do repositório:
+
+```text
+src/pages/funcionarios/
+├── ui/                   # Views, CSS Modules e componentes da interface
+│   ├── index.jsx         # EmployeesPage: entrypoint do módulo
+│   ├── Listagem.jsx
+│   ├── Cadastro.jsx
+│   ├── Detalhe.jsx
+│   ├── Editar.jsx
+│   ├── ConviteEnviado.jsx
+│   ├── Estados.jsx
+│   └── components/
+├── model/                # Model + ViewModels (hooks) + navegação React Router
+│   ├── funcionariosModel.js
+│   ├── demoData.js
+│   ├── navigation.js
+│   ├── funcionariosContext.jsx
+│   ├── useFuncionariosList.js
+│   ├── useFuncionarioForm.js
+│   └── useFuncionarioDetail.js
+└── api/                  # Repositório Axios, usando shared/api/http-client.js
+    └── funcionariosRepository.js
+```
+
+O layout global ativo (`src/components/layout`) foi preservado. O arquivo `src/App.jsx` recebeu apenas a rota `/funcionarios/*` e o título da seção. A navegação usa o React Router que já existia no projeto. Os arquivos das demais páginas não foram alterados.
+
+### Abrir as telas
+
+- `/funcionarios`: listagem, KPIs, filtros e convites
+- `/funcionarios/novo`: cadastro e convite
+- `/funcionarios/2`: detalhes, matriz de permissões, desativação
+- `/funcionarios/2/editar`: edição
+- `/funcionarios/convite-enviado`: retorno de convite
+- `/funcionarios/estados`: galeria de estados para QA
+
+### Demonstração e API
+
+Por padrão `VITE_FUNCIONARIOS_MOCK=true` (ainda que não exista `.env`) mantém a experiência funcional usando `localStorage`; nenhum e-mail real é enviado.
+
+Para usar o back-end:
+
+1. Copie `.env.example` para `.env`, defina `VITE_FUNCIONARIOS_MOCK=false` e `VITE_API_BASE_URL` adequadamente.
+2. Confira no `src/pages/funcionarios/api/funcionariosRepository.js` os endpoints e contratos de resposta reais do Spring. **Os caminhos presentes são sugestões, não foram confirmados.**
+3. Faça `EmployeesPage` receber `currentUser` da sessão autenticada; hoje o `AccessPage` do ZIP é somente um placeholder. Para segurança, proteja as rotas e valide autorização no Spring também.
+4. Confirme CORS, credenciais de autenticação, envio de e-mail e encerramento de sessões após desativação. O front-end não implementa esses recursos do servidor.
+
+### Verificações
+
+Execute `npm install`, `npm run build` e `npm run lint`. Os testes do Model ficam em `tests/funcionarios-model.test.mjs` (`node --test tests/funcionarios-model.test.mjs`).

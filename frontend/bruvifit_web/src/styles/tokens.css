@@ -1,0 +1,63 @@
+:root {
+  /* Cores da marca */
+  --cor-primaria: #173F35;
+  --cor-primaria-hover: #0B2923;
+  --cor-secundaria: #D9A8A0;
+  --cor-acento: #285C4F;
+  --cor-fundo: #F7F6F3;
+  --cor-superficie: #FFFFFF;
+  --cor-texto: #111111;
+  --cor-texto-secundario: #444444;
+  --cor-borda: #A8C5B8;
+  --cor-sucesso: #4CAF50;
+  --cor-alerta: #B87872;
+  --cor-erro: #B42318;
+
+  /* Derivados */
+  --cor-verde-suave: #E6EEE9;
+  --cor-rosa-suave: #F8EBE8;
+  --cor-erro-borda: #E3A9A2;
+  --cor-borda-suave: #E3E8E5;
+  --cor-linha-zebra: #F6F9F7;
+  --cor-texto-sobre-escuro: #F7F6F3;
+  --cor-texto-sobre-escuro-suave: rgba(247, 246, 243, 0.72);
+
+  /* Aliases do padrão figma-produtos */
+  --green: var(--cor-primaria);
+  --green-hover: var(--cor-primaria-hover);
+  --green-dark: #0B2923;
+  --mint: var(--cor-verde-suave);
+  --sage: #A8C5B8;
+  --canvas: var(--cor-fundo);
+  --line: var(--cor-borda-suave);
+  --ink: var(--cor-texto);
+  --muted: var(--cor-texto-secundario);
+  --white: var(--cor-superficie);
+
+  /* Espaçamento */
+  --espaco-4: 4px;
+  --espaco-8: 8px;
+  --espaco-12: 12px;
+  --espaco-16: 16px;
+  --espaco-24: 24px;
+  --espaco-32: 32px;
+  --espaco-48: 48px;
+
+  /* Forma e elevação */
+  --raio-input: 8px;
+  --raio-card: 12px;
+  --sombra-card: 0 1px 2px rgba(17, 17, 17, 0.06);
+
+  /* Foco */
+  --foco: 2px solid var(--cor-acento);
+  --foco-offset: 2px;
+
+  /* Tipografia */
+  --fonte-titulo: 'Montserrat Variable', 'Montserrat', sans-serif;
+  --fonte-corpo: 'Manrope Variable', 'Manrope', sans-serif;
+
+  /* Estrutura */
+  --sidebar-largura: 244px;
+  --topbar-altura: 72px;
+  --controle-altura: 48px;
+}

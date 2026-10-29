@@ -1,0 +1,95 @@
+.voltarWrap,
+.sucessoWrap,
+.inativacaoWrap {
+  margin-top: 0;
+}
+
+.sucessoWrap {
+  position: relative;
+}
+
+.fechar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-24);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.historicoWrap {
+  margin-top: 20px;
+}
+
+.contatoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.destaque {
+  font-weight: 700;
+}
+
+.micro,
+.microNota,
+.semVendas,
+.inativacaoTexto {
+  color: var(--cor-texto-secundario);
+  font-family: var(--fonte-corpo);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.btnContato {
+  margin-top: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--cor-borda-suave);
+  text-align: left;
+}
+
+.linkBtn {
+  border: 0;
+  background: transparent;
+  color: var(--cor-primaria);
+  cursor: pointer;
+  padding: 0;
+}
+
+.microNota {
+  margin-top: 12px;
+}
+
+.inativacaoAcoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}

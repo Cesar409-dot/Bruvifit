@@ -1,0 +1,32 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-24);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.cardErro {
+  border-color: var(--cor-erro-borda);
+}
+
+.aviso {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tentar {
+  display: flex;
+  justify-content: flex-end;
+}
