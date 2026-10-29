@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import { productsRepository, errorMessage, productsMockEnabled } from '../api/products-repository.js'
 import { PRODUCT_STATUS, formatMoney, stockStatus } from '../model/product-model.js'
@@ -34,6 +35,7 @@ function Field({ label, children }) {
 }
 
 export function ProductsPage() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState(null)
@@ -148,7 +150,7 @@ export function ProductsPage() {
           <h1>Produtos</h1>
           <p>Gerencie os produtos cadastrados</p>
         </div>
-        <Button onClick={() => goToProducts('/novo')}>
+        <Button onClick={() => goToProducts(navigate, '/novo')}>
           <img src={addIcon} alt="" />
           Novo produto
         </Button>
@@ -282,7 +284,7 @@ export function ProductsPage() {
                       <Button
                         variant="icon"
                         aria-label={`Editar ${product.name}`}
-                        onClick={() => goToProducts(`/${product.id}`)}
+                        onClick={() => goToProducts(navigate, `/${product.id}`)}
                       >
                         <img src={editIcon} alt="" />
                       </Button>
@@ -469,7 +471,7 @@ export function ProductsPage() {
               <Button
                 onClick={() => {
                   setViewingId(null)
-                  goToProducts(`/${viewedProduct.id}`)
+                  goToProducts(navigate, `/${viewedProduct.id}`)
                 }}
               >
                 Editar produto

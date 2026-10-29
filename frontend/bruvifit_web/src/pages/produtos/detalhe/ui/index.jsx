@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { errorMessage, productsRepository } from '../../api/products-repository.js'
 import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus } from '../../model/product-model.js'
@@ -15,7 +16,7 @@ function Field({ label, hint, children }) {
   )
 }
 
-function ProductDetailNotFound({ id, isValidId }) {
+function ProductDetailNotFound({ id, isValidId, navigate }) {
   return (
     <div className={styles.headingRow}>
       <div>
@@ -30,7 +31,7 @@ function ProductDetailNotFound({ id, isValidId }) {
         <button
           type="button"
           className={styles.primary}
-          onClick={() => goToProducts()}
+          onClick={() => goToProducts(navigate)}
         >
           Voltar para produtos
         </button>
@@ -39,7 +40,7 @@ function ProductDetailNotFound({ id, isValidId }) {
   )
 }
 
-function ProductDetailForm({ product }) {
+function ProductDetailForm({ product, navigate }) {
   const [form, setForm] = useState(() => productToForm(product))
   const [initialForm, setInitialForm] = useState(() => productToForm(product))
   const [feedback, setFeedback] = useState(null)
@@ -71,14 +72,14 @@ function ProductDetailForm({ product }) {
 
   function requestCancel() {
     if (isDirty) setConfirmAction('cancel')
-    else goToProducts()
+    else goToProducts(navigate)
   }
 
   async function confirmActionHandler() {
     if (saving) return
 
     if (confirmAction === 'cancel') {
-      goToProducts()
+      goToProducts(navigate)
       return
     }
 
@@ -87,7 +88,7 @@ function ProductDetailForm({ product }) {
       try {
         const saved = await productsRepository.deactivate(product.id)
         setFeedback({ tone: 'sucesso', title: 'Produto inativado.', text: `${saved.name} não estará disponível em novas vendas.` })
-        goToProducts()
+        goToProducts(navigate)
       } catch (err) {
         setFeedback({ tone: 'erro', title: 'Não foi possível inativar.', text: errorMessage(err) })
       } finally {
@@ -337,6 +338,7 @@ function ProductDetailForm({ product }) {
 }
 
 export function ProductDetailPage({ params }) {
+  const navigate = useNavigate()
   const id = params?.id
   const isValidId = /^\d+$/.test(String(id ?? ''))
   const [product, setProduct] = useState(null)
@@ -385,7 +387,7 @@ export function ProductDetailPage({ params }) {
   if (!product) {
     return (
       <main className={styles.detailPage}>
-        <ProductDetailNotFound id={id} isValidId={isValidId} />
+        <ProductDetailNotFound id={id} isValidId={isValidId} navigate={navigate} />
         {error ? (
           <StatusPanel variante="erro" titulo="Não foi possível carregar o produto.">
             {error}
@@ -395,5 +397,5 @@ export function ProductDetailPage({ params }) {
     )
   }
 
-  return <ProductDetailForm key={id} product={product} />
+  return <ProductDetailForm key={id} product={product} navigate={navigate} />
 }

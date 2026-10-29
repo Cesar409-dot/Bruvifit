@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createProduct } from '../api/create-product.js'
 import { goToProducts } from '../../model/navigation.js'
 import styles from './index.module.css'
@@ -49,6 +50,7 @@ function getOptionalNumber(value) {
 }
 
 export function ProductCreatePage() {
+  const navigate = useNavigate()
   const [feedback, setFeedback] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -87,7 +89,7 @@ export function ProductCreatePage() {
   }
 
   function returnToProducts() {
-    goToProducts()
+    goToProducts(navigate)
   }
 
   return (
