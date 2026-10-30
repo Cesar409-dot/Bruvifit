@@ -148,7 +148,7 @@ Todos os componentes devem usar tokens, ter nome acessível, foco visível e pre
 | EmptyState | Ausência de dados ou filtro sem resultado | Explica causa e oferece ação útil; diferenciar “sem cadastro” de “sem resultado” |
 | ErrorState | Recuperação de falha | Explica, preserva dados e oferece tentar novamente; texto objetivo |
 | SuccessState | Confirmação de conclusão | Confirma resultado e próximo destino; não depender de animação |
-| Gráficos | Tendências e comparação | Título, período, unidade, legenda, alternativa textual/tabular e cores redundantes; refluem sem cortar |
+| Gráficos | Tendências e comparação | Usar **Chart.js** como biblioteca padrão; título, período, unidade, legenda, alternativa textual/tabular e cores redundantes; refluem sem cortar |
 
 ### Botões e formulários
 
@@ -203,6 +203,10 @@ Usar Grid/Flexbox, `minmax` e `min-width: 0` quando apropriado. Garantir tabelas
 Meta **WCAG AA**: contraste 4,5:1 para texto normal; 3:1 para texto grande e elementos não textuais essenciais; foco visível; teclado funcional; labels associados; erros relacionados ao campo; status redundante além de cor; `aria-live` apropriado; diálogo com foco gerenciado; zoom até 200% sem perda relevante; alvos de toque aproximadamente 44x44px quando possível.
 
 Rosa nude `#D9A8A0` sobre branco não deve ser texto pequeno. Gráficos precisam de título, período, unidade e alternativa textual ou tabular. Conteúdo, mensagens e ações devem ser diretos, claros e acolhedores: “Novo produto”, “Cadastrar”, “Limpar filtros”, “Revisar e finalizar”, “Produto salvo com sucesso”, “Não foi possível concluir agora. Tentar novamente.” Evitar erros genéricos ou mensagens enganosas; ações críticas explicam consequências.
+
+### Padrão de gráficos
+
+Todos os gráficos novos e gráficos refatorados do projeto devem usar **Chart.js**, salvo exceção registrada em especificação própria. Não criar gráficos com `conic-gradient`, barras HTML/CSS, SVG manual ou outra biblioteca sem justificativa e aprovação. Cada gráfico deve ter dados textuais equivalentes, legenda compreensível, título/contexto, unidade e período quando aplicável, contraste adequado e cleanup da instância ao desmontar o componente.
 
 ## 12. Arquitetura e limites desta especificação
 
