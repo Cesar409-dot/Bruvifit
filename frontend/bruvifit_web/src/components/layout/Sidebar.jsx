@@ -10,7 +10,7 @@ import financeIcon from '../../shared/assets/figma-products/ae6b1.svg';
 import reportsIcon from '../../shared/assets/figma-products/05fd8.svg';
 import employeesIcon from '../../shared/assets/figma-products/7702e.svg';
 import settingsIcon from '../../shared/assets/figma-products/874fb.svg';
-import brandLogo from '../../shared/assets/figma-products/07b20.png';
+import brandLogo from '../../assets/logo-bruvi.svg';
 
 const items = [
   { to: '/dashboard', label: 'Dashboard', icon: dashboardIcon },

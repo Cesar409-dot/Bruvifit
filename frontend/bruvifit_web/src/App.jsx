@@ -12,6 +12,7 @@ import { ProductCreatePage } from './pages/produtos/cadastro/ui/index.jsx';
 import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
 import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
+import { FinancePage } from './pages/financeiro/ui/index.jsx';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -25,6 +26,7 @@ function getSectionLabel(pathname) {
   if (pathname.startsWith('/produtos')) return 'Produtos';
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/clientes') || pathname === '/estados') return 'Clientes';
+  if (pathname.startsWith('/financeiro')) return 'Financeiro';
   return 'BruVi Fit';
 }
 
@@ -44,6 +46,7 @@ function ProtectedRoutes() {
         <Route path="/estados" element={<EstadosClientesPage />} />
         <Route path="/produtos" element={<ProductsPage />} />
         <Route path="/funcionarios/*" element={<EmployeesPage />} />
+        <Route path="/financeiro" element={<FinancePage />} />
         <Route path="/produtos/novo" element={<ProductCreatePage />} />
         <Route path="/produtos/:id" element={<ProductDetailPage />} />
         <Route path="/:modulo" element={<EmBrevePage />} />

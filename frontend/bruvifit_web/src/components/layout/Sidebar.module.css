@@ -37,11 +37,11 @@
   justify-content: center;
   text-decoration: none;
   width: 184px;
-  height: 144px;
-  padding: 12px;
+  height: 72px;
+  padding: 0;
   overflow: hidden;
-  border-radius: 8px;
-  background: var(--cor-fundo);
+  border-radius: 0;
+  background: transparent;
 }
 
 .brand img {
@@ -161,7 +161,7 @@
 
   .brand {
     width: 178px;
-    height: 140px;
+    height: 72px;
   }
 }
 
