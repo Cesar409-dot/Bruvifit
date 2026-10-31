@@ -1,7 +1,7 @@
 import styles from './StatCard.module.css';
 
-export function StatCard({ rotulo, valor, destaque }) {
-  const classes = [styles.card, destaque ? styles.destaque : ''].filter(Boolean).join(' ');
+export function StatCard({ rotulo, valor, destaque, className = '' }) {
+  const classes = [styles.card, destaque ? styles.destaque : '', className].filter(Boolean).join(' ');
   return (
     <article className={classes}>
       <p className={styles.rotulo}>{rotulo}</p>
