@@ -1,0 +1,11 @@
+.module {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  font-family: var(--fonte-corpo);
+  color: var(--cor-texto);
+  font-size: 14px;
+}
+.module button { cursor: pointer; }
+.module button:disabled { cursor: not-allowed; opacity: .55; }
+.module a { color: inherit; }
+.module :focus-visible { outline: var(--foco); outline-offset: var(--foco-offset); }

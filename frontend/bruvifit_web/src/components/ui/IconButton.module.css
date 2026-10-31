@@ -1,0 +1,21 @@
+.iconButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: 8px;
+  background: var(--cor-superficie);
+  color: var(--cor-primaria);
+}
+
+.iconButton:hover {
+  background: var(--cor-verde-suave);
+}
+
+.hitArea {
+  position: absolute;
+  inset: -4px;
+}

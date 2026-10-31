@@ -1,0 +1,5 @@
+.pagination { display: flex; align-items: center; gap: var(--espaco-8); }
+.button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--cor-borda-suave); border-radius: 8px; background: var(--cor-superficie); color: var(--cor-texto); font-family: var(--fonte-titulo); font-weight: 600; font-size: 13px; position: relative; }
+.button::after { content: ''; position: absolute; inset: -4px; }
+.button:disabled { opacity: 0.5; cursor: not-allowed; }
+.active { background: var(--cor-primaria); color: #FFFFFF; border-color: var(--cor-primaria); }

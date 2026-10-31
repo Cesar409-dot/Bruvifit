@@ -1,0 +1,17 @@
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import EmployeeForm from './EmployeeForm.jsx';
+import { ErrorState, LoadingState } from '../../../components/ui/StateView.jsx';
+import { useFuncionarios } from '../model/funcionariosContext.jsx';
+import useFuncionarioForm from '../model/useFuncionarioForm.js';
+
+export default function Editar() {
+  const { id } = useParams();
+  const { repository, mockMode } = useFuncionarios();
+  const vm = useFuncionarioForm(repository, true, id);
+  const load = vm.load;
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
+  if (vm.initialLoading) return <LoadingState/>;
+  if (vm.initialError) return <ErrorState message={vm.initialError} onRetry={vm.load}/>;
+  return <EmployeeForm vm={vm} isEdit mockMode={mockMode}/>;
+}

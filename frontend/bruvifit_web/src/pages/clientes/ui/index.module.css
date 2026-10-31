@@ -1,0 +1,47 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-24);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.cardMargin {
+  margin-top: 0;
+}
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.exibidos,
+.linhasLabel {
+  color: var(--cor-texto-secundario);
+  font-family: var(--fonte-corpo);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.selectPag {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: 8px;
+  background: var(--cor-superficie);
+}

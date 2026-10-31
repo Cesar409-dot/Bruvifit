@@ -1,0 +1,13 @@
+.panel { display: flex; align-items: flex-start; gap: var(--espaco-12); border-radius: var(--raio-input); padding: var(--espaco-12) var(--espaco-16); }
+.info.tomRosa { background: var(--cor-rosa-suave); }
+.info.tomVerde { background: var(--cor-verde-suave); }
+.erro { background: var(--cor-rosa-suave); }
+.sucesso { background: var(--cor-verde-suave); }
+.icon { margin-top: 2px; flex-shrink: 0; }
+.info .icon { color: var(--cor-primaria); }
+.erro .icon { color: var(--cor-erro); }
+.sucesso .icon { color: var(--cor-primaria); }
+.content { display: flex; flex-direction: column; gap: 2px; }
+.titulo { font-family: var(--fonte-corpo); font-weight: 700; font-size: 14px; line-height: 1.45; color: var(--cor-texto); }
+.erro .titulo { color: var(--cor-erro); }
+.body { font-family: var(--fonte-corpo); font-weight: 400; font-size: 14px; line-height: 1.45; color: var(--cor-texto-secundario); }
