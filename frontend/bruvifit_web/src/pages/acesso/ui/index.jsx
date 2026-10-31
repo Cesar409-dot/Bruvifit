@@ -40,13 +40,17 @@ export function AccessPage() {
     setEmail,
     setPassword,
     togglePassword,
-    submit,
+    validate,
+    attemptLogin,
     showRecoveryMessage,
     showSignupMessage,
   } = useAccessForm();
 
-  function handleSubmit(event) {
-    if (submit(event)) {
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!validate()) return;
+    const entrou = await attemptLogin();
+    if (entrou) {
       navigate('/clientes', { replace: true });
     }
   }
