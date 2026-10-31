@@ -7,12 +7,13 @@ const icons = {
   sucesso: CircleCheck,
 };
 
-export function StatusPanel({ variante = 'info', titulo, children, tom = 'rosa', role }) {
+export function StatusPanel({ variante = 'info', titulo, children, tom = 'rosa', role, className = '' }) {
   const Icon = icons[variante] || Info;
   const classes = [
     styles.panel,
     styles[variante],
     variante === 'info' ? (tom === 'verde' ? styles.tomVerde : styles.tomRosa) : '',
+    className,
   ]
     .filter(Boolean)
     .join(' ');
