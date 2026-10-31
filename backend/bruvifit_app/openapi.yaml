@@ -1,0 +1,1729 @@
+openapi: 3.1.0
+info:
+  title: BRUVIFIT API
+  description: Documentação oficial das APIs REST do sistema BRUVIFIT.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desenvolvimento local
+tags:
+  - name: Usuarios
+    description: Operações relacionadas a usuários
+  - name: Fornecedores
+    description: Operações relacionadas a fornecedores
+  - name: Clientes
+    description: Operações relacionadas a clientes
+  - name: Produtos
+    description: Operações relacionadas a produtos
+  - name: Enderecos
+    description: Operações relacionadas a endereços
+  - name: Alertas
+    description: Operações relacionadas a alertas
+  - name: Pedidos
+    description: Operações relacionadas a pedidos
+  - name: ItemPedido
+    description: Operações relacionadas a itens de pedido
+  - name: Financeiro
+    description: Operações relacionadas a financeiro
+  - name: Dashboard
+    description: Operações relacionadas a dashboards
+paths:
+  /usuarios:
+    get:
+      summary: Lista todos os usuários
+      description: Retorna uma lista de todos os usuários cadastrados no sistema.
+      operationId: listarUsuarios
+      tags:
+        - Usuarios
+      responses:
+        '200':
+          description: Lista de usuários obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsuarioResponse'
+      security:
+        - bearerAuth: []
+    post:
+      summary: Cadastra um novo usuário
+      description: Cria um novo usuário no sistema. A senha deve ser fornecida como hash.
+      operationId: cadastrarUsuario
+      tags:
+        - Usuarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'
+            example:
+              nome: "João Silva"
+              email: "joao@email.com"
+              cpf: "123.456.789-00"
+              senhaHash: "hash_senha_aqui"
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '409':
+          description: Conflito de dados
+  /usuarios/{id}:
+    get:
+      summary: Busca um usuário pelo ID
+      description: Retorna os dados de um usuário específico identificado pelo ID.
+      operationId: buscarUsuarioPorId
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do usuário a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do usuário obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '404':
+          description: Usuário não encontrado
+    put:
+      summary: Atualiza um usuário existente
+      description: Atualiza os dados de um usuário existente.
+      operationId: atualizarUsuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do usuário a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'
+            example:
+              nome: "João Silva Atualizado"
+              email: "joao.atualizado@email.com"
+              cpf: "123.456.789-00"
+              senhaHash: "hash_senha_atualizado"
+      responses:
+        '200':
+          description: Usuário atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Usuário não encontrado
+    delete:
+      summary: Remove um usuário
+      description: Remove um usuário do sistema pelo ID.
+      operationId: deletarUsuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do usuário a ser removido
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuário removido com sucesso
+        '204':
+          description: Usuário removido (corpo vazio)
+        '404':
+          description: Usuário não encontrado
+  /fornecedores:
+    get:
+      summary: Lista todos os fornecedores
+      description: Retorna uma lista de todos os fornecedores cadastrados no sistema.
+      operationId: listarFornecedores
+      tags:
+        - Fornecedores
+      responses:
+        '200':
+          description: Lista de fornecedores obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FornecedorResponse'
+    post:
+      summary: Cadastra um novo fornecedor
+      description: Cria um novo fornecedor no sistema.
+      operationId: cadastrarFornecedor
+      tags:
+        - Fornecedores
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FornecedorRequest'
+            example:
+              nome: "Fornecedor Exemplo"
+              cnpj: "12.345.678/0001-99"
+              contato: "João Contato"
+              email: "contato@exemplo.com"
+      responses:
+        '201':
+          description: Fornecedor criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FornecedorResponse'
+        '400':
+          description: Dados de entrada inválidos
+  /fornecedores/{id}:
+    get:
+      summary: Busca um fornecedor pelo ID
+      description: Retorna os dados de um fornecedor específico identificado pelo ID.
+      operationId: buscarFornecedorPorId
+      tags:
+        - Fornecedores
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do fornecedor a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do fornecedor obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FornecedorResponse'
+        '404':
+          description: Fornecedor não encontrado
+    put:
+      summary: Atualiza um fornecedor existente
+      description: Atualiza os dados de um fornecedor existente.
+      tags:
+        - Fornecedores
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do fornecedor a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FornecedorRequest'
+      responses:
+        '200':
+          description: Fornecedor atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FornecedorResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Fornecedor não encontrado
+    delete:
+      summary: Remove um fornecedor
+      description: Remove um fornecedor do sistema pelo ID.
+      tags:
+        - Fornecedores
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do fornecedor a ser removido
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fornecedor removido com sucesso
+        '204':
+          description: Fornecedor removido (corpo vazio)
+        '404':
+          description: Fornecedor não encontrado
+  /clientes:
+    get:
+      summary: Lista todos os clientes
+      description: Retorna uma lista de todos os clientes cadastrados no sistema.
+      operationId: listarClientes
+      tags:
+        - Clientes
+      responses:
+        '200':
+          description: Lista de clientes obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClienteResponse'
+    post:
+      summary: Cadastra um novo cliente
+      description: Cria um novo cliente no sistema. Retorna o cliente criado com ID e status ativo.
+      operationId: cadastrarCliente
+      tags:
+        - Clientes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteRequest'
+            example:
+              nome: "Cliente Exemplo"
+              telefone: "11987654321"
+              email: "cliente@exemplo.com"
+              ativo: true
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '400':
+          description: Dados de entrada inválidos
+    get:
+      summary: Busca um cliente pelo ID
+      description: Retorna os dados de um cliente específico identificado pelo ID. Retorna 404 se não encontrado.
+      operationId: buscarClientePorId
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do cliente a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do cliente obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente não encontrado
+    put:
+      summary: Atualiza um cliente existente
+      description: Atualiza os dados de um cliente existente. Retorna 404 se o cliente não for encontrado.
+      operationId: atualizarCliente
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do cliente a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteRequest'
+      responses:
+        '200':
+          description: Cliente atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Cliente não encontrado
+    delete:
+      summary: Remove um cliente
+      description: Remove um cliente do sistema pelo ID. Retorna 404 se o cliente não for encontrado.
+      operationId: deletarCliente
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do cliente a ser removido
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Cliente removido (corpo vazio)
+        '404':
+          description: Cliente não encontrado
+  /produtos:
+    get:
+      summary: Lista todos os produtos
+      description: Retorna uma lista de todos os produtos cadastrados no sistema.
+      operationId: listarProdutos
+      tags:
+        - Produtos
+      responses:
+        '200':
+          description: Lista de produtos obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProdutoResponse'
+    post:
+      summary: Cadastra um novo produto
+      description: Cria um novo produto no sistema.
+      operationId: cadastrarProduto
+      tags:
+        - Produtos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdutoRequest'
+            example:
+              nome: "Produto Exemplo"
+              sku: "SKU-001"
+              custoMateriaPrima: 10.50
+              margemPercentual: 30.00
+              precoVenda: 25.00
+              saldoEstoque: 50
+              estoqueMinimo: 10
+      responses:
+        '201':
+          description: Produto criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoResponse'
+        '400':
+          description: Dados de entrada inválidos
+    put:
+      summary: Atualiza um produto existente
+      description: Atualiza os dados de um produto existente.
+      operationId: atualizarProduto
+      tags:
+        - Produtos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do produto a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdutoRequest'
+    delete:
+      summary: Remove um produto
+      description: Remove um produto do sistema pelo ID.
+      operationId: deletarProduto
+      tags:
+        - Produtos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do produto a ser removido
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto removido com sucesso
+        '404':
+          description: Produto não encontrado
+  /enderecos:
+    get:
+      summary: Lista todos os endereços
+      description: Retorna uma lista de todos os endereços cadastrados no sistema.
+      operationId: listarEnderecos
+      tags:
+        - Enderecos
+      responses:
+        '200':
+          description: Lista de endereços obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnderecoResponse'
+    post:
+      summary: Cadastra um novo endereço
+      description: Cria um novo endereço associado a um cliente existente.
+      operationId: cadastrarEndereco
+      tags:
+        - Enderecos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnderecoRequest'
+            example:
+              clienteId: 1
+              cep: "01001-000"
+              rua: "Rua Principal"
+              numero: "100"
+              complemento: "Apt 10"
+              bairro: "Centro"
+              cidade: "São Paulo"
+              estado: "SP"
+      responses:
+        '201':
+          description: Endereço criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnderecoResponse'
+        '400':
+          description: Dados de entrada inválidos
+    get:
+      summary: Busca um endereço pelo ID
+      description: Retorna os dados de um endereço específico identificado pelo ID. Retorna 404 se não encontrado.
+      operationId: buscarEnderecoPorId
+      tags:
+        - Enderecos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do endereço a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do endereço obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnderecoResponse'
+        '404':
+          description: Endereço não encontrado
+    put:
+      summary: Atualiza um endereço existente
+      description: Atualiza os dados de um endereço existente. Retorna 404 se o endereço não for encontrado.
+      operationId: atualizarEndereco
+      tags:
+        - Enderecos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do endereço a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnderecoRequest'
+      responses:
+        '200':
+          description: Endereço atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnderecoResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Endereço não encontrado
+    delete:
+      summary: Remove um endereço
+      description: Remove um endereço do sistema pelo ID. Retorna 404 se o endereço não for encontrado.
+      operationId: deletarEndereco
+      tags:
+        - Enderecos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do endereço a ser removido
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Endereço removido (corpo vazio)
+        '404':
+          description: Endereço não encontrado
+  /alertas:
+    get:
+      summary: Lista todas as alertas
+      description: Retorna uma lista de todas as alertas cadastradas no sistema.
+      operationId: listarAlertas
+      tags:
+        - Alertas
+      responses:
+        '200':
+          description: Lista de alertas obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertaResponse'
+    post:
+      summary: Cadastra uma nova alerta
+      description: Cria uma nova alerta no sistema. O nível pode ser ALTO, MEDIO ou BAIXO.
+      operationId: cadastrarAlerta
+      tags:
+        - Alertas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertaRequest'
+            example:
+              titulo: "Estoque baixo"
+              descricao: "O produto X está com estoque abaixo do mínimo"
+              nivel: "ALTO"
+      responses:
+        '201':
+          description: Alerta criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertaResponse'
+        '400':
+          description: Dados de entrada inválidos
+    get:
+      summary: Busca uma alerta pelo ID
+      description: Retorna os dados de uma alerta específica identificado pelo ID.
+      operationId: buscarAlertaPorId
+      tags:
+        - Alertas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da alerta a ser buscada
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados da alerta obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertaResponse'
+    put:
+      summary: Atualiza uma alerta existente
+      description: Atualiza os dados de uma alerta existente.
+      operationId: atualizarAlerta
+      tags:
+        - Alertas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da alerta a ser atualizada
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertaRequest'
+    delete:
+      summary: Remove uma alerta
+      description: Remove uma alerta do sistema pelo ID.
+      operationId: deletarAlerta
+      tags:
+        - Alertas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da alerta a ser removida
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Alerta removido (corpo vazio)
+  /pedidos:
+    get:
+      summary: Lista todos os pedidos
+      description: Retorna uma lista de todos os pedidos cadastrados no sistema.
+      operationId: listarPedidos
+      tags:
+        - Pedidos
+      responses:
+        '200':
+          description: Lista de pedidos obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PedidoResponse'
+    post:
+      summary: Cadastra um novo pedido
+      description: Cria um novo pedido no sistema. É necessário informar data, status, valor total, forma de pagamento e IDs de cliente e usuário.
+      operationId: cadastrarPedido
+      tags:
+        - Pedidos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoRequest'
+            example:
+              dataPedido: "2024-01-15T10:30:00"
+              status: "PENDENTE"
+              valorTotal: 150.00
+              formaPagamento: "CARTAO_CREDITO"
+              clienteId: 1
+              usuarioId: 1
+      responses:
+        '201':
+          description: Pedido criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '400':
+          description: Dados de entrada inválidos
+    post:
+      summary: Cadastra um novo pedido com itens
+      description: Cria um novo pedido com itens associados. Necessário informar os itens com quantidade e preço unitário.
+      operationId: cadastrarPedidoComItens
+      tags:
+        - Pedidos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoComItensRequest'
+    get:
+      summary: Busca um pedido pelo ID
+      description: Retorna os dados de um pedido específico identificado pelo ID. Retorna 404 se não encontrado.
+      operationId: buscarPedidoPorId
+      tags:
+        - Pedidos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do pedido a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do pedido obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '404':
+          description: Pedido não encontrado
+    put:
+      summary: Atualiza um pedido existente
+      description: Atualiza os dados de um pedido existente. Retorna 404 se o pedido não for encontrado.
+      operationId: atualizarPedido
+      tags:
+        - Pedidos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do pedido a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoRequest'
+      responses:
+        '200':
+          description: Pedido atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Pedido não encontrado
+    put:
+      summary: Cancela um pedido
+      description: Cancela um pedido existente. Retorna 404 se o pedido não for encontrado ou se o cancelamento não for possível.
+      operationId: cancelarPedido
+      tags:
+        - Pedidos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do pedido a ser cancelado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Pedido cancelado com sucesso
+        '404':
+          description: Pedido não encontrado ou cancelamento não possível
+    delete:
+      summary: Remove um pedido
+      description: Remove um pedido do sistema pelo ID. Retorna 404 se o pedido não for encontrado.
+      operationId: deletarPedido
+      tags:
+        - Pedidos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do pedido a ser removido
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Pedido removido (corpo vazio)
+        '404':
+          description: Pedido não encontrado
+  /api/pedidos/{pedidoId}/itens:
+    get:
+      summary: Lista todos os itens de um pedido
+      description: Retorna todos os itens associados a um pedido específico.
+      operationId: listarItensDoPedido
+      tags:
+        - ItemPedido
+      parameters:
+        - name: pedidoId
+          in: path
+          required: true
+          description: ID do pedido cujos itens serão listados
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de itens do pedido obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemPedidoResponse'
+        '404':
+          description: Pedido não encontrado
+    post:
+      summary: Adiciona um item a um pedido
+      description: Adiciona um novo item a um pedido existente. O ID do pedido é informado no caminho.
+      operationId: adicionarItemPedido
+      tags:
+        - ItemPedido
+      parameters:
+        - name: pedidoId
+          in: path
+          required: true
+          description: ID do pedido ao qual o item será adicionado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemPedidoRequest'
+            example:
+              quantidade: 3
+              precoUnitario: 25.00
+              produtoId: 1
+      responses:
+        '201':
+          description: Item adicionado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemPedidoResponse'
+        '400':
+          description: Dados de entrada inválidos
+    get:
+      summary: Busca um item de pedido pelo ID
+      description: Retorna os dados de um item de pedido específico identificado pelo ID.
+      operationId: buscarItemPedidoPorId
+      tags:
+        - ItemPedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do item de pedido a ser buscado
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do item do pedido obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemPedidoResponse'
+        '404':
+          description: Item de pedido não encontrado
+    put:
+      summary: Atualiza um item de pedido
+      description: Atualiza os dados de um item de pedido existente. Retorna 404 se não encontrado.
+      operationId: atualizarItemPedido
+      tags:
+        - ItemPedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do item de pedido a ser atualizado
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemPedidoRequest'
+      responses:
+        '200':
+          description: Item de pedido atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemPedidoResponse'
+        '404':
+          description: Item de pedido não encontrado
+    delete:
+      summary: Remove um item de pedido
+      description: Remove um item de pedido do sistema pelo ID. Retorna 204 se removido com sucesso ou 404 se não encontrado.
+      operationId: removerItemPedido
+      tags:
+        - ItemPedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do item de pedido a ser removido
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Item de pedido removido (corpo vazio)
+        '404':
+          description: Item de pedido não encontrado
+  /financeiros:
+    get:
+      summary: Lista todas as movimentações financeiras
+      description: Retorna uma lista de todas as movimentações financeiras cadastradas no sistema.
+      operationId: listarFinanceiros
+      tags:
+        - Financeiro
+      responses:
+        '200':
+          description: Lista de movimentações financeiras obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinanceiroResponse'
+    post:
+      summary: Cadastra uma nova movimentação financeira
+      description: Cria uma nova movimentação financeira no sistema.
+      operationId: cadastrarFinanceiro
+      tags:
+        - Financeiro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceiroRequest'
+            example:
+              tipo: "ENTRADA"
+              categoria: "VENDA"
+              valor: 1500.00
+              dataCompetencia: "2024-01-15"
+              situacao: "PENDENTE"
+              pedidoId: 1
+      responses:
+        '201':
+          description: Movimentação financeira criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceiroResponse'
+        '400':
+          description: Dados de entrada inválidos
+    get:
+      summary: Busca uma movimentação financeira pelo ID
+      description: Retorna os dados de uma movimentação financeira específica identificado pelo ID. Retorna 404 se não encontrado.
+      operationId: buscarFinanceiroPorId
+      tags:
+        - Financeiro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da movimentação financeira a ser buscada
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados da movimentação financeira obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceiroResponse'
+        '404':
+          description: Movimentação financeira não encontrada
+    put:
+      summary: Atualiza uma movimentação financeira
+      description: Atualiza os dados de uma movimentação financeira existente. Retorna 404 se não encontrado.
+      operationId: atualizarFinanceiro
+      tags:
+        - Financeiro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da movimentação financeira a ser atualizada
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceiroRequest'
+      responses:
+        '200':
+          description: Movimentação financeira atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceiroResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Movimentação financeira não encontrada
+    delete:
+      summary: Remove uma movimentação financeira
+      description: Remove uma movimentação financeira do sistema pelo ID. Retorna 404 se não encontrado.
+      operationId: deletarFinanceiro
+      tags:
+        - Financeiro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da movimentação financeira a ser removida
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Movimentação financeira removida (corpo vazio)
+        '404':
+          description: Movimentação financeira não encontrada
+  /dashboard/indicadores:
+    get:
+      summary: Obtém indicadores do dashboard
+      description: Retorna um mapa com os indicadores principais do sistema.
+      operationId: getIndicadores
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Indicadores obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+  /dashboard/financeiro:
+    get:
+      summary: Obtém resumo financeiro do dashboard
+      description: Retorna um resumo financeiro baseado no período informado. Se não informado, usa o mês atual.
+      operationId: getResumoFinanceiro
+      tags:
+        - Dashboard
+      parameters:
+        - name: inicio
+          in: query
+          required: false
+          description: Data de início do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: fim
+          in: query
+          required: false
+          description: Data de fim do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Resumo financeiro obtido com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+    get:
+      summary: Obtém top de produtos por margem
+      description: Retorna os produtos com as maiores margens de lucro.
+      operationId: getTopProdutosMargem
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Top de produtos por margem obtido com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    UsuarioRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: "João Silva"
+          description: Nome completo do usuário
+        email:
+          type: string
+          format: email
+          example: "joao@email.com"
+          description: E-mail do usuário
+        cpf:
+          type: string
+          example: "123.456.789-00"
+          description: CPF do usuário (apenas números e pontuação)
+        senhaHash:
+          type: string
+          example: "hash_senha_aqui"
+          description: Hash da senha do usuário
+      required:
+        - nome
+        - email
+        - cpf
+        - senhaHash
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do usuário
+        nome:
+          type: string
+          example: "João Silva"
+          description: Nome completo do usuário
+        email:
+          type: string
+          example: "joao@email.com"
+          description: E-mail do usuário
+        cpf:
+          type: string
+          example: "123.456.789-00"
+          description: CPF do usuário
+    FornecedorRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: "Fornecedor Exemplo"
+          description: Nome completo do fornecedor
+        cnpj:
+          type: string
+          example: "12.345.678/0001-99"
+          description: CNPJ do fornecedor
+        contato:
+          type: string
+          example: "João Contato"
+          description: Nome do contato do fornecedor
+        email:
+          type: string
+          format: email
+          example: "contato@exemplo.com"
+          description: E-mail do fornecedor
+      required:
+        - nome
+        - cnpj
+        - contato
+        - email
+    FornecedorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do fornecedor
+        nome:
+          type: string
+          example: "Fornecedor Exemplo"
+          description: Nome do fornecedor
+        cnpj:
+          type: string
+          example: "12.345.678/0001-99"
+          description: CNPJ do fornecedor
+        contato:
+          type: string
+          example: "João Contato"
+          description: Contato do fornecedor
+        email:
+          type: string
+          example: "contato@exemplo.com"
+          description: E-mail do fornecedor
+    ClienteRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: "Cliente Exemplo"
+          description: Nome completo do cliente
+        telefone:
+          type: string
+          example: "11987654321"
+          description: Telefone do cliente
+        email:
+          type: string
+          format: email
+          example: "cliente@exemplo.com"
+          description: E-mail do cliente
+      required:
+        - nome
+        - email
+    ClienteResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do cliente
+        nome:
+          type: string
+          example: "Cliente Exemplo"
+          description: Nome do cliente
+        telefone:
+          type: string
+          example: "11987654321"
+          description: Telefone do cliente
+        email:
+          type: string
+          example: "cliente@exemplo.com"
+          description: E-mail do cliente
+        ativo:
+          type: boolean
+          example: true
+          description: Status do cliente
+    ProdutoRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: "Produto Exemplo"
+          description: Nome do produto
+        sku:
+          type: string
+          example: "SKU-001"
+          description: SKU do produto
+        tamanho:
+          type: string
+          example: "M"
+          description: Tamanho do produto
+        cor:
+          type: string
+          example: "Azul"
+          description: Cor do produto
+        custoMateriaPrima:
+          type: number
+          format: decimal
+          example: 10.50
+          description: Custo da matéria-prima
+        margemPercentual:
+          type: number
+          format: decimal
+          example: 30.00
+          description: Margem percentual de lucro
+        precoVenda:
+          type: number
+          format: decimal
+          example: 25.00
+          description: Preço de venda ao público
+        saldoEstoque:
+          type: integer
+          example: 50
+          description: Quantidade em estoque
+        estoqueMinimo:
+          type: integer
+          example: 10
+          description: Estoque mínimo alerta
+      required:
+        - nome
+    ProdutoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do produto
+        nome:
+          type: string
+          example: "Produto Exemplo"
+          description: Nome do produto
+        sku:
+          type: string
+          example: "SKU-001"
+          description: SKU do produto
+        tamanho:
+          type: string
+          example: "M"
+          description: Tamanho do produto
+        cor:
+          type: string
+          example: "Azul"
+          description: Cor do produto
+        custoMateriaPrima:
+          type: number
+          format: decimal
+          description: Custo da matéria-prima
+        margemPercentual:
+          type: number
+          format: decimal
+          description: Margem percentual de lucro
+        precoVenda:
+          type: number
+          format: decimal
+          description: Preço de venda ao público
+        saldoEstoque:
+          type: integer
+          example: 50
+          description: Quantidade em estoque
+        estoqueMinimo:
+          type: integer
+          example: 10
+          description: Estoque mínimo
+        ativo:
+          type: boolean
+          example: true
+          description: Status do produto
+    EnderecoRequest:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          example: 1
+          description: ID do cliente associado ao endereço
+        cep:
+          type: string
+          example: "01001-000"
+          description: CEP do endereço
+        rua:
+          type: string
+          example: "Rua Principal"
+          description: Rua do endereço
+        logradouro:
+          type: string
+          example: "Rua Principal"
+          description: Logradouro do endereço
+        numero:
+          type: string
+          example: "100"
+          description: Número do endereço
+        complemento:
+          type: string
+          example: "Apt 10"
+          description: Complemento do endereço
+        bairro:
+          type: string
+          example: "Centro"
+          description: Bairro do endereço
+        cidade:
+          type: string
+          example: "São Paulo"
+          description: Cidade do endereço
+        estado:
+          type: string
+          example: "SP"
+          description: Estado do endereço
+    EnderecoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do endereço
+        clienteId:
+          type: integer
+          example: 1
+          description: ID do cliente associado
+        cep:
+          type: string
+          example: "01001-000"
+          description: CEP do endereço
+        rua:
+          type: string
+          example: "Rua Principal"
+          description: Rua do endereço
+        logradouro:
+          type: string
+          example: "Rua Principal"
+          description: Logradouro do endereço
+        numero:
+          type: string
+          example: "100"
+          description: Número do endereço
+        complemento:
+          type: string
+          example: "Apt 10"
+          description: Complemento do endereço
+        bairro:
+          type: string
+          example: "Centro"
+          description: Bairro do endereço
+        cidade:
+          type: string
+          example: "São Paulo"
+          description: Cidade do endereço
+        estado:
+          type: string
+          example: "SP"
+          description: Estado do endereço
+    AlertaRequest:
+      type: object
+      properties:
+        titulo:
+          type: string
+          example: "Estoque baixo"
+          description: Título da alerta
+        descricao:
+          type: string
+          example: "O produto X está com estoque abaixo do mínimo"
+          description: Descrição da alerta
+        nivel:
+          type: string
+          example: "ALTO"
+          description: Nível da alerta (ALTO, MEDIO, BAIXO)
+      required:
+        - titulo
+        - descricao
+        - nivel
+    AlertaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único da alerta
+        titulo:
+          type: string
+          example: "Estoque baixo"
+          description: Título da alerta
+        descricao:
+          type: string
+          example: "O produto X está com estoque abaixo do mínimo"
+          description: Descrição da alerta
+        nivel:
+          type: string
+          example: "ALTO"
+          description: Nível da alerta
+        criadoEm:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Data e hora de criação da alerta
+        ativo:
+          type: boolean
+          example: true
+          description: Status da alerta
+    PedidoRequest:
+      type: object
+      properties:
+        dataPedido:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00"
+          description: Data e hora do pedido
+        status:
+          type: string
+          example: "PENDENTE"
+          description: Status do pedido
+        valorTotal:
+          type: number
+          format: decimal
+          example: 150.00
+          description: Valor total do pedido
+        formaPagamento:
+          type: string
+          example: "CARTAO_CREDITO"
+          description: Forma de pagamento
+        prazoPagamento:
+          type: string
+          format: date
+          example: "2024-01-22"
+          description: Prazo de pagamento
+        clienteId:
+          type: integer
+          example: 1
+          description: ID do cliente
+        usuarioId:
+          type: integer
+          example: 1
+          description: ID do usuário
+      required:
+        - dataPedido
+        - status
+        - valorTotal
+        - formaPagamento
+        - clienteId
+        - usuarioId
+    PedidoComItensRequest:
+      type: object
+      properties:
+        dataPedido:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00"
+          description: Data e hora do pedido
+        status:
+          type: string
+          example: "PENDENTE"
+          description: Status do pedido
+        formaPagamento:
+          type: string
+          example: "CARTAO_CREDITO"
+          description: Forma de pagamento
+        prazoPagamento:
+          type: string
+          format: date
+          example: "2024-01-22"
+          description: Prazo de pagamento
+        clienteId:
+          type: integer
+          example: 1
+          description: ID do cliente
+        usuarioId:
+          type: integer
+          example: 1
+          description: ID do usuário
+        itens:
+          type: array
+          description: Lista de itens do pedido
+          items:
+            $ref: '#/components/schemas/ItemPedidoResumidoRequest'
+            example:
+              - quantidade: 2
+                precoUnitario: 50.00
+                produtoId: 1
+      required:
+        - dataPedido
+        - status
+        - formaPagamento
+        - clienteId
+        - usuarioId
+        - itens
+    ItemPedidoResumidoRequest:
+      type: object
+      properties:
+        quantidade:
+          type: integer
+          example: 2
+          description: Quantidade do item
+        precoUnitario:
+          type: number
+          format: decimal
+          example: 50.00
+          description: Preço unitário do item
+        produtoId:
+          type: integer
+          example: 1
+          description: ID do produto
+    PedidoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do pedido
+        dataPedido:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00"
+          description: Data e hora do pedido
+        status:
+          type: string
+          example: "PENDENTE"
+          description: Status do pedido
+        valorTotal:
+          type: number
+          format: decimal
+          example: 150.00
+          description: Valor total do pedido
+        formaPagamento:
+          type: string
+          example: "CARTAO_CREDITO"
+          description: Forma de pagamento
+        prazoPagamento:
+          type: string
+          format: date
+          example: "2024-01-22"
+          description: Prazo de pagamento
+        clienteId:
+          type: integer
+          example: 1
+          description: ID do cliente
+        usuarioId:
+          type: integer
+          example: 1
+          description: ID do usuário
+    ItemPedidoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único do item de pedido
+        quantidade:
+          type: integer
+          example: 2
+          description: Quantidade do item
+        precoUnitario:
+          type: number
+          format: decimal
+          example: 50.00
+          description: Preço unitário do item
+        subtotal:
+          type: number
+          format: decimal
+          example: 100.00
+          description: Subtotal do item (quantidade * preço unitário)
+        pedidoId:
+          type: integer
+          example: 1
+          description: ID do pedido
+        produtoId:
+          type: integer
+          example: 1
+          description: ID do produto
+        produtoNome:
+          type: string
+          example: "Produto Exemplo"
+          description: Nome do produto
+        produtoSku:
+          type: string
+          example: "SKU-001"
+          description: SKU do produto
+    FinanceiroRequest:
+      type: object
+      properties:
+        tipo:
+          type: string
+          example: "ENTRADA"
+          description: Tipo da movimentação (ENTRADA ou SAIDA)
+        categoria:
+          type: string
+          example: "VENDA"
+          description: Categoria da movimentação
+        valor:
+          type: number
+          format: decimal
+          example: 1500.00
+          description: Valor da movimentação
+        dataCompetencia:
+          type: string
+          format: date
+          example: "2024-01-15"
+          description: Data de competência
+        dataRecebimento:
+          type: string
+          format: date
+          example: "2024-01-20"
+          description: Data de recebimento
+        situacao:
+          type: string
+          example: "PENDENTE"
+          description: Situação da movimentação
+        pedidoId:
+          type: integer
+          example: 1
+          description: ID do pedido associado
+      required:
+        - tipo
+        - categoria
+        - valor
+        - dataCompetencia
+        - situacao
+    FinanceiroResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único da movimentação financeira
+        tipo:
+          type: string
+          example: "ENTRADA"
+          description: Tipo da movimentação
+        categoria:
+          type: string
+          example: "VENDA"
+          description: Categoria da movimentação
+        valor:
+          type: number
+          format: decimal
+          example: 1500.00
+          description: Valor da movimentação
+        dataCompetencia:
+          type: string
+          format: date
+          example: "2024-01-15"
+          description: Data de competência
+        dataRecebimento:
+          type: string
+          format: date
+          example: "2024-01-20"
+          description: Data de recebimento
+        situacao:
+          type: string
+          example: "PENDENTE"
+          description: Situação da movimentação
+        pedidoId:
+          type: integer
+          example: 1
+          description: ID do pedido associado
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
