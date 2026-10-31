@@ -28,6 +28,7 @@
   display: block;
   width: min(100%, 260px);
   height: auto;
+  filter: brightness(0) invert(1);
   margin-top: 6px;
 }
 
