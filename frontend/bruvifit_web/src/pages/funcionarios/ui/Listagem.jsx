@@ -1,8 +1,16 @@
-import { useLocation, useNavigate } from '../model/navigation.js';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import Icon from './components/Icons.jsx';
-import { Alert, Button, Card, Field, PageHeader, SelectField, StatusBadge } from './components/UI.jsx';
-import { EmptyState, ErrorState, LoadingState } from './components/Feedback.jsx';
+import { Pencil, Plus } from 'lucide-react';
+import { PageHeader } from '../../../components/layout/PageHeader.jsx';
+import { Button } from '../../../components/ui/Button.jsx';
+import { Card } from '../../../components/ui/Card.jsx';
+import { FilterBar } from '../../../components/ui/FilterBar.jsx';
+import { SelectField } from '../../../components/ui/SelectField.jsx';
+import { StatCard } from '../../../components/ui/StatCard.jsx';
+import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/StateView.jsx';
+import { StatusBadge } from '../../../components/ui/StatusBadge.jsx';
+import { TextField } from '../../../components/ui/TextField.jsx';
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx';
 import { roleOptions, roleLabel, STATUS, statusLabel, statusOptions } from '../model/funcionariosModel.js';
 import { useFuncionarios } from '../model/funcionariosContext.jsx';
 import useFuncionariosList from '../model/useFuncionariosList.js';
@@ -22,38 +30,35 @@ export default function Listagem() {
     }
   }, [success, setFeedback, navigate, location.pathname]);
   return <>
-    <PageHeader title="Funcionários" description="Equipe, convites e perfis de acesso" actions={<Button icon="plus" onClick={() => navigate('/funcionarios/novo')}>Novo funcionário</Button>} />
+    <PageHeader titulo="Funcionários" subtitulo="Equipe, convites e perfis de acesso" acoes={<Button icon={Plus} onClick={() => navigate('/funcionarios/novo')}>Novo funcionário</Button>} />
     <div className={styles.stats}>
-      <div className={styles.statPrimary}><span>Ativos na equipe</span><strong>{vm.stats.active}</strong></div>
-      <div className={styles.stat}><span>Convites pendentes</span><strong>{vm.stats.pending}</strong></div>
-      <div className={styles.stat}><span>Administradores</span><strong>{vm.stats.admins}</strong></div>
+      <StatCard rotulo="Ativos na equipe" valor={vm.stats.active} destaque />
+      <StatCard rotulo="Convites pendentes" valor={vm.stats.pending} />
+      <StatCard rotulo="Administradores" valor={vm.stats.admins} />
     </div>
-    {vm.feedback && <Alert tone="success" title="Operação concluída">{vm.feedback}</Alert>}
-    <Card title="Pesquisa e filtros">
-      <form onSubmit={(event) => { event.preventDefault(); vm.apply(); }}>
-        <div className={styles.filterGrid}>
-          <Field name="search-employee" label="Pesquisar" placeholder="Nome ou e-mail" value={vm.draft.query} onChange={(query) => vm.setDraft((old) => ({ ...old, query }))}/>
-          <SelectField name="search-role" label="Cargo" value={vm.draft.role} onChange={(role) => vm.setDraft((old) => ({ ...old, role }))} options={[{ value: '', label: 'Todos' }, ...roleOptions]}/>
-          <SelectField name="search-status" label="Status" value={vm.draft.status} onChange={(status) => vm.setDraft((old) => ({ ...old, status }))} options={[{ value: '', label: 'Todos' }, ...statusOptions]}/>
-        </div>
-        <div className={styles.filtersActions}><Button variant="secondary" onClick={vm.clear}>Limpar</Button><Button type="submit">Filtrar</Button></div>
-      </form>
+    {vm.feedback && <StatusPanel variante="sucesso" titulo="Operação concluída">{vm.feedback}</StatusPanel>}
+    <Card titulo="Pesquisa e filtros">
+      <FilterBar columns={3} onSubmit={(event) => { event.preventDefault(); vm.apply(); }} onClear={vm.clear} clearLabel="Limpar" submitLabel="Filtrar">
+          <TextField id="search-employee" label="Pesquisar" placeholder="Nome ou e-mail" value={vm.draft.query} onChange={(event) => vm.setDraft((old) => ({ ...old, query: event.target.value }))}/>
+          <SelectField id="search-role" label="Cargo" value={vm.draft.role} onChange={(event) => vm.setDraft((old) => ({ ...old, role: event.target.value }))}>{[{ value: '', label: 'Todos' }, ...roleOptions].map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SelectField>
+          <SelectField id="search-status" label="Status" value={vm.draft.status} onChange={(event) => vm.setDraft((old) => ({ ...old, status: event.target.value }))}>{[{ value: '', label: 'Todos' }, ...statusOptions].map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SelectField>
+      </FilterBar>
     </Card>
-    <Card title="Equipe cadastrada">
+    <Card titulo="Equipe cadastrada" className={styles.listCard}>
       {vm.error && !vm.employees.length ? <ErrorState message={vm.error} onRetry={vm.refresh} /> : <>
-        {vm.error && <Alert tone="error" title="Não foi possível concluir a operação">{vm.error}</Alert>}
+        {vm.error && <StatusPanel variante="erro" titulo="Não foi possível concluir a operação">{vm.error}</StatusPanel>}
         {vm.loading ? <LoadingState/> : vm.filtered.length === 0 ? <EmptyState query={true} onReset={vm.clear}/> : <>
           <div className={styles.tableScroll}><table className={styles.table}>
-            <thead><tr><th>Funcionário</th><th>E-mail</th><th>Cargo</th><th>Status</th><th>Ação</th></tr></thead>
+            <thead><tr><th scope="col">Funcionário</th><th scope="col">E-mail</th><th scope="col">Cargo</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
             <tbody>{vm.visible.map((e) => <tr key={e.id}><td><strong>{e.name}</strong></td><td>{e.email}</td><td>{roleLabel(e.role)}</td><td><StatusBadge status={e.status}>{statusLabel(e.status)}</StatusBadge></td>
               <td>{e.status === STATUS.PENDING ? <button className={styles.rowLink} disabled={vm.busyId === e.id} onClick={() => vm.resend(e.id)}>{vm.busyId === e.id ? 'Reenviando...' : 'Reenviar convite'}</button> :
                 <button className={styles.rowLink} onClick={() => navigate(`/funcionarios/${e.id}`)}>Ver detalhe</button>}
-                {e.status === STATUS.PENDING && <button className={styles.iconLink} title="Ver detalhes" aria-label={`Ver detalhes de ${e.name}`} onClick={() => navigate(`/funcionarios/${e.id}`)}><Icon name="pencil" size={14}/></button>}
+                {e.status === STATUS.PENDING && <button className={styles.iconLink} title="Ver detalhes" aria-label={`Ver detalhes de ${e.name}`} onClick={() => navigate(`/funcionarios/${e.id}`)}><Pencil size={14} aria-hidden="true"/></button>}
               </td></tr>)}</tbody>
           </table></div>
           <div className={styles.tableFooter}>
             <span>{vm.filtered.length} registro(s) · Página {vm.page} de {vm.pages}. Convites são enviados por e-mail; nenhuma senha é exibida.</span>
-            {vm.pages > 1 && <div className={styles.pagination}><Button variant="secondary" disabled={vm.page === 1} onClick={() => vm.setPage((p) => p - 1)}>Anterior</Button><Button variant="secondary" disabled={vm.page === vm.pages} onClick={() => vm.setPage((p) => p + 1)}>Próxima</Button></div>}
+            {vm.pages > 1 && <div className={styles.pagination}><Button variant="outline" disabled={vm.page === 1} onClick={() => vm.setPage((p) => p - 1)}>Anterior</Button><Button variant="outline" disabled={vm.page === vm.pages} onClick={() => vm.setPage((p) => p + 1)}>Próxima</Button></div>}
           </div>
         </>}
       </>}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from './navigation.js';
+import { useNavigate } from 'react-router-dom';
 import { friendlyError } from '../api/funcionariosRepository.js';
 import { ROLE, STATUS } from './funcionariosModel.js';
 
@@ -20,13 +20,8 @@ export default function useFuncionarioDetail(repository, id) {
     finally { setLoading(false); }
   }, [repository, id]);
   useEffect(() => {
-    let cancelled = false;
-    Promise.all([repository.get(id), repository.list()])
-      .then(([item, items]) => { if (!cancelled) { setEmployee(item); setAll(items); } })
-      .catch((err) => { if (!cancelled) setError(friendlyError(err)); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [repository, id]);
+    void Promise.resolve().then(load);
+  }, [load]);
   const lastAdmin = employee?.role === ROLE.ADMIN && employee.status === STATUS.ACTIVE
     && all.filter((e) => e.role === ROLE.ADMIN && e.status === STATUS.ACTIVE).length < 2;
   async function deactivate() {

@@ -19,13 +19,8 @@ export default function useFuncionariosList(repository) {
     finally { setLoading(false); }
   }, [repository]);
   useEffect(() => {
-    let cancelled = false;
-    repository.list()
-      .then((rows) => { if (!cancelled) setEmployees(rows); })
-      .catch((err) => { if (!cancelled) setError(friendlyError(err)); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [repository]);
+    void Promise.resolve().then(refresh);
+  }, [refresh]);
   const stats = useMemo(() => ({
     active: employees.filter((e) => e.status === STATUS.ACTIVE).length,
     pending: employees.filter((e) => e.status === STATUS.PENDING).length,

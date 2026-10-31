@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useParams } from '../model/navigation.js';
-import EmployeeForm from './components/EmployeeForm.jsx';
-import { ErrorState, LoadingState } from './components/Feedback.jsx';
+import { useParams } from 'react-router-dom';
+import EmployeeForm from './EmployeeForm.jsx';
+import { ErrorState, LoadingState } from '../../../components/ui/StateView.jsx';
 import { useFuncionarios } from '../model/funcionariosContext.jsx';
 import useFuncionarioForm from '../model/useFuncionarioForm.js';
 

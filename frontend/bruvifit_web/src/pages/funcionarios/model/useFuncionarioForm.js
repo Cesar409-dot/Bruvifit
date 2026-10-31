@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useNavigate } from './navigation.js';
+import { useNavigate } from 'react-router-dom';
 import { ROLE, toEmployeePayload, validateEmployee } from './funcionariosModel.js';
 import { friendlyError, isDuplicateEmail } from '../api/funcionariosRepository.js';
 

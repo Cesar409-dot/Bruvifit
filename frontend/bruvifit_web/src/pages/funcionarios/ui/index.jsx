@@ -4,7 +4,7 @@ import { FuncionariosContext } from '../model/funcionariosContext.jsx';
 import { demoCurrentUser } from '../model/demoData.js';
 import { ROLE } from '../model/funcionariosModel.js';
 import { createApiRepository, createDemoRepository } from '../api/funcionariosRepository.js';
-import { LoadingState, AccessDenied } from './components/Feedback.jsx';
+import { LoadingState, AccessDenied } from '../../../components/ui/StateView.jsx';
 import Listagem from './Listagem.jsx';
 import Cadastro from './Cadastro.jsx';
 import Detalhe from './Detalhe.jsx';

@@ -1,14 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap');
 .module {
   width: min(100%, 1180px);
   margin: 0 auto;
-  font-family: 'Manrope', Arial, sans-serif;
-  color: #171b19;
-  --func-primary: #173f35;
-  --func-bg: #f7f6f3;
+  font-family: var(--fonte-corpo);
+  color: var(--cor-texto);
   font-size: 14px;
 }
 .module button { cursor: pointer; }
 .module button:disabled { cursor: not-allowed; opacity: .55; }
 .module a { color: inherit; }
-.module :focus-visible { outline: 3px solid #75a995; outline-offset: 2px; }
+.module :focus-visible { outline: var(--foco); outline-offset: var(--foco-offset); }

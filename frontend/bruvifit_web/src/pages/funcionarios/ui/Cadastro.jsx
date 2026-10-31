@@ -1,5 +1,5 @@
 import { useFuncionarios } from '../model/funcionariosContext.jsx';
-import EmployeeForm from './components/EmployeeForm.jsx';
+import EmployeeForm from './EmployeeForm.jsx';
 import useFuncionarioForm from '../model/useFuncionarioForm.js';
 
 export default function Cadastro() {
