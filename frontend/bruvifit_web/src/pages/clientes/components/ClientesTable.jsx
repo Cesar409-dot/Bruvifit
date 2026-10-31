@@ -1,5 +1,6 @@
 import { Eye, Pencil, Archive } from 'lucide-react';
 import { IconButton } from '../../../components/ui/IconButton.jsx';
+import { StatusBadge } from '../../../components/ui/StatusBadge.jsx';
 import styles from './ClientesTable.module.css';
 
 function getCidadeUf(cliente) {
@@ -34,7 +35,7 @@ export function ClientesTable({ clientes = [] }) {
                 <td>
                   <div className={styles.nomeCell}>
                     <span className={styles.nome}>{cliente.nome}</span>
-                    {inativo ? <span className={styles.selo}>Inativo</span> : null}
+                    {inativo ? <StatusBadge status="inativo">Inativo</StatusBadge> : null}
                   </div>
                 </td>
                 <td>{cliente.email}</td>

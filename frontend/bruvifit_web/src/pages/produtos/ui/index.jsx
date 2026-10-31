@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
+import { StatusBadge } from '../../../components/ui/StatusBadge.jsx'
+import { PageHeader } from '../../../components/layout/PageHeader.jsx'
+import { StatCard } from '../../../components/ui/StatCard.jsx'
+import { FilterBar } from '../../../components/ui/FilterBar.jsx'
+import { TextField } from '../../../components/ui/TextField.jsx'
+import { SelectField } from '../../../components/ui/SelectField.jsx'
 import { productsRepository, errorMessage, productsMockEnabled } from '../api/products-repository.js'
 import { PRODUCT_STATUS, formatMoney, stockStatus } from '../model/product-model.js'
 import { goToProducts } from '../model/navigation.js'
@@ -22,15 +28,6 @@ function Button({ children, variant = 'primary', className = '', type = 'button'
     >
       {children}
     </button>
-  )
-}
-
-function Field({ label, children }) {
-  return (
-    <label className={styles.field}>
-      <span>{label}</span>
-      {children}
-    </label>
   )
 }
 
@@ -145,16 +142,11 @@ export function ProductsPage() {
 
   return (
     <main className={styles.productsPage}>
-      <section className={styles.titleRow}>
-        <div>
-          <h1>Produtos</h1>
-          <p>Gerencie os produtos cadastrados</p>
-        </div>
-        <Button onClick={() => goToProducts(navigate, '/novo')}>
-          <img src={addIcon} alt="" />
-          Novo produto
-        </Button>
-      </section>
+      <PageHeader
+        titulo="Produtos"
+        subtitulo="Gerencie os produtos cadastrados"
+        acoes={<Button onClick={() => goToProducts(navigate, '/novo')}><img src={addIcon} alt="" />Novo produto</Button>}
+      />
 
       {feedback ? (
         <StatusPanel variante={feedback.tone === 'error' ? 'erro' : 'sucesso'} titulo={feedback.title}>
@@ -175,58 +167,24 @@ export function ProductsPage() {
           ['Estoque baixo', lowStockCount],
           ['Produtos inativos', inactiveCount],
         ].map(([label, value], index) => (
-          <article className={index === 0 ? `${styles.metric} ${styles.metricFeatured}` : styles.metric} key={label}>
-            <span>{label}</span>
-            <strong>{loading ? '—' : value}</strong>
-          </article>
+          <StatCard key={label} rotulo={label} valor={loading ? '—' : value} destaque={index === 0} />
         ))}
       </section>
 
       <section className={styles.panel} aria-labelledby="product-filters-title">
         <h2 id="product-filters-title">Busca e filtros</h2>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault()
-            applyFilters()
-          }}
-        >
-          <div className={styles.filters}>
-            <Field label="Pesquisar">
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar produto..."
-              />
-            </Field>
-            <Field label="Categoria">
-              <select value={category} onChange={(event) => setCategory(event.target.value)}>
-                <option>Todas</option>
-                {[...new Set(products.map((product) => product.category))].map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Status">
-              <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                <option>Todos</option>
-                <option>Ativo</option>
-                <option>Inativo</option>
-              </select>
-            </Field>
-            <Field label="Estoque">
-              <select value={stock} onChange={(event) => setStock(event.target.value)}>
-                <option>Todos</option>
-                <option>Normal</option>
-                <option>Baixo</option>
-                <option>Sem estoque</option>
-              </select>
-            </Field>
-          </div>
-          <div className={styles.panelActions}>
-            <Button variant="secondary" type="button" onClick={resetFilters}>Limpar filtros</Button>
-            <Button type="submit">Buscar</Button>
-          </div>
-        </form>
+        <FilterBar onSubmit={(event) => { event.preventDefault(); applyFilters() }} onClear={resetFilters}>
+          <TextField id="produto-pesquisar" label="Pesquisar" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto..." />
+          <SelectField id="produto-categoria" label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option>Todas</option>{[...new Set(products.map((product) => product.category))].map((item) => <option key={item}>{item}</option>)}
+          </SelectField>
+          <SelectField id="produto-status" label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option>Todos</option><option>Ativo</option><option>Inativo</option>
+          </SelectField>
+          <SelectField id="produto-estoque" label="Estoque" value={stock} onChange={(event) => setStock(event.target.value)}>
+            <option>Todos</option><option>Normal</option><option>Baixo</option><option>Sem estoque</option>
+          </SelectField>
+        </FilterBar>
       </section>
 
       <section className={`${styles.panel} ${styles.productsPanel}`} aria-labelledby="products-table-title">
@@ -261,16 +219,14 @@ export function ProductsPage() {
                       : ` • ${stockStatus(product)}`}
                   </td>
                   <td>
-                    <span className={`${styles.badge} ${product.status === PRODUCT_STATUS.INACTIVE ? styles.inactiveBadge : ''}`}>
-                      <button
-                        type="button"
-                        className={styles.badgeToggle}
-                        aria-label={`Alterar status de ${product.name}`}
-                        onClick={() => toggleStatus(product)}
-                      >
-                        {product.status}
-                      </button>
-                    </span>
+                    <StatusBadge
+                      as="button"
+                      status={product.status}
+                      aria-label={`Alterar status de ${product.name}`}
+                      onClick={() => toggleStatus(product)}
+                    >
+                      {product.status}
+                    </StatusBadge>
                   </td>
                   <td>
                     <div className={styles.rowActions}>
