@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { friendlyError } from '../api/funcionariosRepository.js';
-import { ROLE, STATUS } from './funcionariosModel.js';
+import { ROLE } from './funcionariosModel.js';
 
 export default function useFuncionariosList(repository) {
   const [employees, setEmployees] = useState([]);
@@ -22,9 +22,9 @@ export default function useFuncionariosList(repository) {
     void Promise.resolve().then(refresh);
   }, [refresh]);
   const stats = useMemo(() => ({
-    active: employees.filter((e) => e.status === STATUS.ACTIVE).length,
-    pending: employees.filter((e) => e.status === STATUS.PENDING).length,
-    admins: employees.filter((e) => e.role === ROLE.ADMIN && e.status === STATUS.ACTIVE).length,
+    active: employees.length,
+    inativos: 0,
+    admins: employees.filter((e) => e.role === ROLE.ADMIN).length,
   }), [employees]);
   const filtered = useMemo(() => employees.filter((e) => {
     const search = filters.query.toLocaleLowerCase('pt-BR').trim();

@@ -1,16 +1,9 @@
-import { httpClient } from '../../../shared/api/http-client.js';
 import { demoEmployees } from '../model/demoData.js';
 import { normalizeEmployee, ROLE, STATUS } from '../model/funcionariosModel.js';
 
-/**
- * Endpoints de exemplo; não foi possível confirmar contrato no backend.
- * Ajuste caminhos e conversões de payload de acordo com o controller Spring.
- * A branch de login pode passar seu próprio client Axios por prop.
- */
-const ENDPOINT = '/funcionarios';
+const ENDPOINT = '/usuarios';
 const delay = () => new Promise((resolve) => setTimeout(resolve, 200));
 const STORE_KEY = 'bruvifit-demo-funcionarios-v1';
-export const defaultApiClient = httpClient;
 
 function readDemo() {
   try {
@@ -57,15 +50,29 @@ export function createDemoRepository() {
   };
 }
 
-export function createApiRepository(client = defaultApiClient) {
-  const unwrap = (res) => res.data?.content ?? res.data?.data ?? res.data;
+export function createApiRepository(client) {
   return {
-    async list() { const body = unwrap(await client.get(ENDPOINT)); const rows = Array.isArray(body) ? body : body?.content ?? body?.items ?? []; return rows.map(normalizeEmployee); },
-    async get(id) { return normalizeEmployee(unwrap(await client.get(`${ENDPOINT}/${encodeURIComponent(id)}`))); },
-    async createInvite(payload) { return normalizeEmployee(unwrap(await client.post(`${ENDPOINT}/convites`, payload))); },
-    async update(id, payload) { return normalizeEmployee(unwrap(await client.put(`${ENDPOINT}/${encodeURIComponent(id)}`, payload))); },
-    async deactivate(id) { return unwrap(await client.patch(`${ENDPOINT}/${encodeURIComponent(id)}/desativar`)); },
-    async resend(id) { return unwrap(await client.post(`${ENDPOINT}/${encodeURIComponent(id)}/reenviar-convite`)); },
+    async list() {
+      const response = await client.get(ENDPOINT);
+      const rows = Array.isArray(response.data) ? response.data : (response.data?.content ?? response.data?.items ?? []);
+      return rows.map(normalizeEmployee);
+    },
+    async get(id) {
+      const response = await client.get(`${ENDPOINT}/${encodeURIComponent(id)}`);
+      return normalizeEmployee(response.data);
+    },
+    async createInvite() {
+      throw new Error('Cadastro não disponível via API: o back-end exige senha e CPF, que não estão preenchidos no formulário.');
+    },
+    async update() {
+      throw new Error('Edição não disponível via API: o PUT /usuarios/{id} exige senha, que não está no formulário.');
+    },
+    async deactivate() {
+      throw new Error('Desativação não disponível via API: o back-end só oferece exclusão definitiva, sem inativação.');
+    },
+    async resend() {
+      throw new Error('Reenvio de convite não disponível via API.');
+    },
   };
 }
 

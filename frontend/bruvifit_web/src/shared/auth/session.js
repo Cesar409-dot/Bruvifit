@@ -1,3 +1,4 @@
+
 const STORAGE_KEY = 'bruvifit_session_v1';
 
 function read() {
@@ -17,12 +18,17 @@ export const session = {
 
   getUser() {
     const data = read();
+
     if (!data) return null;
+
+    const roles = Array.isArray(data.roles) ? data.roles : [];
+
     return {
       usuarioId: data.usuarioId,
       nome: data.nome,
       email: data.email,
-      roles: data.roles,
+      roles,
+      role: roles[0]?.replace(/^ROLE_/, '') ?? null,
     };
   },
 
@@ -40,6 +46,7 @@ export const session = {
       expiraEm,
       criadoEm: Date.now(),
     };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   },
 

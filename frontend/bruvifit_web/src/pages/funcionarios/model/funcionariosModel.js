@@ -7,7 +7,6 @@ export const roleOptions = [
 ];
 export const statusOptions = [
   { value: STATUS.ACTIVE, label: 'Ativo' },
-  { value: STATUS.PENDING, label: 'Convite pendente' },
   { value: STATUS.INACTIVE, label: 'Inativo' },
 ];
 export const roleLabel = (role) => roleOptions.find((item) => item.value === role)?.label ?? role;

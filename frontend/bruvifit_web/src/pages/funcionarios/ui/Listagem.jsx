@@ -33,7 +33,7 @@ export default function Listagem() {
     <PageHeader titulo="Funcionários" subtitulo="Equipe, convites e perfis de acesso" acoes={<Button icon={Plus} onClick={() => navigate('/funcionarios/novo')}>Novo funcionário</Button>} />
     <div className={styles.stats}>
       <StatCard rotulo="Ativos na equipe" valor={vm.stats.active} destaque />
-      <StatCard rotulo="Convites pendentes" valor={vm.stats.pending} />
+      <StatCard rotulo="Inativos" valor={vm.stats.inativos} />
       <StatCard rotulo="Administradores" valor={vm.stats.admins} />
     </div>
     {vm.feedback && <StatusPanel variante="sucesso" titulo="Operação concluída">{vm.feedback}</StatusPanel>}
@@ -57,7 +57,7 @@ export default function Listagem() {
               </td></tr>)}</tbody>
           </table></div>
           <div className={styles.tableFooter}>
-            <span>{vm.filtered.length} registro(s) · Página {vm.page} de {vm.pages}. Convites são enviados por e-mail; nenhuma senha é exibida.</span>
+            <span>{vm.filtered.length} registro(s) · Página {vm.page} de {vm.pages}. Os dados vêm do back-end; nenhuma senha é exibida.</span>
             {vm.pages > 1 && <div className={styles.pagination}><Button variant="outline" disabled={vm.page === 1} onClick={() => vm.setPage((p) => p - 1)}>Anterior</Button><Button variant="outline" disabled={vm.page === vm.pages} onClick={() => vm.setPage((p) => p + 1)}>Próxima</Button></div>}
           </div>
         </>}
