@@ -1,18 +1,57 @@
+
 CREATE DATABASE IF NOT EXISTS bruvifit
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
 USE bruvifit;
+USE bruvifit;
+
+DROP TABLE IF EXISTS usuario;
+
+
+USE bruvifit;
+
+DROP TABLE IF EXISTS usuario;
 
 CREATE TABLE usuario (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT NOT NULL AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
     email VARCHAR(45) NOT NULL,
     cpf VARCHAR(45) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    criadoEm TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizadoEm TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ativo TINYINT NOT NULL DEFAULT 1,
+    aprovado TINYINT NOT NULL DEFAULT 1,
+    cargo VARCHAR(20) NOT NULL DEFAULT 'VENDEDOR',
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_usuario_email (email),
+    UNIQUE KEY uk_usuario_cpf (cpf)
 );
+
+INSERT INTO usuario (
+    nome,
+    email,
+    cpf,
+    senha_hash,
+    ativo,
+    aprovado,
+    cargo,
+    criado_em,
+    atualizado_em
+)
+VALUES (
+    'Administrador Teste',
+    'admin@bruvifit.com',
+    '12345678909',
+    '$2y$10$vfo1De4kQBmfSUdMUPhx8uQYUhYRH7.urEb1GkNHcGb0XF79lPK4G',
+    1,
+    1,
+    'ADMINISTRADOR',
+    NOW(6),
+    NOW(6)
+);
+
 
 CREATE TABLE cliente (
     id INT NOT NULL AUTO_INCREMENT,
