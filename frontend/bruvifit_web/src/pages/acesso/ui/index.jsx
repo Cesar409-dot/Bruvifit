@@ -121,7 +121,7 @@ export function AccessPage() {
 
           {message ? <p className={styles.message} role="status">{message}</p> : null}
 
-          <aside className={styles.note}>
+          {/*<aside className={styles.note}>
             <div className={styles.infoIcon} aria-hidden="true">i</div>
             <div>
               <strong>Acesso à sua operação</strong>
@@ -129,7 +129,7 @@ export function AccessPage() {
                 Após entrar, você seguirá para a área principal. O cadastro de usuário depende da aprovação do administrador.
               </p>
             </div>
-          </aside>
+          </aside>*/}
 
           <div className={styles.signupRow}>
             <p>Ainda não tem acesso?</p>
@@ -137,8 +137,6 @@ export function AccessPage() {
               Criar conta
             </button>
           </div>
-
-          <p className={styles.footer}>Bruvi Fit · Ambiente de acesso restrito</p>
         </div>
       </section>
     </main>
