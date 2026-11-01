@@ -35,7 +35,8 @@ public class UsuarioService {
                             usuario.getId(),
                             usuario.getNome(),
                             usuario.getEmail(),
-                            usuario.getCpf()
+                            usuario.getCpf(),
+                            usuario.getCargo().name()
                     );
 
             usuariosResponse.add(respostaDaVez);
@@ -57,7 +58,8 @@ public class UsuarioService {
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getCpf()
+                usuario.getCpf(),
+                usuario.getCargo().name()
         );
 
         return ResponseEntity.status(200).body(resposta);
@@ -78,6 +80,7 @@ public class UsuarioService {
         usuarioParaCadastro.setEmail(usuarioRequest.getEmail());
         usuarioParaCadastro.setCpf(usuarioRequest.getCpf());
         usuarioParaCadastro.setSenhaHash(passwordEncoder.encode(usuarioRequest.getSenhaHash()));
+        usuarioParaCadastro.setCargo(Usuario.Cargo.valueOf(usuarioRequest.getCargo()));
         usuarioParaCadastro.setCriadoEm(LocalDateTime.now());
         usuarioParaCadastro.setAtualizadoEm(LocalDateTime.now());
         usuarioParaCadastro.setAtivo(true);
@@ -89,7 +92,8 @@ public class UsuarioService {
                 usuarioCadastrado.getId(),
                 usuarioCadastrado.getNome(),
                 usuarioCadastrado.getEmail(),
-                usuarioCadastrado.getCpf()
+                usuarioCadastrado.getCpf(),
+                usuarioCadastrado.getCargo().name()
         );
 
         return ResponseEntity.status(201).body(resposta);
@@ -119,6 +123,7 @@ public class UsuarioService {
         usuarioParaAtualizar.setEmail(usuarioRequest.getEmail());
         usuarioParaAtualizar.setCpf(usuarioRequest.getCpf());
         usuarioParaAtualizar.setSenhaHash(passwordEncoder.encode(usuarioRequest.getSenhaHash()));
+        usuarioParaAtualizar.setCargo(Usuario.Cargo.valueOf(usuarioRequest.getCargo()));
         usuarioParaAtualizar.setAtualizadoEm(LocalDateTime.now());
 
         Usuario usuarioAtualizado = repository.save(usuarioParaAtualizar);
@@ -127,7 +132,8 @@ public class UsuarioService {
                 usuarioAtualizado.getId(),
                 usuarioAtualizado.getNome(),
                 usuarioAtualizado.getEmail(),
-                usuarioAtualizado.getCpf()
+                usuarioAtualizado.getCpf(),
+                usuarioAtualizado.getCargo().name()
         );
 
         return ResponseEntity.status(200).body(resposta);

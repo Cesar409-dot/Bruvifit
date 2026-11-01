@@ -52,7 +52,7 @@ public class AuthService {
 
             String token = jwtTokenProvider.createToken(
                     usuario.getEmail(),
-                    Collections.singletonList("ROLE_USER")
+                    Collections.singletonList("ROLE_" + usuario.getCargo().name())
             );
 
             return new LoginResponse(
@@ -61,7 +61,7 @@ public class AuthService {
                     usuario.getId(),
                     usuario.getNome(),
                     usuario.getEmail(),
-                    Collections.singletonList("ROLE_USER")
+                    Collections.singletonList("ROLE_" + usuario.getCargo().name())
             );
 
         } catch (BadCredentialsException e) {

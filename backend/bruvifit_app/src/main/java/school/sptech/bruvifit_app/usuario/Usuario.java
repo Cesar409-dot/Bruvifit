@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import java.time.LocalDateTime;
 
@@ -31,6 +33,11 @@ public class Usuario {
     @Column(name = "senha_hash", length = 255, nullable = false)
     private String senhaHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cargo", nullable = false, length = 20,
+            columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'VENDEDOR'")
+    private Cargo cargo = Cargo.VENDEDOR;
+
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
@@ -46,7 +53,13 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(Integer id, String nome, String email, String cpf, String senhaHash, Boolean ativo, Boolean aprovado, LocalDateTime criadoEm, LocalDateTime atualizadoEm) {
+    public enum Cargo {
+        ADMINISTRADOR,
+        GERENTE,
+        VENDEDOR
+    }
+
+    public Usuario(Integer id, String nome, String email, String cpf, String senhaHash, Boolean ativo, Boolean aprovado, LocalDateTime criadoEm, LocalDateTime atualizadoEm, Cargo cargo) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -56,6 +69,7 @@ public class Usuario {
         this.aprovado = aprovado;
         this.criadoEm = criadoEm;
         this.atualizadoEm = atualizadoEm;
+        this.cargo = cargo;
     }
 
     public Integer getId() {
@@ -97,6 +111,14 @@ public class Usuario {
 
     public void setSenhaHash(String senhaHash) {
         this.senhaHash = senhaHash;
+    }
+
+    public Cargo getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(Cargo cargo) {
+        this.cargo = cargo;
     }
 
     public Boolean getAtivo() {

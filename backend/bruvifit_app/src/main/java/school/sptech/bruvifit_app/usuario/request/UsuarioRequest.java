@@ -3,6 +3,7 @@ package school.sptech.bruvifit_app.usuario.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class UsuarioRequest {
@@ -23,6 +24,10 @@ public class UsuarioRequest {
     @NotBlank
     @Size(min = 6, max = 100)
     private String senhaHash;
+
+    @NotBlank
+    @Pattern(regexp = "ADMINISTRADOR|GERENTE|VENDEDOR", message = "Cargo deve ser ADMINISTRADOR, GERENTE ou VENDEDOR")
+    private String cargo;
 
     public String getNome() {
         return nome;
@@ -54,5 +59,13 @@ public class UsuarioRequest {
 
     public void setSenhaHash(String senhaHash) {
         this.senhaHash = senhaHash;
+    }
+
+    public String getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(String cargo) {
+        this.cargo = cargo;
     }
 }
