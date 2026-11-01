@@ -10,6 +10,7 @@ public class UsuarioMapper {
         usuario.setNome(request.getNome());
         usuario.setEmail(request.getEmail());
         usuario.setCpf(request.getCpf());
+        usuario.setCargo(Usuario.Cargo.valueOf(request.getCargo()));
         return usuario;
     }
 
@@ -18,7 +19,8 @@ public class UsuarioMapper {
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getCpf()
+                usuario.getCpf(),
+                usuario.getCargo().name()
         );
     }
 
@@ -26,5 +28,6 @@ public class UsuarioMapper {
         usuario.setNome(request.getNome());
         usuario.setEmail(request.getEmail());
         usuario.setCpf(request.getCpf());
+        usuario.setCargo(Usuario.Cargo.valueOf(request.getCargo()));
     }
 }

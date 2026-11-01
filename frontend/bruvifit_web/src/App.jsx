@@ -1,3 +1,4 @@
+
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ClientesProvider } from './pages/clientes/context/ClientesContext.jsx';
@@ -13,12 +14,15 @@ import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
 import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
 import { FinancePage } from './pages/financeiro/ui/index.jsx';
+import { session } from './shared/auth/session.js';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
   return null;
 }
 
@@ -27,15 +31,27 @@ function getSectionLabel(pathname) {
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/clientes') || pathname === '/estados') return 'Clientes';
   if (pathname.startsWith('/financeiro')) return 'Financeiro';
+
   return 'BruVi Fit';
 }
 
 function Shell({ children }) {
   const { pathname } = useLocation();
-  return <AppLayout sectionLabel={getSectionLabel(pathname)}>{children}</AppLayout>;
+
+  return (
+    <AppLayout sectionLabel={getSectionLabel(pathname)}>
+      {children}
+    </AppLayout>
+  );
 }
 
 function ProtectedRoutes() {
+  const currentUser = session.getUser();
+
+  if (!session.isAuthenticated()) {
+    return <Navigate to="/acesso" replace />;
+  }
+
   return (
     <Shell>
       <Routes>
@@ -44,11 +60,17 @@ function ProtectedRoutes() {
         <Route path="/clientes/:id" element={<ClientePerfilPage />} />
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
         <Route path="/estados" element={<EstadosClientesPage />} />
+
         <Route path="/produtos" element={<ProductsPage />} />
-        <Route path="/funcionarios/*" element={<EmployeesPage />} />
-        <Route path="/financeiro" element={<FinancePage />} />
         <Route path="/produtos/novo" element={<ProductCreatePage />} />
         <Route path="/produtos/:id" element={<ProductDetailPage />} />
+
+        <Route
+          path="/funcionarios/*"
+          element={<EmployeesPage currentUser={currentUser} />}
+        />
+
+        <Route path="/financeiro" element={<FinancePage />} />
         <Route path="/:modulo" element={<EmBrevePage />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
@@ -60,6 +82,7 @@ export default function App() {
   return (
     <ClientesProvider>
       <ScrollToTop />
+
       <Routes>
         <Route path="/" element={<Navigate to="/acesso" replace />} />
         <Route path="/acesso" element={<AccessPage />} />
