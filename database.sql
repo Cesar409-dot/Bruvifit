@@ -4,13 +4,6 @@ CREATE DATABASE IF NOT EXISTS bruvifit
     COLLATE utf8mb4_unicode_ci;
 
 USE bruvifit;
-USE bruvifit;
-
-DROP TABLE IF EXISTS usuario;
-
-
-USE bruvifit;
-
 DROP TABLE IF EXISTS usuario;
 
 CREATE TABLE usuario (
@@ -63,6 +56,14 @@ CREATE TABLE cliente (
     PRIMARY KEY (id)
 );
 
+INSERT INTO cliente (nome, telefone, email, criado_em, ativo) VALUES
+('João Silva', '11987654321', 'joao@gmail.com', NOW(), 1),
+('Maria Oliveira', '11976543210', 'maria@gmail.com', NOW(), 1),
+('Pedro Santos', '11965432109', 'pedro@gmail.com', NOW(), 1),
+('Ana Costa', '11954321098', 'ana@gmail.com', NOW(), 1),
+('Lucas Ferreira', '11943210987', 'lucas@gmail.com', NOW(), 0),
+('Juliana Almeida', '11932109876', 'juliana@gmail.com', NOW(), 1);
+
 CREATE TABLE endereco (
     id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
      cliente_id INT NOT NULL,
@@ -77,6 +78,16 @@ CREATE TABLE endereco (
     cidade VARCHAR(45),
     estado VARCHAR(45)
 );
+
+INSERT INTO endereco
+(cliente_id, cep, rua, logradouro, numero, complemento, bairro, cidade, estado)
+VALUES
+(1, '01001000', 'Praça da Sé', 'Praça da Sé', '100', 'Apartamento 12', 'Sé', 'São Paulo', 'SP'),
+(2, '01310100', 'Avenida Paulista', 'Avenida Paulista', '500', 'Sala 20', 'Bela Vista', 'São Paulo', 'SP'),
+(3, '04538000', 'Rua Funchal', 'Rua Funchal', '200', NULL, 'Vila Olímpia', 'São Paulo', 'SP'),
+(4, '02011000', 'Rua Voluntários da Pátria', 'Rua Voluntários da Pátria', '300', 'Casa', 'Santana', 'São Paulo', 'SP'),
+(5, '04001000', 'Rua Domingos de Morais', 'Rua Domingos de Morais', '150', NULL, 'Vila Mariana', 'São Paulo', 'SP'),
+(6, '05001000', 'Rua Clélia', 'Rua Clélia', '700', 'Casa 2', 'Lapa', 'São Paulo', 'SP');
 
 CREATE TABLE fornecedor (
     id INT NOT NULL AUTO_INCREMENT,
@@ -102,6 +113,75 @@ CREATE TABLE produto (
     PRIMARY KEY (id)
 );
 
+INSERT INTO produto (
+    nome,
+    sku,
+    tamanho,
+    cor,
+    custo_materia_prima,
+    margem_percentual,
+    preco_venda,
+    saldo_estoque,
+    estoque_minimo,
+    ativo
+) VALUES
+
+-- 1. Produto ativo com estoque normal
+(
+    'Camiseta Teste Normal',
+    'TESTE-PROD-001',
+    'M',
+    'Preto',
+    25.00,
+    100.00,
+    50.00,
+    30,
+    5,
+    1
+),
+
+-- 2. Produto ativo com estoque baixo
+(
+    'Calca Teste Estoque Baixo',
+    'TESTE-PROD-002',
+    '42',
+    'Azul',
+    45.00,
+    100.00,
+    90.00,
+    3,
+    5,
+    1
+),
+
+-- 3. Produto ativo sem estoque
+(
+    'Tenis Teste Sem Estoque',
+    'TESTE-PROD-003',
+    '40',
+    'Branco',
+    100.00,
+    100.00,
+    200.00,
+    0,
+    5,
+    1
+),
+
+-- 4. Produto inativo
+(
+    'Moletom Teste Inativo',
+    'TESTE-PROD-004',
+    'G',
+    'Cinza',
+    60.00,
+    100.00,
+    120.00,
+    15,
+    5,
+    0
+);
+
 CREATE TABLE pedido (
     id INT NOT NULL AUTO_INCREMENT,
     data_pedido DATETIME,
@@ -117,6 +197,27 @@ CREATE TABLE pedido (
     CONSTRAINT fk_pedido_usuario
         FOREIGN KEY (usuario_id) REFERENCES usuario (id)
 );
+
+INSERT INTO pedido
+(data_pedido, status, valor_total, forma_pagamento, prazo_pagamento, cliente_id, usuario_id)
+VALUES
+-- João: 3 pedidos concluídos (recorrente)
+('2026-09-10 10:30:00', 'concluido', 150.00, 'PIX', '2026-09-10', 1, 1),
+('2026-10-05 14:20:00', 'concluido', 250.00, 'Cartão', '2026-10-05', 1, 1),
+('2026-10-25 09:15:00', 'concluido', 350.00, 'PIX', '2026-10-25', 1, 1),
+ 
+-- Maria: 2 pedidos concluídos (recorrente)
+('2026-09-15 11:00:00', 'concluido', 200.00, 'Cartão', '2026-09-15', 2, 1),
+('2026-10-20 16:30:00', 'concluido', 180.00, 'PIX', '2026-10-20', 2, 1),
+ 
+-- Pedro: apenas 1 pedido concluído
+('2026-10-18 13:00:00', 'concluido', 420.00, 'Dinheiro', '2026-10-18', 3, 1),
+ 
+-- Ana: pedido pendente (não conta como compra concluída)
+('2026-10-28 15:00:00', 'pendente', 120.00, 'PIX', '2026-10-30', 4, 1),
+ 
+-- Lucas: pedido cancelado
+('2026-10-22 12:00:00', 'cancelado', 90.00, 'Cartão', '2026-10-22', 5, 1);
 
 CREATE TABLE item_pedido (
     id INT NOT NULL AUTO_INCREMENT,
