@@ -1,5 +1,5 @@
 import { demoProducts } from '../model/demo-products.js'
-import { httpClient } from '../../../shared/api/http-client.js'
+import { apiClient } from '../../../shared/api/axios-client.js'
 import { PRODUCT_STATUS, normalizeProduct, toProduct } from '../model/product-model.js'
 
 const STORAGE_KEY = 'bruvifit:produtos:demo:v3'
@@ -106,26 +106,36 @@ export function createDemoProductsRepository(storage = (typeof window !== 'undef
   }
 }
 
-export function createApiProductsRepository(client = null) {
-  const getClient = async () => client ?? httpClient
-
+export function createApiProductsRepository(client = apiClient) {
   return {
     async list() {
-      return asList(unwrap(await (await getClient()).get('/produtos'))).map(normalizeProduct)
+      const response = await client.get('/produtos')
+      return asList(unwrap(response)).map(normalizeProduct)
     },
+
     async get(id) {
-      return normalizeProduct(unwrap(await (await getClient()).get(`/produtos/${encodeURIComponent(id)}`)))
+      const response = await client.get(`/produtos/${encodeURIComponent(id)}`)
+      return normalizeProduct(unwrap(response))
     },
+
     async create(data) {
-      const saved = unwrap(await (await getClient()).post('/produtos', toBackendPayload(data)))
-      return normalizeProduct({ ...data, ...(saved || {}) })
+      const response = await client.post('/produtos', toBackendPayload(data))
+      return normalizeProduct({ ...data, ...(unwrap(response) || {}) })
     },
+
     async update(id, data) {
-      const saved = unwrap(await (await getClient()).put(`/produtos/${encodeURIComponent(id)}`, toBackendPayload(data, false)))
-      return normalizeProduct({ ...data, id, ...(saved || {}) })
+      const response = await client.put(
+        `/produtos/${encodeURIComponent(id)}`,
+        toBackendPayload(data, false)
+      )
+      return normalizeProduct({ ...data, id, ...(unwrap(response) || {}) })
     },
+
     async deactivate(id) {
-      return normalizeProduct(unwrap(await (await getClient()).patch(`/produtos/${encodeURIComponent(id)}/inativar`)))
+      const response = await client.patch(
+        `/produtos/${encodeURIComponent(id)}/inativar`
+      )
+      return normalizeProduct(unwrap(response))
     },
   }
 }
