@@ -270,10 +270,39 @@ CREATE TABLE financeiro (
     data_recebimento DATE,
     situacao VARCHAR(45),
     pedido_id INT NULL,
+    forma_pagamento VARCHAR(45),
     PRIMARY KEY (id),
     CONSTRAINT fk_movimentacao_financeiro_pedido
         FOREIGN KEY (pedido_id) REFERENCES pedido (id)
 );
+
+INSERT INTO financeiro
+(tipo, categoria, valor, data_competencia, data_recebimento, situacao, pedido_id, forma_pagamento)
+VALUES
+ 
+-- RECEITAS: pedidos concluídos
+ 
+('RECEITA', 'Venda de produtos', 150.00, '2026-09-10', '2026-09-10', 'RECEBIDO', 1, 'PIX'),
+ 
+('RECEITA', 'Venda de produtos', 250.00, '2026-10-05', '2026-10-05', 'RECEBIDO', 2, 'Cartão'),
+ 
+('RECEITA', 'Venda de produtos', 350.00, '2026-10-25', '2026-10-25', 'RECEBIDO', 3, 'PIX'),
+ 
+('RECEITA', 'Venda de produtos', 200.00, '2026-09-15', '2026-09-15', 'RECEBIDO', 4, 'Cartão'),
+ 
+('RECEITA', 'Venda de produtos', 180.00, '2026-10-20', '2026-10-20', 'RECEBIDO', 5, 'PIX'),
+ 
+('RECEITA', 'Venda de produtos', 420.00, '2026-10-18', '2026-10-18', 'RECEBIDO', 6, 'Dinheiro'),
+ 
+-- DESPESAS: exemplos de custos operacionais
+ 
+('DESPESA', 'Aluguel', 800.00, '2026-09-05', '2026-09-05', 'PAGO', NULL, NULL),
+ 
+('DESPESA', 'Fornecedores', 350.00, '2026-09-20', '2026-09-20', 'PAGO', NULL, NULL),
+ 
+('DESPESA', 'Marketing', 120.00, '2026-10-10', '2026-10-10', 'PAGO', NULL, NULL),
+ 
+('DESPESA', 'Transporte', 90.00, '2026-10-22', '2026-10-22', 'PAGO', NULL, NULL);
 
 CREATE TABLE alerta (
     id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
