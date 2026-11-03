@@ -40,10 +40,13 @@ public class Financeiro {
     @Column(name = "pedido_id")
     private Integer pedidoId;
 
+    @Column(name = "forma_pagamento", length = 45)
+    private String formaPagamento;
+
     public Financeiro() {
     }
 
-    public Financeiro(Integer id, String tipo, String categoria, BigDecimal valor, LocalDate dataCompetencia, LocalDate dataRecebimento, String situacao, Integer pedidoId) {
+    public Financeiro(Integer id, String tipo, String categoria, BigDecimal valor, LocalDate dataCompetencia, LocalDate dataRecebimento, String situacao, Integer pedidoId, String formaPagamento) {
         this.id = id;
         this.tipo = tipo;
         this.categoria = categoria;
@@ -52,6 +55,7 @@ public class Financeiro {
         this.dataRecebimento = dataRecebimento;
         this.situacao = situacao;
         this.pedidoId = pedidoId;
+        this.formaPagamento = formaPagamento;
     }
 
     public Integer getId() {
@@ -116,5 +120,13 @@ public class Financeiro {
 
     public void setPedidoId(Integer pedidoId) {
         this.pedidoId = pedidoId;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento;
+    }
+
+    public void setFormaPagamento(String formaPagamento) {
+        this.formaPagamento = formaPagamento;
     }
 }

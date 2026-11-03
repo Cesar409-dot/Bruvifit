@@ -14,7 +14,9 @@ public class FinanceiroResponse {
     private String situacao;
     private Integer pedidoId;
 
-    public FinanceiroResponse(Integer id, String tipo, String categoria, BigDecimal valor, LocalDate dataCompetencia, LocalDate dataRecebimento, String situacao, Integer pedidoId) {
+    private String formaPagamento;
+
+    public FinanceiroResponse(Integer id, String tipo, String categoria, BigDecimal valor, LocalDate dataCompetencia, LocalDate dataRecebimento, String situacao, Integer pedidoId, String formaPagamento) {
         this.id = id;
         this.tipo = tipo;
         this.categoria = categoria;
@@ -23,6 +25,7 @@ public class FinanceiroResponse {
         this.dataRecebimento = dataRecebimento;
         this.situacao = situacao;
         this.pedidoId = pedidoId;
+        this.formaPagamento = formaPagamento;
     }
 
     public Integer getId() {
@@ -55,5 +58,9 @@ public class FinanceiroResponse {
 
     public Integer getPedidoId() {
         return pedidoId;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento;
     }
 }

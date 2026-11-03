@@ -25,19 +25,7 @@ public class FinanceiroService {
         List<FinanceiroResponse> financeiroResponse = new ArrayList<>();
 
         for (Financeiro f : financeiros) {
-            FinanceiroResponse respostaDaVez =
-                    new FinanceiroResponse(
-                            f.getId(),
-                            f.getTipo(),
-                            f.getCategoria(),
-                            f.getValor(),
-                            f.getDataCompetencia(),
-                            f.getDataRecebimento(),
-                            f.getSituacao(),
-                            f.getPedidoId()
-                    );
-
-            financeiroResponse.add(respostaDaVez);
+            financeiroResponse.add(FinanceiroMapper.toResponse(f));
         }
 
         return financeiroResponse;
@@ -49,15 +37,7 @@ public class FinanceiroService {
 
     @Transactional
     public Financeiro cadastrar(FinanceiroRequest financeiroRequest) {
-        Financeiro financeiroParaCadastro = new Financeiro();
-
-        financeiroParaCadastro.setTipo(financeiroRequest.getTipo());
-        financeiroParaCadastro.setCategoria(financeiroRequest.getCategoria());
-        financeiroParaCadastro.setValor(financeiroRequest.getValor());
-        financeiroParaCadastro.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        financeiroParaCadastro.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        financeiroParaCadastro.setSituacao(financeiroRequest.getSituacao());
-        financeiroParaCadastro.setPedidoId(financeiroRequest.getPedidoId());
+        Financeiro financeiroParaCadastro = FinanceiroMapper.toEntity(financeiroRequest);
 
         return repository.save(financeiroParaCadastro);
     }
@@ -71,14 +51,7 @@ public class FinanceiroService {
         }
 
         Financeiro financeiroParaAtualizar = optFinanceiro.get();
-
-        financeiroParaAtualizar.setTipo(financeiroRequest.getTipo());
-        financeiroParaAtualizar.setCategoria(financeiroRequest.getCategoria());
-        financeiroParaAtualizar.setValor(financeiroRequest.getValor());
-        financeiroParaAtualizar.setDataCompetencia(financeiroRequest.getDataCompetencia());
-        financeiroParaAtualizar.setDataRecebimento(financeiroRequest.getDataRecebimento());
-        financeiroParaAtualizar.setSituacao(financeiroRequest.getSituacao());
-        financeiroParaAtualizar.setPedidoId(financeiroRequest.getPedidoId());
+        FinanceiroMapper.updateEntity(financeiroParaAtualizar, financeiroRequest);
 
         return Optional.of(repository.save(financeiroParaAtualizar));
     }

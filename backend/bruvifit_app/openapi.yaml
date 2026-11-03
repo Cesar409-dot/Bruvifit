@@ -1096,7 +1096,101 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResumoFinanceiroResponse'
+    get:
+      summary: Obtém evolucao financeira por periodo (serie para grafico de barras)
+      description: Retorna a serie de receitas e despesas agrupadas por dia (periodo ate 31 dias) ou mes (acima de 31 dias), com buracos preenchidos por zero.
+      operationId: getEvolucaoFinanceiro
+      tags:
+        - Dashboard
+      parameters:
+        - name: inicio
+          in: query
+          required: false
+          description: Data de início do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: fim
+          in: query
+          required: false
+          description: Data de fim do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Evolucao financeira obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvolucaoFinanceiroResponse'
+    get:
+      summary: Obtém distribuicao de receitas por forma de pagamento (donut)
+      description: Retorna o total e a lista de formas de pagamento das receitas do período, com percentual calculado pelo valor.
+      operationId: getFormasPagamento
+      tags:
+        - Dashboard
+      parameters:
+        - name: inicio
+          in: query
+          required: false
+          description: Data de início do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: fim
+          in: query
+          required: false
+          description: Data de fim do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Formas de pagamento obtidas com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormasPagamentoResponse'
+    get:
+      summary: Obtém ultimas movimentacoes financeiras
+      description: Retorna as ultimas movimentacoes do período, ordenadas por data de competencia desc, limitadas pelo parametro limite (default 10, max 100).
+      operationId: getMovimentacoes
+      tags:
+        - Dashboard
+      parameters:
+        - name: inicio
+          in: query
+          required: false
+          description: Data de início do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: fim
+          in: query
+          required: false
+          description: Data de fim do período (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: limite
+          in: query
+          required: false
+          description: Quantidade máxima de linhas (default 10, max 100)
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+      responses:
+        '200':
+          description: Movimentacoes obtidas com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MovimentacaoResponse'
     get:
       summary: Obtém top de produtos por margem
       description: Retorna os produtos com as maiores margens de lucro.
@@ -1677,6 +1771,10 @@ components:
           type: integer
           example: 1
           description: ID do pedido associado
+        formaPagamento:
+          type: string
+          example: "Pix"
+          description: Forma de pagamento (opcional)
       required:
         - tipo
         - categoria
@@ -1692,7 +1790,7 @@ components:
           description: ID único da movimentação financeira
         tipo:
           type: string
-          example: "ENTRADA"
+          example: "RECEITA"
           description: Tipo da movimentação
         categoria:
           type: string
@@ -1715,12 +1813,143 @@ components:
           description: Data de recebimento
         situacao:
           type: string
-          example: "PENDENTE"
+          example: "Concluído"
           description: Situação da movimentação
         pedidoId:
           type: integer
           example: 1
           description: ID do pedido associado
+        formaPagamento:
+          type: string
+          example: "Pix"
+          description: Forma de pagamento (opcional)
+    ResumoFinanceiroResponse:
+      type: object
+      properties:
+        totalReceitas:
+          type: number
+          format: decimal
+          example: 730.00
+          description: Soma das receitas do período
+        totalDespesas:
+          type: number
+          format: decimal
+          example: 1200.00
+          description: Soma das despesas do período
+        saldo:
+          type: number
+          format: decimal
+          example: -470.00
+          description: Resultado (receitas menos despesas)
+        quantidadeReceitas:
+          type: integer
+          example: 2
+          description: Quantidade de lançamentos de receita no período
+        quantidadeDespesas:
+          type: integer
+          example: 1
+          description: Quantidade de lançamentos de despesa no período
+        ticketMedio:
+          type: number
+          format: decimal
+          example: 365.00
+          description: Ticket medio das receitas (totalReceitas / quantidadeReceitas)
+    EvolucaoFinanceiroResponse:
+      type: object
+      properties:
+        granularidade:
+          type: string
+          example: "DIA"
+          description: Granularidade da serie (DIA ou MES)
+        pontos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PontoEvolucao'
+    PontoEvolucao:
+      type: object
+      properties:
+        data:
+          type: string
+          example: "2026-01-08"
+          description: Data da agregacao (yyyy-MM-dd ou yyyy-MM)
+        receitas:
+          type: number
+          format: decimal
+          example: 480.00
+        despesas:
+          type: number
+          format: decimal
+          example: 0.00
+    FormasPagamentoResponse:
+      type: object
+      properties:
+        total:
+          type: number
+          format: decimal
+          example: 730.00
+          description: Total das receitas considerado na distribuicao
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormaPagamentoItem'
+    FormaPagamentoItem:
+      type: object
+      properties:
+        forma:
+          type: string
+          example: "Pix"
+          description: Forma de pagamento (ou 'Não informado')
+        quantidade:
+          type: integer
+          example: 3
+          description: Quantidade de lancamentos
+        valor:
+          type: number
+          format: decimal
+          example: 547.50
+          description: Soma dos valores da forma
+        percentual:
+          type: number
+          format: decimal
+          example: 75.0
+          description: Percentual sobre o total (1 casa decimal)
+    MovimentacaoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+          description: ID da movimentacao
+        data:
+          type: string
+          format: date
+          example: "2026-01-10"
+          description: Data de competencia
+        descricao:
+          type: string
+          example: "Venda #123"
+          description: Descricao derivada (Venda #<pedidoId> ou categoria)
+        tipo:
+          type: string
+          example: "RECEITA"
+          description: Tipo da movimentacao
+        forma:
+          type: string
+          example: "Pix"
+          description: Forma de pagamento (pode ser null)
+        valor:
+          type: number
+          format: decimal
+          example: 250.00
+          description: Valor sempre positivo
+        situacao:
+          type: string
+          example: "Concluído"
+          description: Situacao da movimentacao
+        pedidoId:
+          type: integer
+          example: 123
+          description: ID do pedido associado (pode ser null)
   securitySchemes:
     bearerAuth:
       type: http
