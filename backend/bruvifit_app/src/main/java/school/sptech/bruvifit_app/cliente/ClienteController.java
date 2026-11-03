@@ -67,8 +67,9 @@ public class ClienteController {
                 .body(clienteAtualizado.get());
     }
 
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Cliente> deletar(
+    public ResponseEntity<Void> deletar(
             @PathVariable Integer id) {
 
         boolean deletado = service.deletar(id);
@@ -79,6 +80,7 @@ public class ClienteController {
 
         return ResponseEntity.status(204).build();
     }
+
 
     @GetMapping("/indicadores")
     public ResponseEntity<Map<String, Integer>> indicadores() {

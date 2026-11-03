@@ -1,20 +1,19 @@
+
 package school.sptech.bruvifit_app.cliente;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import school.sptech.bruvifit_app.cliente.ClienteMapper;
 import school.sptech.bruvifit_app.cliente.request.ClienteRequest;
 import school.sptech.bruvifit_app.cliente.response.ClienteResponse;
 import school.sptech.bruvifit_app.endereco.Endereco;
 import school.sptech.bruvifit_app.endereco.EnderecoRepository;
 import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
-import school.sptech.bruvifit_app.pedido.Pedido;
 import school.sptech.bruvifit_app.pedido.PedidoRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ClienteService {
@@ -23,31 +22,20 @@ public class ClienteService {
     private final EnderecoRepository enderecoRepository;
     private final PedidoRepository pedidoRepository;
 
-    public ClienteService(ClienteRepository repository, EnderecoRepository enderecoRepository, PedidoRepository pedidoRepository) {
+    public ClienteService(
+            ClienteRepository repository,
+            EnderecoRepository enderecoRepository,
+            PedidoRepository pedidoRepository) {
+
         this.repository = repository;
         this.enderecoRepository = enderecoRepository;
         this.pedidoRepository = pedidoRepository;
     }
 
     public List<ClienteResponse> listar() {
-        List<Cliente> clientes = repository.findAll();
-        return clientes.stream()
-                .map(cliente -> {
-                    Endereco endereco = enderecoRepository.findById(cliente.getId())
-                            .orElse(null);
-                    // Buscar última compra para este cliente
-                    String ultimaCompra = null;
-                    List<LocalDateTime> ultimas = pedidoRepository.findUltimasComprasByClienteId(cliente.getId());
-                    if (ultimas != null && !ultimas.isEmpty()) {
-                        LocalDateTime dataMaisRecente = ultimas.stream()
-                                .max(LocalDateTime::compareTo)
-                                .orElse(null);
-                        if (dataMaisRecente != null) {
-                            ultimaCompra = dataMaisRecente.toLocalDate().toString();
-                        }
-                    }
-                    return ClienteMapper.toResponse(cliente, endereco, ultimaCompra);
-                })
+        return repository.findAll()
+                .stream()
+                .map(this::converterParaResponse)
                 .toList();
     }
 
@@ -56,136 +44,141 @@ public class ClienteService {
     }
 
     @Transactional
-    public Cliente cadastrar(ClienteRequest clienteRequest) {
-        if (repository.existsByEmail(clienteRequest.getEmail())) {
-            throw new ConflitoDeDadosException("E-mail já cadastrado");
+    public Cliente cadastrar(ClienteRequest request) {
+
+        if (repository.existsByEmail(request.getEmail())) {
+            throw new ConflitoDeDadosException(
+                    "E-mail já cadastrado"
+            );
         }
-        Cliente cliente = ClienteMapper.toEntity(clienteRequest);
+
+        Cliente cliente = ClienteMapper.toEntity(request);
+
         cliente.setCriadoEm(LocalDateTime.now());
         cliente.setAtivo(true);
-        Cliente clienteSalvo = repository.save(cliente);
 
-        // Cadastro do endereço relacionado - definir clienteId no endereço
-        if (clienteRequest.getClienteId() != null) {
-            Endereco endereco = new Endereco();
-            endereco.setClienteId(clienteSalvo.getId());
-            // Os demais campos do endereço viriam do request ou seriam preenchidos depois
-            enderecoRepository.save(endereco);
-        }
-
-        return clienteSalvo;
+        return repository.save(cliente);
     }
 
     @Transactional
-    public Optional<Cliente> atualizar(Integer id, ClienteRequest clienteRequest) {
-        return repository.findById(id)
-                .map(cliente -> {
-                    ClienteMapper.updateEntity(cliente, clienteRequest);
-                    Cliente clienteAtualizado = repository.save(cliente);
+    public Optional<Cliente> atualizar(
+            Integer id,
+            ClienteRequest request) {
 
-                    // Atualiza endereço se existir, caso contrário pode criar novo
-                    Endereco endereco = enderecoRepository.findById(cliente.getId())
-                            .orElse(null);
-                    if (endereco == null && clienteRequest.getClienteId() != null) {
-                        endereco = new Endereco();
-                        endereco.setClienteId(clienteAtualizado.getId());
-                    }
-                    if (endereco != null) {
-                        endereco.setCep(clienteRequest.getCep());
-                        endereco.setRua(clienteRequest.getRua());
-                        endereco.setLogradouro(clienteRequest.getLogradouro());
-                        endereco.setNumero(clienteRequest.getNumero());
-                        endereco.setComplemento(clienteRequest.getComplemento());
-                        endereco.setBairro(clienteRequest.getBairro());
-                        endereco.setCidade(clienteRequest.getCidade());
-                        endereco.setEstado(clienteRequest.getEstado());
-                        enderecoRepository.save(endereco);
-                    }
+        Optional<Cliente> clienteEncontrado = repository.findById(id);
 
-                    return Optional.of(clienteAtualizado);
-                });
+        if (clienteEncontrado.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Cliente cliente = clienteEncontrado.get();
+
+        if (!cliente.getEmail().equalsIgnoreCase(request.getEmail())
+                && repository.existsByEmailAndIdNot(
+                request.getEmail(), id)) {
+
+            throw new ConflitoDeDadosException(
+                    "E-mail já cadastrado"
+            );
+        }
+
+        ClienteMapper.updateEntity(cliente, request);
+
+        return Optional.of(repository.save(cliente));
     }
 
     @Transactional
     public boolean deletar(Integer id) {
-        if (!repository.existsById(id)) {
+
+        Optional<Cliente> clienteEncontrado = repository.findById(id);
+
+        if (clienteEncontrado.isEmpty()) {
             return false;
         }
-        // Verificar se há endereços relacionados
-        if (enderecoRepository.existsByClienteId(id)) {
-            // Em vez de excluir, faremos soft delete usando o campo ativo
-            // Marcar cliente como inativo
-            Optional<Cliente> clienteOpt = repository.findById(id);
-            if (clienteOpt.isPresent()) {
-                Cliente cliente = clienteOpt.get();
-                cliente.setAtivo(false);
-                repository.save(cliente);
-                return true;
-            }
-        }
-        repository.deleteById(id);
+
+        Cliente cliente = clienteEncontrado.get();
+        cliente.setAtivo(false);
+
+        repository.save(cliente);
+
         return true;
     }
 
-    // KPIs
     public Integer totalClientes() {
         return (int) repository.count();
     }
 
     public Integer clientesAtivos() {
-        return (int) repository.findByAtivoTrue().size();
+        return repository.findByAtivoTrue().size();
     }
 
     public Integer clientesRecorrentes() {
-        // Cliente recorrente: possui pelo menos 2 pedidos com status 'concluido'
-        Long count = pedidoRepository.countClientesRecorrentes();
-        return count.intValue();
+        Long total = pedidoRepository.countClientesRecorrentes();
+
+        return total == null ? 0 : total.intValue();
     }
+
 
     public String getUltimaCompra(Integer clienteId) {
-        // Buscar a data do pedido mais recente com status 'concluido' para este cliente
-        List<LocalDateTime> ultimas = pedidoRepository.findUltimasComprasByClienteId(clienteId);
-        if (ultimas == null || ultimas.isEmpty()) {
+
+        LocalDateTime ultimaCompra =
+                pedidoRepository.findUltimaCompraByClienteId(clienteId);
+
+        if (ultimaCompra == null) {
             return null;
         }
-        // Retornar a data mais recente
-        LocalDateTime dataMaisRecente = ultimas.stream()
-                .max(LocalDateTime::compareTo)
-                .orElse(null);
-        if (dataMaisRecente == null) {
-            return null;
-        }
-        // Formatar para dd/MM/yyyy
-        return dataMaisRecente.toLocalDate().toString();
+
+        return ultimaCompra.toLocalDate().toString();
     }
 
-    // Busca e filtros - usando query methods do Spring Data
-    public List<ClienteResponse> buscar(String nome, String email, String telefone, Boolean ativo) {
+
+    public List<ClienteResponse> buscar(
+            String nome,
+            String email,
+            String telefone,
+            Boolean ativo) {
+
         List<Cliente> clientes;
-        
-        if (nome != null && !nome.isEmpty()) {
+
+        if (nome != null && !nome.isBlank()) {
             clientes = repository.findByNomeContainingIgnoreCase(nome);
-        } else if (email != null && !email.isEmpty()) {
+
+        } else if (email != null && !email.isBlank()) {
             clientes = repository.findByEmailContainingIgnoreCase(email);
-        } else if (telefone != null && !telefone.isEmpty()) {
+
+        } else if (telefone != null && !telefone.isBlank()) {
             clientes = repository.findByTelefoneContaining(telefone);
+
         } else {
             clientes = repository.findAll();
         }
-        
-        // Aplicar filtro deativo se especificado
+
         if (ativo != null) {
             clientes = clientes.stream()
-                    .filter(c -> c.getAtivo().equals(ativo))
+                    .filter(cliente ->
+                            Objects.equals(cliente.getAtivo(), ativo))
                     .toList();
         }
-        
+
         return clientes.stream()
-                .map(cliente -> {
-                    Endereco endereco = enderecoRepository.findById(cliente.getId())
-                            .orElse(null);
-                    return ClienteMapper.toResponse(cliente, endereco);
-                })
+                .map(this::converterParaResponse)
                 .toList();
+    }
+
+    private ClienteResponse converterParaResponse(Cliente cliente) {
+
+        Endereco endereco = enderecoRepository
+                .findByClienteId(cliente.getId())
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        String ultimaCompra = getUltimaCompra(cliente.getId());
+
+        return ClienteMapper.toResponse(
+                cliente,
+                endereco,
+                ultimaCompra
+        );
     }
 }
