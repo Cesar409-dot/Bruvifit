@@ -33,6 +33,9 @@ public class FinanceiroRequest {
 
     private Integer pedidoId;
 
+    @Size(max = 45)
+    private String formaPagamento;
+
     public String getTipo() {
         return tipo;
     }
@@ -87,5 +90,13 @@ public class FinanceiroRequest {
 
     public void setPedidoId(Integer pedidoId) {
         this.pedidoId = pedidoId;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento;
+    }
+
+    public void setFormaPagamento(String formaPagamento) {
+        this.formaPagamento = formaPagamento;
     }
 }

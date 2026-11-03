@@ -18,6 +18,7 @@ public class FinanceiroMapper {
         financeiro.setDataRecebimento(request.getDataRecebimento());
         financeiro.setSituacao(request.getSituacao());
         financeiro.setPedidoId(request.getPedidoId());
+        financeiro.setFormaPagamento(request.getFormaPagamento());
         return financeiro;
     }
 
@@ -30,7 +31,8 @@ public class FinanceiroMapper {
                 financeiro.getDataCompetencia(),
                 financeiro.getDataRecebimento(),
                 financeiro.getSituacao(),
-                financeiro.getPedidoId()
+                financeiro.getPedidoId(),
+                financeiro.getFormaPagamento()
         );
     }
 
@@ -42,5 +44,6 @@ public class FinanceiroMapper {
         financeiro.setDataRecebimento(request.getDataRecebimento());
         financeiro.setSituacao(request.getSituacao());
         financeiro.setPedidoId(request.getPedidoId());
+        financeiro.setFormaPagamento(request.getFormaPagamento());
     }
 }
