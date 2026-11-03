@@ -103,4 +103,8 @@ public class EnderecoService {
         repository.deleteById(id);
         return true;
     }
+
+    public List<Endereco> listarPorCliente(Integer clienteId) {
+        return repository.findByClienteId(clienteId);
+    }
 }

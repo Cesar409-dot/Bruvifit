@@ -1,4 +1,3 @@
-
 package school.sptech.bruvifit_app.cliente;
 
 import jakarta.validation.Valid;
@@ -7,7 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.cliente.request.ClienteRequest;
 import school.sptech.bruvifit_app.cliente.response.ClienteResponse;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -77,5 +78,19 @@ public class ClienteController {
         }
 
         return ResponseEntity.status(204).build();
+    }
+
+    @GetMapping("/indicadores")
+    public ResponseEntity<Map<String, Integer>> indicadores() {
+        Integer total = service.totalClientes();
+        Integer ativos = service.clientesAtivos();
+        Integer recorrentes = service.clientesRecorrentes();
+
+        Map<String, Integer> mapa = new HashMap<>();
+        mapa.put("totalClientes", total);
+        mapa.put("clientesAtivos", ativos);
+        mapa.put("clientesRecorrentes", recorrentes);
+
+        return ResponseEntity.status(200).body(mapa);
     }
 }

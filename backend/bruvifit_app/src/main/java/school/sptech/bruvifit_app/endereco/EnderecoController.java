@@ -68,4 +68,33 @@ public class EnderecoController {
 
         return ResponseEntity.status(204).build();
     }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<EnderecoResponse>> listarPorCliente(
+            @PathVariable Integer clienteId) {
+
+        List<Endereco> enderecos = service.listarPorCliente(clienteId);
+
+        if (enderecos.isEmpty()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        // Converter para resposta
+        List<EnderecoResponse> respostas = enderecos.stream()
+                .map(e -> new EnderecoResponse(
+                        e.getId(),
+                        e.getClienteId(),
+                        e.getCep(),
+                        e.getRua(),
+                        e.getLogradouro(),
+                        e.getNumero(),
+                        e.getComplemento(),
+                        e.getBairro(),
+                        e.getCidade(),
+                        e.getEstado()
+                ))
+                .toList();
+
+        return ResponseEntity.status(200).body(respostas);
+    }
 }
