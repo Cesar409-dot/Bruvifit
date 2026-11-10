@@ -53,6 +53,7 @@ function ProtectedRoutes() {
   }
 
   return (
+    <ClientesProvider>
     <Shell>
       <Routes>
         <Route path="/clientes" element={<ClientesListPage />} />
@@ -75,12 +76,13 @@ function ProtectedRoutes() {
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
     </Shell>
+    </ClientesProvider>
   );
 }
 
 export default function App() {
   return (
-    <ClientesProvider>
+    <>
       <ScrollToTop />
 
       <Routes>
@@ -88,6 +90,6 @@ export default function App() {
         <Route path="/acesso" element={<AccessPage />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>
-    </ClientesProvider>
+    </>
   );
 }

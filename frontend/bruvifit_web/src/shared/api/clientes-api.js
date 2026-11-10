@@ -1,7 +1,14 @@
 import { apiClient } from './axios-client.js';
 
 export const clientesAPI = {
-  listar: () => apiClient.get('/clientes'),
+  listar: async () => {
+    const { data } = await apiClient.get('/clientes');
+    // ClienteController.listar returns List<ClienteResponse>, not a Spring Page.
+    if (!Array.isArray(data)) {
+      throw new Error('Resposta inválida de GET /clientes: esperada uma lista JSON sem paginação.');
+    }
+    return data;
+  },
   buscar: (nome, email, telefone, ativo) =>
     apiClient.get('/clientes', { params: { nome, email, telefone, ativo } }),
   porId: (id) => apiClient.get(`/clientes/${id}`),

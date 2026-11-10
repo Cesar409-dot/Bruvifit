@@ -11,6 +11,14 @@ npm run dev
 
 O frontend espera a API em `http://localhost:8080` por padrão. Para usar outro endereço, defina `VITE_API_BASE_URL` no ambiente antes de iniciar o Vite.
 
+Use a URL base do backend, sem acrescentar `/api` (ex.: `http://localhost:8080`).
+Reinicie o Vite após mudar essa variável. Não há proxy configurado no Vite.
+O login usa `POST /api/auth/login` com `{ email, senha }`; o campo `token` da
+resposta é armazenado na sessão e enviado como `Authorization: Bearer <token>`.
+`GET /clientes` retorna diretamente `List<ClienteResponse>` em JSON, sem paginação
+ou envelope `content`. Respostas fora desse contrato são tratadas como erro,
+sem substituição por listas vazias. A consulta ocorre após a autenticação.
+
 ## Estrutura
 
 ```text

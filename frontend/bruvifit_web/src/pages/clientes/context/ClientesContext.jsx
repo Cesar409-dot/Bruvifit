@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import { apiClient } from '../../../shared/api/axios-client.js';
+import { clientesAPI } from '../../../shared/api/clientes-api.js';
 
 const ClientesContext = createContext(null);
 
@@ -45,11 +46,15 @@ export function ClientesProvider({ children }) {
     setErro('');
 
     try {
-      const resposta = await apiClient.get('/clientes');
-      setClientes(resposta.data.map(normalizar));
+      const dados = await clientesAPI.listar();
+      setClientes(dados.map(normalizar));
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
-      setErro('Não foi possível carregar os clientes. Verifique o backend.');
+      setErro(error.response?.status === 401
+        ? 'Sessão expirada. Faça login novamente.'
+        : error.response
+          ? 'Não foi possível carregar os clientes. Verifique o backend.'
+          : error.message);
     } finally {
       setCarregando(false);
     }

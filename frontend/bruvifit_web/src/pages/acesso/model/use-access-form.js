@@ -59,6 +59,9 @@ export function useAccessForm() {
   }
 
   function loginErrorMessage(error) {
+    if (error?.code === 'ERR_INVALID_LOGIN_RESPONSE') {
+      return error.message;
+    }
     if (!error || !error.response) {
       return 'Não foi possível conectar ao servidor. Verifique se o backend está em execução e tente novamente.';
     }

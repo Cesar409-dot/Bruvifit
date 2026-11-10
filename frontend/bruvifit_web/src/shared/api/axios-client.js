@@ -2,7 +2,7 @@ import axios from 'axios';
 import { session } from '../auth/session.js';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env?.VITE_API_BASE_URL?.trim() || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
