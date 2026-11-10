@@ -26,7 +26,7 @@ public class Alerta {
     @Column(name = "nivel", length = 45)
     private String nivel;
 
-    @Column(name = "criadoEm")
+    @Column(name = "criado_em")
     private LocalDateTime criadoEm;
 
     @Column(name = "ativo", nullable = false)

@@ -73,7 +73,7 @@ class DashboardServiceTest {
         assertEquals(BigDecimal.valueOf(730), resumo.getTotalReceitas());
         assertEquals(BigDecimal.valueOf(1200), resumo.getTotalDespesas());
         assertEquals(BigDecimal.valueOf(-470), resumo.getSaldo());
-        assertEquals(BigDecimal.valueOf(365), resumo.getTicketMedio());
+        assertEquals(0, BigDecimal.valueOf(365).compareTo(resumo.getTicketMedio()));
         assertEquals(2, resumo.getQuantidadeReceitas());
         assertEquals(1, resumo.getQuantidadeDespesas());
         // Coerencia entre blocos: entradas - saidas = saldo
@@ -135,7 +135,7 @@ class DashboardServiceTest {
         FormasPagamentoResponse resp = serviceCom(repo)
                 .getFormasPagamentoReceitas(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
 
-        assertEquals(BigDecimal.valueOf(730), resp.getTotal());
+        assertEquals(0, BigDecimal.valueOf(730).compareTo(resp.getTotal()));
         assertEquals(2, resp.getItens().size());
         double soma = resp.getItens().stream()
                 .mapToDouble(item -> item.getPercentual())

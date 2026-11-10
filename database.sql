@@ -4,7 +4,6 @@ CREATE DATABASE IF NOT EXISTS bruvifit
     COLLATE utf8mb4_unicode_ci;
 
 USE bruvifit;
-DROP TABLE IF EXISTS usuario;
 
 CREATE TABLE usuario (
     id INT NOT NULL AUTO_INCREMENT,
@@ -95,6 +94,7 @@ CREATE TABLE fornecedor (
     cnpj VARCHAR(45),
     contato VARCHAR(45),
     email VARCHAR(45),
+    ativo TINYINT NOT NULL DEFAULT 1,
     PRIMARY KEY (id)
 );
 
@@ -109,8 +109,9 @@ CREATE TABLE produto (
     preco_venda DECIMAL(10, 2),
     saldo_estoque INT,
     estoque_minimo INT,
-    ativo TINYINT,
-    PRIMARY KEY (id)
+    ativo TINYINT NOT NULL DEFAULT 1,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_produto_sku (sku)
 );
 
 INSERT INTO produto (
@@ -309,6 +310,6 @@ CREATE TABLE alerta (
     titulo VARCHAR(45),
     descricao VARCHAR(200),
     nivel VARCHAR(45),
-    criadoEm DATETIME,
-    ativo VARCHAR(45)
+    criado_em DATETIME,
+    ativo TINYINT NOT NULL DEFAULT 1
 );
