@@ -103,6 +103,8 @@ CREATE TABLE fornecedor (
 CREATE TABLE produto (
     id INT NOT NULL AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
+    descricao VARCHAR(200) NULL,
+    categoria VARCHAR(45) NULL,
     sku VARCHAR(45),
     tamanho VARCHAR(45),
     cor VARCHAR(45),
@@ -113,9 +115,14 @@ CREATE TABLE produto (
     estoque_minimo INT,
     ativo TINYINT NOT NULL DEFAULT 1,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_produto_sku (sku)
+    UNIQUE KEY uk_produto_sku (sku),
+    CONSTRAINT chk_produto_categoria CHECK (
+        categoria IS NULL OR CAST(categoria AS BINARY) IN (
+            CAST('Camisetas' AS BINARY), CAST('Calças' AS BINARY), CAST('Acessórios' AS BINARY)
+        )
+    )
 );
-
+SELECT * FROM produto;
 INSERT INTO produto (
     nome,
     sku,

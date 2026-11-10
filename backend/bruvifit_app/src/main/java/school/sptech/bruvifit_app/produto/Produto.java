@@ -21,6 +21,12 @@ public class Produto {
     @Column(name = "nome", length = 45, nullable = false)
     private String nome;
 
+    @Column(name = "descricao", length = 200)
+    private String descricao;
+
+    @Column(name = "categoria", length = 45)
+    private String categoria;
+
     @Column(name = "sku", length = 45, unique = true)
     private String sku;
 
@@ -57,6 +63,22 @@ public class Produto {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
     }
 
     public String getNome() {

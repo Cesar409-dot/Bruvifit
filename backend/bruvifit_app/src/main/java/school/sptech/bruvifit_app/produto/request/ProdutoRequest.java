@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -13,6 +14,13 @@ public class ProdutoRequest {
     @NotBlank
     @Size(min = 1, max = 45)
     private String nome;
+
+    @Size(max = 200)
+    private String descricao;
+
+    @NotBlank(message = "Selecione uma categoria.")
+    @Pattern(regexp = "Camisetas|Calças|Acessórios", message = "Categoria inválida. Use Camisetas, Calças ou Acessórios.")
+    private String categoria;
 
     @Size(max = 45)
     private String sku;
@@ -40,6 +48,22 @@ public class ProdutoRequest {
 
     @Min(0)
     private Integer estoqueMinimo;
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
 
     public String getNome() {
         return nome;

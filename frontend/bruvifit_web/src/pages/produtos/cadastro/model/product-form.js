@@ -1,4 +1,5 @@
-export const PRODUCT_CREATE_CATEGORIES = ['Camisetas', 'Calças', 'Acessórios']
+import { validateProduct } from '../../model/product-model.js'
+
 export const PRODUCT_CREATE_SIZES = ['PP', 'P', 'M', 'G', 'GG']
 export const PRODUCT_CREATE_COLORS = ['Preto', 'Branco', 'Verde', 'Rosa']
 export const PRODUCT_CREATE_STATUS = 'Ativo'
@@ -36,34 +37,14 @@ function parseInteger(value) {
 }
 
 export function validateProductForm(form) {
-  const errors = {}
-
-  if (!String(form.name || '').trim()) errors.name = 'Informe o nome do produto.'
-  if (!String(form.category || '').trim()) errors.category = 'Selecione uma categoria.'
-
-  const sku = String(form.sku || '').trim()
-  if (!sku) errors.sku = 'Informe um SKU.'
-
-  const cost = parseDecimal(form.cost)
-  if (!Number.isFinite(cost) || cost < 0) errors.cost = 'Informe um preço de custo válido.'
-
-  const price = parseDecimal(form.price)
-  if (!Number.isFinite(price) || price < 0) errors.price = 'Informe um preço de venda válido.'
-
-  const stock = parseInteger(form.stock)
-  if (!Number.isFinite(stock) || stock < 0) errors.stock = 'Informe um estoque inicial inteiro e maior ou igual a zero.'
-
-  const minimum = parseInteger(form.minimum)
-  if (!Number.isFinite(minimum) || minimum < 0) errors.minimum = 'Informe um estoque mínimo inteiro e maior ou igual a zero.'
-
-  if (!String(form.status || '').trim()) errors.status = 'Selecione um status.'
-
-  return errors
+  return validateProduct(form)
 }
 
 export function buildCreateProductPayload(form) {
   return {
     nome: String(form.name ?? '').trim(),
+    descricao: form.description?.trim() || null,
+    categoria: form.category,
     sku: String(form.sku ?? '').trim(),
     tamanho: form.size || null,
     cor: form.color || null,

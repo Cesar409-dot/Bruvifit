@@ -6,6 +6,8 @@ public class ProdutoResponse {
 
     private final Integer id;
     private final String nome;
+    private final String descricao;
+    private final String categoria;
     private final String sku;
     private final String tamanho;
     private final String cor;
@@ -19,6 +21,8 @@ public class ProdutoResponse {
     public ProdutoResponse(
             Integer id,
             String nome,
+            String descricao,
+            String categoria,
             String sku,
             String tamanho,
             String cor,
@@ -30,6 +34,8 @@ public class ProdutoResponse {
             Boolean ativo) {
         this.id = id;
         this.nome = nome;
+        this.descricao = descricao;
+        this.categoria = categoria;
         this.sku = sku;
         this.tamanho = tamanho;
         this.cor = cor;
@@ -47,6 +53,14 @@ public class ProdutoResponse {
 
     public String getNome() {
         return nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public String getCategoria() {
+        return categoria;
     }
 
     public String getSku() {

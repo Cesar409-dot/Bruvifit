@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createProduct } from '../api/create-product.js'
 import { goToProducts } from '../../model/navigation.js'
+import { createEmptyProductForm } from '../model/product-form.js'
+import { PRODUCT_CATEGORIES } from '../../model/product-model.js'
+import { errorMessage } from '../../api/products-repository.js'
 import styles from './index.module.css'
 const infoIcon = '/assets/a0377.svg'
 
@@ -14,6 +17,7 @@ function Field({
   defaultValue,
   options,
   maxLength,
+  disabled = false,
 }) {
   return (
     <label className={styles.field}>
@@ -23,11 +27,17 @@ function Field({
           className={styles.control}
           name={name}
           required={required}
+          disabled={disabled}
+          title={disabled ? 'Campo não disponível para gravação na API.' : undefined}
           defaultValue=""
+          onInvalid={name === 'categoria' ? (event) => event.currentTarget.setCustomValidity('Selecione uma categoria.') : undefined}
+          onChange={name === 'categoria' ? (event) => event.currentTarget.setCustomValidity('') : undefined}
         >
           <option value="" disabled>{placeholder ?? 'Selecione'}</option>
           {options.map((option) => <option key={option}>{option}</option>)}
         </select>
+      ) : type === 'textarea' ? (
+        <textarea className={styles.control} name={name} placeholder={placeholder} maxLength={maxLength} rows={3} />
       ) : (
         <input
           className={styles.control}
@@ -39,6 +49,8 @@ function Field({
           placeholder={placeholder}
           defaultValue={defaultValue}
           maxLength={maxLength}
+          disabled={disabled}
+          title={disabled ? 'Campo não disponível para gravação na API.' : undefined}
         />
       )}
     </label>
@@ -56,33 +68,30 @@ export function ProductCreatePage() {
 
   async function submit(event) {
     event.preventDefault()
+    if (isSaving) return
     setFeedback(null)
     setIsSaving(true)
 
     const formData = new FormData(event.currentTarget)
     const product = {
-      nome: String(formData.get('nome')).trim(),
+      ...createEmptyProductForm(),
+      name: String(formData.get('nome')).trim(),
+      description: String(formData.get('descricao') ?? ''),
+      category: String(formData.get('categoria') ?? ''),
       sku: String(formData.get('sku')).trim(),
-      tamanho: formData.get('tamanho') || null,
-      cor: formData.get('cor') || null,
-      custoMateriaPrima: getOptionalNumber(String(formData.get('custo'))),
-      precoVenda: getOptionalNumber(String(formData.get('venda'))),
-      saldoEstoque: getOptionalNumber(String(formData.get('estoque'))),
-      estoqueMinimo: getOptionalNumber(String(formData.get('minimo'))),
+      size: formData.get('tamanho') || '',
+      color: formData.get('cor') || '',
+      cost: getOptionalNumber(String(formData.get('custo'))),
+      price: getOptionalNumber(String(formData.get('venda'))),
+      stock: getOptionalNumber(String(formData.get('estoque'))),
+      minimum: getOptionalNumber(String(formData.get('minimo'))),
     }
 
     try {
       const savedProduct = await createProduct(product)
-      setFeedback({
-        type: 'success',
-        message: `Produto salvo${savedProduct?.id ? ` (ID ${savedProduct.id})` : ''}. A API atual não grava descrição, categoria ou status; a listagem continua demonstrativa.`,
-      })
+      navigate(`/produtos/${savedProduct.id}`, { replace: true, state: { flash: 'criado' } })
     } catch (error) {
-      const apiMessage = error?.response?.data?.message
-      const message = typeof apiMessage === 'string'
-        ? apiMessage
-        : 'Não foi possível cadastrar o produto. Verifique os dados e tente novamente.'
-      setFeedback({ type: 'error', message })
+      setFeedback({ type: 'error', message: errorMessage(error) })
     } finally {
       setIsSaving(false)
     }
@@ -103,7 +112,7 @@ export function ProductCreatePage() {
       </div>
 
       <p className={styles.demoNotice}>
-        Modo cadastro local: os campos seguem o padrão visual do figma e a gravação continua usando a API atual.
+        Novos produtos são cadastrados como ativos.
       </p>
 
       <form id="product-form" onSubmit={submit}>
@@ -111,8 +120,8 @@ export function ProductCreatePage() {
           <h2 id="product-info-title" className={styles.sectionTitle}>Informações do produto</h2>
           <div className={styles.formGrid}>
             <Field label="Nome do produto" name="nome" placeholder="Ex.: Camiseta Basic" required maxLength={45} />
-            <Field label="Descrição" name="descricao" placeholder="Descrição do produto..." />
-            <Field label="Categoria" name="categoria" placeholder="Selecione a categoria" required options={['Camisetas', 'Calças', 'Acessórios']} />
+            <Field label="Descrição" name="descricao" type="textarea" maxLength={200} />
+            <Field label="Categoria" name="categoria" placeholder="Selecione uma categoria" options={PRODUCT_CATEGORIES} required />
             <Field label="SKU" name="sku" placeholder="Ex.: CAM-001" required maxLength={45} />
             <Field label="Preço de custo" name="custo" type="number" placeholder="R$ 0,00" required />
             <Field label="Preço de venda" name="venda" type="number" placeholder="R$ 0,00" required />
@@ -122,7 +131,7 @@ export function ProductCreatePage() {
           <div className={`${styles.formGrid} ${styles.thirds}`}>
             <Field label="Tamanho" name="tamanho" options={['PP', 'P', 'M', 'G', 'GG']} />
             <Field label="Cor" name="cor" options={['Preto', 'Branco', 'Verde', 'Rosa']} />
-            <Field label="Status" name="status" defaultValue="Ativo" />
+            <Field label="Status" name="status" defaultValue="Ativo" disabled />
           </div>
         </section>
       </form>
@@ -139,7 +148,7 @@ export function ProductCreatePage() {
           <img src={infoIcon} alt="" />
           <div>
             <h3>Observação</h3>
-            <p>O visual segue a pasta figma-produtos; a lógica atual de cadastro foi mantida.</p>
+            <p>A descrição é opcional. O status é definido pelo sistema.</p>
           </div>
         </article>
       </section>

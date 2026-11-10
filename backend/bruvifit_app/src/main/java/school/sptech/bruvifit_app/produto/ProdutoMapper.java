@@ -11,6 +11,8 @@ public class ProdutoMapper {
     public static Produto toEntity(ProdutoRequest request) {
         Produto produto = new Produto();
         produto.setNome(request.getNome());
+        produto.setDescricao(request.getDescricao());
+        produto.setCategoria(request.getCategoria());
         produto.setSku(request.getSku());
         produto.setTamanho(request.getTamanho());
         produto.setCor(request.getCor());
@@ -26,6 +28,8 @@ public class ProdutoMapper {
         return new ProdutoResponse(
                 produto.getId(),
                 produto.getNome(),
+                produto.getDescricao(),
+                produto.getCategoria(),
                 produto.getSku(),
                 produto.getTamanho(),
                 produto.getCor(),
@@ -40,13 +44,17 @@ public class ProdutoMapper {
 
     public static void updateEntity(Produto produto, ProdutoRequest request) {
         produto.setNome(request.getNome());
+        produto.setDescricao(request.getDescricao());
+        produto.setCategoria(request.getCategoria());
         produto.setSku(request.getSku());
         produto.setTamanho(request.getTamanho());
         produto.setCor(request.getCor());
         produto.setCustoMateriaPrima(request.getCustoMateriaPrima());
         produto.setMargemPercentual(request.getMargemPercentual());
         produto.setPrecoVenda(request.getPrecoVenda());
-        produto.setSaldoEstoque(request.getSaldoEstoque());
+        if (request.getSaldoEstoque() != null) {
+            produto.setSaldoEstoque(request.getSaldoEstoque());
+        }
         produto.setEstoqueMinimo(request.getEstoqueMinimo());
     }
 }

@@ -1,9 +1,6 @@
-import { demoProducts } from '../model/demo-products.js'
 import { apiClient } from '../../../shared/api/axios-client.js'
-import { PRODUCT_STATUS, normalizeProduct, toProduct } from '../model/product-model.js'
-
-const STORAGE_KEY = 'bruvifit:produtos:demo:v3'
-const wait = () => new Promise((resolve) => setTimeout(resolve, 130))
+import { normalizeProduct, parseAmount, validateProduct } from '../model/product-model.js'
+import { buildCreateProductPayload } from '../cadastro/model/product-form.js'
 
 export class ProductRepositoryError extends Error {
   constructor(message, status = 400, field = '') {
@@ -14,143 +11,75 @@ export class ProductRepositoryError extends Error {
   }
 }
 
-export const productsMockEnabled = import.meta.env?.VITE_PRODUCTS_MOCK !== 'false'
-
-function listStored(storage) {
-  try {
-    const raw = storage.getItem(STORAGE_KEY)
-    const parsed = raw === null ? null : JSON.parse(raw)
-    if (Array.isArray(parsed)) return parsed.map(normalizeProduct)
-  } catch {
-    // Se o storage estiver corrompido, recomeçar com os dados demonstrativos.
+function readProduct(data) {
+  if (!data || !Number.isInteger(data.id) || typeof data.nome !== 'string' || typeof data.ativo !== 'boolean') {
+    throw new ProductRepositoryError('Resposta inválida da API de Produtos. Esperado um cadastro JSON com ID, nome e status.', 502)
   }
-
-  return demoProducts.map(normalizeProduct)
+  return data
 }
 
-function assertUnique(products, data, exceptId) {
-  if (products.some((p) => p.sku.toUpperCase() === data.sku.toUpperCase() && String(p.id) !== String(exceptId))) {
-    throw new ProductRepositoryError('Este SKU já existe. Use um código único.', 409, 'sku')
-  }
-}
-
-function toBackendPayload(product, includeStock = true) {
-  const normalized = toProduct(product)
-  return {
-    nome: normalized.name,
-    sku: normalized.sku,
-    tamanho: normalized.size || null,
-    cor: normalized.color || null,
-    custoMateriaPrima: normalized.cost,
-    precoVenda: normalized.price,
-    ...(includeStock ? { saldoEstoque: normalized.stock } : {}),
-    estoqueMinimo: normalized.minimum,
-  }
-}
-
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
-
-function asList(result) {
-  return Array.isArray(result) ? result : result?.content ?? result?.items ?? []
-}
-
-export function createDemoProductsRepository(storage = (typeof window !== 'undefined' ? window.localStorage : null)) {
-  function save(rows) {
-    storage.setItem(STORAGE_KEY, JSON.stringify(rows))
-  }
-
-  return {
-    async list() {
-      await wait()
-      return listStored(storage)
-    },
-    async get(id) {
-      await wait()
-      const found = listStored(storage).find((p) => String(p.id) === String(id))
-      if (!found) throw new ProductRepositoryError('Produto não encontrado.', 404)
-      return found
-    },
-    async create(data) {
-      await wait()
-      const products = listStored(storage)
-      const product = normalizeProduct({ ...toProduct(data), ...data })
-      assertUnique(products, product)
-      const id = String(Math.max(0, ...products.map((p) => Number(p.id) || 0)) + 1)
-      const result = { ...product, id }
-      save([...products, result])
-      return result
-    },
-    async update(id, data) {
-      await wait()
-      const products = listStored(storage)
-      const index = products.findIndex((p) => String(p.id) === String(id))
-      if (index < 0) throw new ProductRepositoryError('Produto não encontrado.', 404)
-      const next = normalizeProduct({ ...products[index], ...data, id: products[index].id })
-      assertUnique(products, next, id)
-      const result = { ...products[index], ...next, stock: products[index].stock, id: products[index].id }
-      products[index] = result
-      save(products)
-      return result
-    },
-    async deactivate(id) {
-      await wait()
-      const products = listStored(storage)
-      const item = products.find((p) => String(p.id) === String(id))
-      if (!item) throw new ProductRepositoryError('Produto não encontrado.', 404)
-      item.status = PRODUCT_STATUS.INACTIVE
-      save(products)
-      return item
-    },
-  }
+function assertValid(data, editing = false) {
+  const errors = validateProduct(data, [], null, editing)
+  const first = Object.keys(errors)[0]
+  if (first) throw new ProductRepositoryError(errors[first], 400, first)
 }
 
 export function createApiProductsRepository(client = apiClient) {
   return {
-    async list() {
-      const response = await client.get('/produtos')
-      return asList(unwrap(response)).map(normalizeProduct)
+    async list(options = {}) {
+      const { data } = await client.get('/produtos', options)
+      if (!Array.isArray(data)) throw new ProductRepositoryError('Resposta inválida de GET /produtos: esperada uma lista JSON sem paginação.', 502)
+      return data.map((row) => normalizeProduct(readProduct(row)))
     },
-
     async get(id) {
-      const response = await client.get(`/produtos/${encodeURIComponent(id)}`)
-      return normalizeProduct(unwrap(response))
+      const { data } = await client.get(`/produtos/${encodeURIComponent(id)}`)
+      return normalizeProduct(readProduct(data))
     },
-
-    async create(data) {
-      const response = await client.post('/produtos', toBackendPayload(data))
-      return normalizeProduct({ ...data, ...(unwrap(response) || {}) })
+    async create(form) {
+      assertValid(form)
+      const { data } = await client.post('/produtos', buildCreateProductPayload(form))
+      return normalizeProduct(readProduct(data))
     },
-
-    async update(id, data) {
-      const response = await client.put(
-        `/produtos/${encodeURIComponent(id)}`,
-        toBackendPayload(data, false)
-      )
-      return normalizeProduct({ ...data, id, ...(unwrap(response) || {}) })
+    async update(id, form) {
+      assertValid(form, true)
+      // PUT uses a full DTO; retain fields not exposed by the existing edit form.
+      const { data: latest } = await client.get(`/produtos/${encodeURIComponent(id)}`)
+      readProduct(latest)
+      const payload = {
+        nome: String(form.name).trim(), sku: String(form.sku || '').trim(),
+        descricao: form.description?.trim() || null,
+        categoria: form.category,
+        tamanho: latest.tamanho, cor: latest.cor, custoMateriaPrima: latest.custoMateriaPrima,
+        margemPercentual: latest.margemPercentual, precoVenda: parseAmount(form.price),
+        estoqueMinimo: parseAmount(form.minimum),
+      }
+      const { data } = await client.put(`/produtos/${encodeURIComponent(id)}`, payload)
+      return normalizeProduct(readProduct(data))
     },
-
-    async deactivate(id) {
-      const response = await client.patch(
-        `/produtos/${encodeURIComponent(id)}/inativar`
-      )
-      return normalizeProduct(unwrap(response))
-    },
+    async remove(id) { await client.delete(`/produtos/${encodeURIComponent(id)}`) },
   }
 }
 
-export const productsRepository = productsMockEnabled ? createDemoProductsRepository() : createApiProductsRepository()
+// Only the real API is used; local storage and mock environment flags do not replace it.
+export const productsRepository = createApiProductsRepository()
 
-export function errorMessage(error) {
-  if (error?.status === 409 || error?.response?.status === 409) return error?.response?.data?.message || error.message || 'Este SKU já existe.'
-  if (error?.response?.status === 401) return 'Sua sessão expirou. Entre novamente.'
-  if (error?.response?.status === 403) return 'Você não tem permissão para realizar esta operação.'
-  if (error?.response?.status === 404 || error?.status === 404) return 'Produto não encontrado.'
-  if (error?.code === 'ERR_NETWORK' || error?.code === 'ECONNABORTED') return 'Falha de rede. Os dados preenchidos foram mantidos. Confira sua conexão antes de tentar novamente.'
-  return error?.response?.data?.message || error?.message || 'Não foi possível concluir a operação.'
+export function errorMessage(error, operation = '') {
+  const status = error?.response?.status ?? error?.status
+  if (status === 409 && operation === 'delete') return 'Não foi possível excluir o produto. Existem registros vinculados a este cadastro.'
+  if (status === 409) return error?.response?.data?.message || error.message || 'Este SKU já existe. Use um código único.'
+  if (status === 401) return 'Sua sessão expirou. Entre novamente.'
+  if (status === 403) return 'Você não tem permissão para realizar esta operação.'
+  if (status === 404) return 'Produto não encontrado ou removido. Atualize a listagem.'
+  if (error instanceof ProductRepositoryError) return error.message
+  if (status === 400) {
+    const data = error?.response?.data
+    return data?.message || (data && typeof data === 'object' ? Object.values(data).filter((v) => typeof v === 'string').join(' ') : '') || 'Confira os campos informados e tente novamente.'
+  }
+  if (status >= 500) return 'O servidor não conseguiu concluir a operação. Tente novamente.'
+  return 'Não foi possível conectar ao servidor. Verifique a conexão e tente novamente.'
 }
 
 export function isSkuError(error) {
-  return error?.field === 'sku' || (error?.response?.status === 409 && /sku/i.test(error?.response?.data?.message || ''))
+  return error?.field === 'sku' || Boolean(error?.response?.data?.sku)
+    || (error?.response?.status === 409 && /sku/i.test(error?.response?.data?.message || ''))
 }

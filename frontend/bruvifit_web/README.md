@@ -51,6 +51,62 @@ de testes descartável e autorizado. Não execute esse teste no banco principal.
 Resultados e arquivos: [especificação do CRUD](specs/004-clientes-crud/spec.md).
 Regra atual de exclusão e testes: [clientes com endereços](specs/005-exclusao-clientes-enderecos/spec.md).
 
+## Integração de Produtos
+
+Produtos usa exclusivamente o Axios compartilhado e o JWT da sessão; não há
+fallback para demonstração ou localStorage. Endpoints: `GET/POST /produtos` e
+`GET/PUT/DELETE /produtos/{id}`. A listagem retorna um array completo; nome/SKU,
+categoria, status e situação de estoque são filtrados em conjunto antes da paginação local.
+
+O cadastro navega para o ID retornado pela API. A edição preserva custo, margem,
+tamanho, cor e saldo não editados. A descrição é opcional e aceita até 200
+caracteres. Cadastro e edição exigem uma categoria entre Camisetas, Calças e
+Acessórios. O status existente continua visível e
+pode ser usado para filtrar a lista.
+
+Para atualizar um banco existente, revise o comando abaixo antes de aplicar a
+nova versão do backend. O Hibernate usa `ddl-auto=validate` e exige as colunas
+no início da aplicação. Os produtos existentes ficam com os novos campos nulos.
+
+```sql
+ALTER TABLE bruvifit.produto
+    ADD COLUMN descricao VARCHAR(200) NULL,
+    ADD COLUMN categoria VARCHAR(45) NULL,
+    ADD CONSTRAINT chk_produto_categoria CHECK (
+        categoria IS NULL OR CAST(categoria AS BINARY) IN (
+            CAST('Camisetas' AS BINARY), CAST('Calças' AS BINARY), CAST('Acessórios' AS BINARY)
+        )
+    );
+```
+
+Antes de tornar a coluna obrigatória no banco, consulte os produtos que precisam
+de classificação e revise a categoria de cada um. O comando inicial acima se
+destina ao schema em que as duas colunas ainda estão ausentes.
+
+```sql
+SELECT id, nome, categoria
+FROM bruvifit.produto
+WHERE categoria IS NULL OR CAST(categoria AS BINARY) NOT IN (
+    CAST('Camisetas' AS BINARY), CAST('Calças' AS BINARY), CAST('Acessórios' AS BINARY)
+);
+```
+
+Quando a consulta retornar zero linhas, pode-se aplicar `NOT NULL` mantendo a
+restrição de valores.
+
+```sql
+ALTER TABLE bruvifit.produto MODIFY COLUMN categoria VARCHAR(45) NOT NULL;
+```
+
+Excluir é uma remoção física com confirmação. Itens de pedidos, movimentações
+de estoque ou vínculos com fornecedores bloqueiam a remoção por integridade
+referencial; não há cascata nem exclusão lógica. O erro 409 aparece no modal,
+e o produto só sai da tela após sucesso da API. Reinicie o backend para carregar
+a preservação de saldo no PUT e o flush explícito de exclusão.
+
+Testes: `node --test tests/products-api.test.mjs tests/products-ui.test.mjs`.
+Contratos, arquivos e limitações: [integração de Produtos](specs/006-produtos-crud/spec.md).
+
 ## Estrutura
 
 ```text

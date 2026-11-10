@@ -7,8 +7,8 @@ import { StatCard } from '../../../components/ui/StatCard.jsx'
 import { FilterBar } from '../../../components/ui/FilterBar.jsx'
 import { TextField } from '../../../components/ui/TextField.jsx'
 import { SelectField } from '../../../components/ui/SelectField.jsx'
-import { productsRepository, errorMessage, productsMockEnabled } from '../api/products-repository.js'
-import { PRODUCT_STATUS, formatMoney, stockStatus } from '../model/product-model.js'
+import { productsRepository, errorMessage } from '../api/products-repository.js'
+import { PRODUCT_STATUS, formatMoney, stockStatus, filterProducts } from '../model/product-model.js'
 import { goToProducts } from '../model/navigation.js'
 import styles from './index.module.css'
 
@@ -37,21 +37,24 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState(null)
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('Todas')
+  const [category, setCategory] = useState('')
   const [status, setStatus] = useState('Todos')
   const [stock, setStock] = useState('Todos')
-  const [applied, setApplied] = useState({ query: '', category: 'Todas', status: 'Todos', stock: 'Todos' })
+  const [applied, setApplied] = useState({ query: '', category: '', status: 'Todos', stock: 'Todos' })
   const [page, setPage] = useState(1)
   const [viewingId, setViewingId] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
   const [working, setWorking] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
     let active = true
+    const controller = new AbortController()
 
-    ;(async () => {
+    const timer = setTimeout(async () => {
       try {
-        const items = await productsRepository.list()
+        const items = await productsRepository.list({ signal: controller.signal })
         if (!active) return
         setProducts(items)
         setFeedback(null)
@@ -61,10 +64,10 @@ export function ProductsPage() {
       } finally {
         if (active) setLoading(false)
       }
-    })()
+    }, 0)
 
-    return () => { active = false }
-  }, [])
+    return () => { active = false; clearTimeout(timer); controller.abort() }
+  }, [reload])
 
   const viewedProduct = useMemo(
     () => products.find((product) => product.id === viewingId) ?? null,
@@ -72,18 +75,7 @@ export function ProductsPage() {
   )
 
   const filteredProducts = useMemo(
-    () => products.filter((product) => {
-      const matchesQuery = product.name.toLowerCase().includes(applied.query.toLowerCase())
-      const matchesCategory = applied.category === 'Todas' || product.category === applied.category
-      const matchesStatus = applied.status === 'Todos' || product.status === applied.status
-      const stockLabel = stockStatus(product)
-      const matchesStock = applied.stock === 'Todos'
-        || (applied.stock === 'Normal' && stockLabel === 'Normal')
-        || (applied.stock === 'Baixo' && stockLabel === 'Baixo')
-        || (applied.stock === 'Sem estoque' && stockLabel === 'Sem estoque')
-
-      return matchesQuery && matchesCategory && matchesStatus && matchesStock
-    }),
+    () => filterProducts(products, applied),
     [applied, products],
   )
 
@@ -98,10 +90,10 @@ export function ProductsPage() {
 
   const resetFilters = () => {
     setQuery('')
-    setCategory('Todas')
+    setCategory('')
     setStatus('Todos')
     setStock('Todos')
-    setApplied({ query: '', category: 'Todas', status: 'Todos', stock: 'Todos' })
+    setApplied({ query: '', category: '', status: 'Todos', stock: 'Todos' })
     setPage(1)
   }
 
@@ -110,31 +102,17 @@ export function ProductsPage() {
     setPage(1)
   }
 
-  async function toggleStatus(product) {
-    if (working) return
-    setWorking(true)
-    try {
-      const nextStatus = product.status === PRODUCT_STATUS.ACTIVE ? PRODUCT_STATUS.INACTIVE : PRODUCT_STATUS.ACTIVE
-      const saved = await productsRepository.update(product.id, { ...product, status: nextStatus })
-      setProducts((items) => items.map((item) => (item.id === saved.id ? saved : item)))
-      setFeedback({ tone: 'success', title: 'Status atualizado.', text: `${saved.name} agora está ${saved.status.toLowerCase()}.` })
-    } catch (err) {
-      setFeedback({ tone: 'error', title: 'Não foi possível atualizar o status.', text: errorMessage(err) })
-    } finally {
-      setWorking(false)
-    }
-  }
-
   async function confirmDelete() {
     if (!pendingDelete || working) return
     setWorking(true)
+    setDeleteError('')
     try {
-      const saved = await productsRepository.deactivate(pendingDelete.id)
-      setProducts((items) => items.map((item) => (item.id === saved.id ? saved : item)))
-      setFeedback({ tone: 'success', title: 'Produto inativado.', text: `${saved.name} foi removido da disponibilidade para novas vendas.` })
+      await productsRepository.remove(pendingDelete.id)
+      setProducts((items) => items.filter((item) => item.id !== pendingDelete.id))
+      setFeedback({ tone: 'success', title: 'Produto excluído.', text: `${pendingDelete.name} foi removido definitivamente.` })
       setPendingDelete(null)
     } catch (err) {
-      setFeedback({ tone: 'error', title: 'Não foi possível inativar o produto.', text: errorMessage(err) })
+      setDeleteError(errorMessage(err, 'delete'))
     } finally {
       setWorking(false)
     }
@@ -151,14 +129,10 @@ export function ProductsPage() {
       {feedback ? (
         <StatusPanel variante={feedback.tone === 'error' ? 'erro' : 'sucesso'} titulo={feedback.title}>
           {feedback.text}
+          {feedback.tone === 'error' ? <Button variant="secondary" onClick={() => { setLoading(true); setFeedback(null); setReload((value) => value + 1) }}>Tentar novamente</Button> : null}
         </StatusPanel>
       ) : null}
 
-      {productsMockEnabled ? (
-        <p className={styles.demoNotice}>
-          Modo demonstração: as alterações ficam salvas no navegador enquanto o mock estiver ativo.
-        </p>
-      ) : null}
 
       <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
@@ -167,7 +141,7 @@ export function ProductsPage() {
           ['Estoque baixo', lowStockCount],
           ['Produtos inativos', inactiveCount],
         ].map(([label, value], index) => (
-          <StatCard key={label} rotulo={label} valor={loading ? '—' : value} destaque={index === 0} />
+          <StatCard key={label} rotulo={label} valor={loading || feedback?.tone === 'error' ? '—' : value} destaque={index === 0} />
         ))}
       </section>
 
@@ -176,7 +150,7 @@ export function ProductsPage() {
         <FilterBar onSubmit={(event) => { event.preventDefault(); applyFilters() }} onClear={resetFilters}>
           <TextField id="produto-pesquisar" label="Pesquisar" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto..." />
           <SelectField id="produto-categoria" label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option>Todas</option>{[...new Set(products.map((product) => product.category))].map((item) => <option key={item}>{item}</option>)}
+            <option value="">Todas</option>{[...new Set(products.map((product) => product.category).filter(Boolean))].map((item) => <option key={item}>{item}</option>)}
           </SelectField>
           <SelectField id="produto-status" label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
             <option>Todos</option><option>Ativo</option><option>Inativo</option>
@@ -210,7 +184,7 @@ export function ProductsPage() {
               {pageProducts.map((product) => (
                 <tr key={product.id}>
                   <td><strong>{product.name}</strong></td>
-                  <td>{product.category}</td>
+                  <td>{product.category || 'Sem categoria'}</td>
                   <td><strong>{formatMoney(product.price)}</strong></td>
                   <td>
                     {product.stock}
@@ -222,8 +196,9 @@ export function ProductsPage() {
                     <StatusBadge
                       as="button"
                       status={product.status}
-                      aria-label={`Alterar status de ${product.name}`}
-                      onClick={() => toggleStatus(product)}
+                      aria-label={`Status de ${product.name}`}
+                      title="A API não disponibiliza alteração de status."
+                      disabled
                     >
                       {product.status}
                     </StatusBadge>
@@ -246,8 +221,8 @@ export function ProductsPage() {
                       </Button>
                       <Button
                         variant="icon"
-                        aria-label={`Inativar ${product.name}`}
-                        onClick={() => setPendingDelete(product)}
+                        aria-label={`Excluir ${product.name}`}
+                        onClick={() => { setDeleteError(''); setPendingDelete(product) }}
                       >
                         <img src={archiveIcon} alt="" />
                       </Button>
@@ -255,7 +230,7 @@ export function ProductsPage() {
                   </td>
                 </tr>
               ))}
-              {!filteredProducts.length && (
+              {!loading && feedback?.tone !== 'error' && !filteredProducts.length && (
                 <tr>
                   <td className={styles.empty} colSpan={6}>Nenhum produto encontrado.</td>
                 </tr>
@@ -292,14 +267,14 @@ export function ProductsPage() {
       </section>
 
       <footer className={styles.footer}>
-        BruVi Fit · Demonstração local · Dados temporários desta página.
+        BruVi Fit · Produtos cadastrados no sistema.
       </footer>
 
       {pendingDelete && (
         <div
           className={styles.modalBackdrop}
           role="presentation"
-          onMouseDown={() => setPendingDelete(null)}
+          onMouseDown={() => { if (!working) { setDeleteError(''); setPendingDelete(null) } }}
         >
           <section
             className={styles.modal}
@@ -311,7 +286,7 @@ export function ProductsPage() {
             <div className={styles.modalHeading}>
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
-                <h2 id="confirm-delete-title">Inativar produto</h2>
+                <h2 id="confirm-delete-title">Excluir produto</h2>
                 <p className={styles.modalSubtitle}>{pendingDelete.name}</p>
               </div>
               <span className={styles.modalBadge}>Ação irreversível</span>
@@ -319,16 +294,17 @@ export function ProductsPage() {
 
             <div className={styles.modalBody}>
               <p className={styles.modalNote}>
-                O produto deixará de aparecer em novas vendas, mas histórico e saldo serão preservados.
+                O cadastro será removido definitivamente. Produtos com pedidos, movimentações ou outros registros vinculados não podem ser excluídos. Nenhum histórico será apagado.
               </p>
+              {deleteError ? <StatusPanel variante="erro" titulo="Exclusão não concluída">{deleteError}</StatusPanel> : null}
             </div>
 
             <div className={styles.modalActions}>
-              <Button variant="secondary" disabled={working} onClick={() => setPendingDelete(null)}>
+              <Button variant="secondary" disabled={working} onClick={() => { setDeleteError(''); setPendingDelete(null) }}>
                 Cancelar
               </Button>
               <Button disabled={working} onClick={() => { void confirmDelete() }}>
-                {working ? 'Inativando...' : 'Confirmar inativação'}
+                {working ? 'Excluindo...' : 'Confirmar exclusão'}
               </Button>
             </div>
           </section>
@@ -353,7 +329,7 @@ export function ProductsPage() {
                 <span className={styles.modalEyebrow}>Detalhes do produto</span>
                 <h2 id="product-view-title">{viewedProduct.name}</h2>
                 <p className={styles.modalSubtitle}>
-                  {viewedProduct.category} · {formatMoney(viewedProduct.price)}
+                  {viewedProduct.category || 'Sem categoria'} · {formatMoney(viewedProduct.price)}
                 </p>
               </div>
               <span className={styles.badge}>{viewedProduct.status}</span>
@@ -371,7 +347,11 @@ export function ProductsPage() {
                   </div>
                   <div>
                     <dt>Categoria</dt>
-                    <dd>{viewedProduct.category}</dd>
+                    <dd>{viewedProduct.category || 'Sem categoria'}</dd>
+                  </div>
+                  <div>
+                    <dt>Descrição</dt>
+                    <dd>{viewedProduct.description || '—'}</dd>
                   </div>
                   <div>
                     <dt>Tamanho</dt>

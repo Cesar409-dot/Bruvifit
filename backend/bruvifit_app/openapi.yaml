@@ -1343,6 +1343,13 @@ components:
     ProdutoRequest:
       type: object
       properties:
+        descricao:
+          type: string
+          maxLength: 200
+          nullable: true
+        categoria:
+          type: string
+          enum: [Camisetas, Calças, Acessórios]
         nome:
           type: string
           example: "Produto Exemplo"
@@ -1384,9 +1391,18 @@ components:
           description: Estoque mínimo alerta
       required:
         - nome
+        - categoria
     ProdutoResponse:
       type: object
       properties:
+        descricao:
+          type: string
+          maxLength: 200
+          nullable: true
+        categoria:
+          type: string
+          nullable: true
+          enum: [Camisetas, Calças, Acessórios, null]
         id:
           type: integer
           example: 1

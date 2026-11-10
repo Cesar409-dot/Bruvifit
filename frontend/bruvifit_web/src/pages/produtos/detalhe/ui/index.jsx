@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { errorMessage, productsRepository } from '../../api/products-repository.js'
-import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus } from '../../model/product-model.js'
+import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct } from '../../model/product-model.js'
 import { goToProducts } from '../../model/navigation.js'
 import styles from './index.module.css'
 
@@ -23,7 +23,7 @@ function ProductDetailNotFound({ id, isValidId, navigate }) {
         <h1 className={styles.title}>Produto não encontrado</h1>
         <p className={styles.subtitle}>
           {isValidId
-            ? `Nenhum produto com ID ${id} na lista demonstrativa.`
+            ? `Nenhum produto com ID ${id} foi encontrado.`
             : `O identificador "${id ?? ''}" não é válido.`}
         </p>
       </div>
@@ -40,10 +40,11 @@ function ProductDetailNotFound({ id, isValidId, navigate }) {
   )
 }
 
-function ProductDetailForm({ product, navigate }) {
+function ProductDetailForm({ product: loadedProduct, navigate, created = false }) {
+  const [product, setProduct] = useState(loadedProduct)
   const [form, setForm] = useState(() => productToForm(product))
   const [initialForm, setInitialForm] = useState(() => productToForm(product))
-  const [feedback, setFeedback] = useState(null)
+  const [feedback, setFeedback] = useState(created ? { tone: 'sucesso', title: 'Produto cadastrado.', text: 'O produto foi salvo e os dados abaixo foram carregados da API.' } : null)
   const [confirmAction, setConfirmAction] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -58,7 +59,7 @@ function ProductDetailForm({ product, navigate }) {
     if (!confirmAction) return undefined
 
     const closeOnEscape = (event) => {
-      if (event.key === 'Escape' && !saving) setConfirmAction(null)
+      if (event.key === 'Escape' && !saving) { setConfirmAction(null); setFeedback(null) }
     }
 
     window.addEventListener('keydown', closeOnEscape)
@@ -67,6 +68,12 @@ function ProductDetailForm({ product, navigate }) {
 
   function requestSave(event) {
     event.preventDefault()
+    const errors = validateProduct(form, [], product.id, true)
+    if (Object.keys(errors).length) {
+      setFeedback({ tone: 'erro', title: 'Confira os dados.', text: Object.values(errors).join(' ') })
+      return
+    }
+    setFeedback(null)
     setConfirmAction('save')
   }
 
@@ -85,15 +92,14 @@ function ProductDetailForm({ product, navigate }) {
 
     if (confirmAction === 'delete') {
       setSaving(true)
+      setFeedback(null)
       try {
-        const saved = await productsRepository.deactivate(product.id)
-        setFeedback({ tone: 'sucesso', title: 'Produto inativado.', text: `${saved.name} não estará disponível em novas vendas.` })
+        await productsRepository.remove(product.id)
         goToProducts(navigate)
       } catch (err) {
-        setFeedback({ tone: 'erro', title: 'Não foi possível inativar.', text: errorMessage(err) })
+        setFeedback({ tone: 'erro', title: 'Não foi possível excluir.', text: errorMessage(err, 'delete') })
       } finally {
         setSaving(false)
-        setConfirmAction(null)
       }
       return
     }
@@ -105,11 +111,13 @@ function ProductDetailForm({ product, navigate }) {
         name: form.name,
         sku: form.sku,
         category: form.category,
+        description: form.description,
         price: form.price,
         minimum: form.minimum,
         status: form.status,
       })
       const nextForm = productToForm(saved)
+      setProduct(saved)
       setFeedback({ tone: 'sucesso', title: 'Produto salvo.', text: `As alterações de ${saved.name} foram persistidas com sucesso.` })
       setForm(nextForm)
       setInitialForm(nextForm)
@@ -171,11 +179,15 @@ function ProductDetailForm({ product, navigate }) {
               <select
                 className={styles.control}
                 value={form.category}
-                onChange={(event) => updateField('category', event.target.value)}
                 required
+                onInvalid={(event) => event.currentTarget.setCustomValidity('Selecione uma categoria.')}
+                onChange={(event) => {
+                  event.currentTarget.setCustomValidity('')
+                  updateField('category', event.target.value)
+                }}
               >
-                <option value="" disabled>Selecione a categoria</option>
-                {PRODUCT_CATEGORIES.map((option) => <option key={option}>{option}</option>)}
+                <option value="" disabled>Selecione uma categoria</option>
+                {PRODUCT_CATEGORIES.map((category) => <option key={category}>{category}</option>)}
               </select>
             </Field>
             <Field label="Preço de venda *">
@@ -211,10 +223,11 @@ function ProductDetailForm({ product, navigate }) {
                 required
               />
             </Field>
-            <Field label="Status">
+            <Field label="Status" hint="Alteração de status não é disponibilizada pela API.">
               <select
                 className={styles.control}
                 value={form.status}
+                disabled
                 onChange={(event) => updateField('status', event.target.value)}
               >
                 <option>{PRODUCT_STATUS.ACTIVE}</option>
@@ -222,6 +235,11 @@ function ProductDetailForm({ product, navigate }) {
               </select>
             </Field>
           </div>
+
+          <Field label="Descrição">
+            <textarea className={styles.control} rows={3} maxLength={200} value={form.description}
+              onChange={(event) => updateField('description', event.target.value)} />
+          </Field>
 
           <p className={styles.formFootnote}>
             O SKU deve ser único. Preço e estoque mínimo não podem ser negativos.
@@ -267,17 +285,17 @@ function ProductDetailForm({ product, navigate }) {
       </section>
 
       <section className={`${styles.formCard} ${styles.dangerCard}`} aria-labelledby="deactivation-title">
-        <h2 id="deactivation-title" className={styles.sectionTitle}>Inativar produto</h2>
+        <h2 id="deactivation-title" className={styles.sectionTitle}>Excluir produto</h2>
         <p className={styles.dangerText}>
-          Inativar {form.name || 'este produto'}? O produto deixará de aparecer em novas vendas.
-          Vendas anteriores, movimentações e vínculos serão preservados; o saldo não será apagado.
+          Excluir definitivamente {form.name || 'este produto'}? Produtos com pedidos,
+          movimentações ou outros registros vinculados não podem ser excluídos. Nenhum histórico será apagado.
         </p>
         <div className={styles.dangerActions}>
           <button type="button" className={styles.secondary} onClick={requestCancel}>
             Cancelar
           </button>
-          <button type="button" className={styles.primary} onClick={() => setConfirmAction('delete')} disabled={saving}>
-            Inativar produto
+          <button type="button" className={styles.primary} onClick={() => { setFeedback(null); setConfirmAction('delete') }} disabled={saving}>
+            Excluir produto
           </button>
         </div>
       </section>
@@ -286,7 +304,7 @@ function ProductDetailForm({ product, navigate }) {
         <div
           className={styles.modalBackdrop}
           role="presentation"
-          onMouseDown={() => !saving && setConfirmAction(null)}
+          onMouseDown={() => { if (!saving) { setConfirmAction(null); setFeedback(null) } }}
         >
           <section
             className={styles.modal}
@@ -299,7 +317,7 @@ function ProductDetailForm({ product, navigate }) {
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
                 <h2 id="product-confirm-title">
-                  {confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Inativar produto' : 'Descartar alterações'}
+                  {confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Excluir produto' : 'Descartar alterações'}
                 </h2>
                 <p className={styles.modalSubtitle}>{form.name}</p>
               </div>
@@ -312,22 +330,23 @@ function ProductDetailForm({ product, navigate }) {
                   Confirme para gravar as informações editadas no produto.
                 </StatusPanel>
               ) : confirmAction === 'delete' ? (
-                <StatusPanel variante="info" titulo="O produto será inativado">
-                  O item deixará de aparecer em novas vendas, mas histórico e saldo permanecerão preservados.
+                <StatusPanel variante="info" titulo="O produto será excluído definitivamente">
+                  Esta ação não pode ser desfeita. A exclusão será bloqueada se houver registros vinculados.
                 </StatusPanel>
               ) : (
                 <StatusPanel variante="info" titulo="Descartar alterações não salvas">
                   Se continuar, você voltará para a página de Produtos sem gravar as mudanças feitas aqui.
                 </StatusPanel>
               )}
+              {feedback?.tone === 'erro' ? <StatusPanel variante="erro" titulo={feedback.title}>{feedback.text}</StatusPanel> : null}
             </div>
 
             <div className={styles.modalActions}>
-              <button type="button" className={styles.secondary} autoFocus disabled={saving} onClick={() => setConfirmAction(null)}>
+              <button type="button" className={styles.secondary} autoFocus disabled={saving} onClick={() => { setConfirmAction(null); setFeedback(null) }}>
                 Continuar editando
               </button>
               <button type="button" className={styles.primary} disabled={saving} onClick={() => { void confirmActionHandler() }}>
-                {saving ? 'Processando...' : confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Confirmar inativação' : 'Descartar e sair'}
+                {saving ? 'Processando...' : confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Confirmar exclusão' : 'Descartar e sair'}
               </button>
             </div>
           </section>
@@ -339,7 +358,9 @@ function ProductDetailForm({ product, navigate }) {
 
 export function ProductDetailPage({ params }) {
   const navigate = useNavigate()
-  const id = params?.id
+  const routeParams = useParams()
+  const location = useLocation()
+  const id = params?.id ?? routeParams.id
   const isValidId = /^\d+$/.test(String(id ?? ''))
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -397,5 +418,5 @@ export function ProductDetailPage({ params }) {
     )
   }
 
-  return <ProductDetailForm key={id} product={product} navigate={navigate} />
+  return <ProductDetailForm key={id} product={product} navigate={navigate} created={location.state?.flash === 'criado'} />
 }

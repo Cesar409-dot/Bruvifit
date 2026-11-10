@@ -67,6 +67,7 @@ public class ProdutoService {
             return ResponseEntity.notFound().build();
         }
         repository.deleteById(id);
+        repository.flush();
         return ResponseEntity.noContent().build();
     }
 

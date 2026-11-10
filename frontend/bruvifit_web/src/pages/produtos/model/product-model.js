@@ -1,7 +1,5 @@
-import { demoProducts } from './demo-products.js'
-
 export const PRODUCT_STATUS = Object.freeze({ ACTIVE: 'Ativo', INACTIVE: 'Inativo' })
-export const PRODUCT_CATEGORIES = [...new Set(demoProducts.map((product) => product.category))]
+export const PRODUCT_CATEGORIES = Object.freeze(['Camisetas', 'Calças', 'Acessórios'])
 export const PRODUCT_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'Único', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44']
 export const PRODUCT_COLORS = ['Preto', 'Branco', 'Verde', 'Rosa', 'Azul', 'Cinza', 'Bege']
 
@@ -28,7 +26,7 @@ export function productToForm(product) {
   return {
     name: product.name || '',
     description: product.description || '',
-    category: product.category || '',
+    category: PRODUCT_CATEGORIES.includes(product.category) ? product.category : '',
     sku: product.sku || '',
     cost: String(product.cost ?? 0),
     price: String(product.price ?? 0),
@@ -51,7 +49,11 @@ export function validateProduct(form, products = [], excludeId = null, editing =
   const errors = {}
 
   if (!String(form.name || '').trim()) errors.name = 'Informe o nome do produto.'
-  if (!String(form.category || '').trim()) errors.category = 'Selecione uma categoria.'
+  for (const field of ['name', 'sku', 'size', 'color']) {
+    if (String(form[field] || '').trim().length > 45) errors[field] = 'Use no máximo 45 caracteres.'
+  }
+  if (String(form.description ?? '').trim().length > 200) errors.description = 'Use no máximo 200 caracteres na descrição.'
+  if (!PRODUCT_CATEGORIES.includes(form.category)) errors.category = 'Selecione uma categoria.'
 
   const sku = String(form.sku || '').trim().toUpperCase()
   if (!sku) errors.sku = 'Informe um SKU.'
@@ -62,7 +64,8 @@ export function validateProduct(form, products = [], excludeId = null, editing =
   for (const [field, label] of [['cost', 'custo'], ['price', 'venda'], ['minimum', 'estoque mínimo'], ...(!editing ? [['stock', 'estoque inicial']] : [])]) {
     const value = parseAmount(form[field])
     if (!Number.isFinite(value) || value < 0) errors[field] = `Informe um valor de ${label} válido, maior ou igual a zero.`
-    else if (['minimum', 'stock'].includes(field) && !Number.isInteger(value)) errors[field] = `${label} deve ser um número inteiro.`
+    else if (['minimum', 'stock'].includes(field) && (!Number.isInteger(value) || value > 2147483647)) errors[field] = `${label} deve ser um número inteiro válido.`
+    else if (['cost', 'price'].includes(field) && (value > 99999999.99 || Number(value.toFixed(2)) !== value)) errors[field] = 'Use no máximo 8 dígitos inteiros e 2 casas decimais.'
   }
 
   if (![PRODUCT_STATUS.ACTIVE, PRODUCT_STATUS.INACTIVE].includes(form.status)) errors.status = 'Selecione um status válido.'
@@ -98,7 +101,7 @@ export function normalizeProduct(raw) {
     id: String(raw.id ?? ''),
     name: raw.name ?? raw.nome ?? '',
     description: raw.description ?? raw.descricao ?? '',
-    category: raw.category ?? raw.categoria ?? 'Sem categoria',
+    category: raw.category ?? raw.categoria ?? '',
     sku: raw.sku ?? '',
     cost: Number(raw.cost ?? raw.custoMateriaPrima ?? raw.custo ?? 0),
     price: Number(raw.price ?? raw.precoVenda ?? 0),
@@ -117,4 +120,13 @@ export function calculateStats(products) {
     low: products.filter((p) => stockStatus(p) === 'Baixo').length,
     inactive: products.filter((p) => p.status === PRODUCT_STATUS.INACTIVE).length,
   }
+}
+
+export function filterProducts(products, filters) {
+  const fold = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const query = fold(filters.query.trim())
+  return products.filter((product) => (!query || [product.name, product.sku].some((value) => fold(value).includes(query)))
+    && (!filters.category || product.category === filters.category)
+    && (filters.status === 'Todos' || product.status === filters.status)
+    && (filters.stock === 'Todos' || stockStatus(product) === filters.stock))
 }
