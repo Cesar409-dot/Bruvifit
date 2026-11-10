@@ -1,154 +1,65 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import { apiClient } from '../../../shared/api/axios-client.js';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { clientesAPI } from '../../../shared/api/clientes-api.js';
+import { normalizarCliente, erroClientes } from '../model/clientes-model.js';
 
 const ClientesContext = createContext(null);
 
-function normalizar(cliente) {
-  return {
-    ...cliente,
-    cpf: cliente.cpf || '',
-    status: cliente.ativo ? 'ativo' : 'inativo',
-    cidade: cliente.cidade || '',
-    uf: cliente.estado || '',
-    endereco: {
-      cep: cliente.cep || '',
-      logradouro: cliente.rua || '',
-      numero: cliente.numero || '',
-      complemento: cliente.complemento || '',
-      bairro: cliente.bairro || '',
-      cidade: cliente.cidade || '',
-      uf: cliente.estado || '',
-    },
-    vendas: [],
-  };
-}
-
 export function ClientesProvider({ children }) {
   const [clientes, setClientes] = useState([]);
-  const [resumo, setResumo] = useState({
-    totalClientes: 0,
-    clientesAtivos: 0,
-    clientesRecorrentes: 0,
-  });
+  const [resumo, setResumo] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
   const carregarClientes = useCallback(async () => {
-    setCarregando(true);
-    setErro('');
-
     try {
-      const dados = await clientesAPI.listar();
-      setClientes(dados.map(normalizar));
+      const [dados, indicadores] = await Promise.all([clientesAPI.listar(), clientesAPI.indicadores()]);
+      setClientes(dados.map((c) => normalizarCliente(c)));
+      setResumo(indicadores);
+      setErro('');
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
-      setErro(error.response?.status === 401
-        ? 'Sessão expirada. Faça login novamente.'
-        : error.response
-          ? 'Não foi possível carregar os clientes. Verifique o backend.'
-          : error.message);
-    } finally {
-      setCarregando(false);
-    }
-
-    try {
-      const respostaIndicadores = await apiClient.get('/clientes/indicadores');
-      setResumo(respostaIndicadores.data);
-    } catch (error) {
-      console.error('Erro ao carregar indicadores:', error);
-    }
+      setErro(erroClientes(error));
+      throw error;
+    } finally { setCarregando(false); }
   }, []);
 
+  const recarregar = useCallback(() => { setCarregando(true); return carregarClientes(); }, [carregarClientes]);
   useEffect(() => {
-    carregarClientes();
+    // Cleanup prevents duplicate initial requests during StrictMode's effect replay.
+    const timer = setTimeout(() => { carregarClientes().catch(() => {}); }, 0);
+    return () => clearTimeout(timer);
   }, [carregarClientes]);
 
-  const obterCliente = useCallback((id) => {
-    return clientes.find((cliente) => cliente.id === Number(id)) || null;
-  }, [clientes]);
-
-  const criarCliente = useCallback((dados) => {
-    const novoId = clientes.length
-      ? Math.max(...clientes.map((cliente) => cliente.id)) + 1
-      : 1;
-
-    const novoCliente = normalizar({
-      id: novoId,
-      ativo: true,
-      ...dados,
-    });
-
-    setClientes((anteriores) => [novoCliente, ...anteriores]);
-    return novoCliente;
-  }, [clientes]);
-
-  const atualizarCliente = useCallback((id, dados) => {
-    setClientes((anteriores) =>
-      anteriores.map((cliente) =>
-        cliente.id === Number(id)
-          ? normalizar({ ...cliente, ...dados, id: Number(id) })
-          : cliente
-      )
-    );
+  const obterCliente = useCallback(async (id) => {
+    const { cliente, endereco } = await clientesAPI.porId(id);
+    return normalizarCliente(cliente, endereco || {});
   }, []);
 
-  const inativarCliente = useCallback((id) => {
-    setClientes((anteriores) =>
-      anteriores.map((cliente) =>
-        cliente.id === Number(id)
-          ? { ...cliente, ativo: false, status: 'inativo' }
-          : cliente
-      )
-    );
-  }, []);
+  const salvarCliente = useCallback(async (dados, id) => {
+    let cliente;
+    try { cliente = await clientesAPI.salvar(dados, id); }
+    catch (error) {
+      if (error.salvoParcialmente) await carregarClientes().catch(() => {});
+      throw error;
+    }
+    // Never repeat a successful mutation because refreshing the list failed.
+    await carregarClientes().catch(() => {});
+    return cliente;
+  }, [carregarClientes]);
 
-  const value = useMemo(
-    () => ({
-      clientes,
-      resumo,
-      carregando,
-      erro,
-      obterCliente,
-      criarCliente,
-      atualizarCliente,
-      inativarCliente,
-      carregarClientes,
-    }),
-    [
-      clientes,
-      resumo,
-      carregando,
-      erro,
-      obterCliente,
-      criarCliente,
-      atualizarCliente,
-      inativarCliente,
-      carregarClientes,
-    ]
-  );
+  const excluirCliente = useCallback(async (id) => {
+    await clientesAPI.excluir(id);
+    setClientes((anteriores) => anteriores.filter((c) => c.id !== Number(id)));
+    await carregarClientes().catch(() => {});
+  }, [carregarClientes]);
 
-  return (
-    <ClientesContext.Provider value={value}>
-      {children}
-    </ClientesContext.Provider>
-  );
+  const value = useMemo(() => ({ clientes, resumo, carregando, erro, obterCliente, salvarCliente,
+    excluirCliente, carregarClientes: recarregar }), [clientes, resumo, carregando, erro, obterCliente, salvarCliente, excluirCliente, recarregar]);
+  return <ClientesContext.Provider value={value}>{children}</ClientesContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useClientes() {
   const ctx = useContext(ClientesContext);
-
-  if (!ctx) {
-    throw new Error('useClientes deve ser usado dentro de ClientesProvider');
-  }
-
+  if (!ctx) throw new Error('useClientes deve ser usado dentro de ClientesProvider');
   return ctx;
 }

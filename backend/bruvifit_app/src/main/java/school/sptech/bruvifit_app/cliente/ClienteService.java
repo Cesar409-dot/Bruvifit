@@ -73,7 +73,7 @@ public class ClienteService {
 
         Cliente cliente = clienteEncontrado.get();
 
-        if (!cliente.getEmail().equalsIgnoreCase(request.getEmail())
+        if (!request.getEmail().equalsIgnoreCase(cliente.getEmail())
                 && repository.existsByEmailAndIdNot(
                 request.getEmail(), id)) {
 
@@ -96,10 +96,15 @@ public class ClienteService {
             return false;
         }
 
-        Cliente cliente = clienteEncontrado.get();
-        cliente.setAtivo(false);
-
-        repository.save(cliente);
+        if (pedidoRepository.existsByClienteId(id)) {
+            throw new ConflitoDeDadosException("Cliente possui pedidos vinculados e não pode ser excluído. O cadastro, os endereços e o histórico foram preservados.");
+        }
+        // Enderecos have one owner and no incoming foreign keys in the schema.
+        // Flush children first; any constraint failure rolls back the whole transaction.
+        enderecoRepository.deleteAll(enderecoRepository.findByClienteId(id));
+        enderecoRepository.flush();
+        repository.delete(clienteEncontrado.get());
+        repository.flush();
 
         return true;
     }

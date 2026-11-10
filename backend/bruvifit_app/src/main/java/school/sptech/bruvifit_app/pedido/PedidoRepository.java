@@ -13,6 +13,8 @@ import java.util.List;
 
 public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
+    boolean existsByClienteId(Integer clienteId);
+
     Page<Pedido> findByClienteId(Integer clienteId, Pageable pageable);
 
     Page<Pedido> findByUsuarioId(Integer usuarioId, Pageable pageable);

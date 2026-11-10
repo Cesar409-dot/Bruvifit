@@ -63,6 +63,8 @@ INSERT INTO cliente (nome, telefone, email, criado_em, ativo) VALUES
 ('Lucas Ferreira', '11943210987', 'lucas@gmail.com', NOW(), 0),
 ('Juliana Almeida', '11932109876', 'juliana@gmail.com', NOW(), 1);
 
+SELECT * FROM cliente;
+
 CREATE TABLE endereco (
     id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
      cliente_id INT NOT NULL,

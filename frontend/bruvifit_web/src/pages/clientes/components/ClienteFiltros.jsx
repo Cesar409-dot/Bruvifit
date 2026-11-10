@@ -5,19 +5,21 @@ import { FilterBar } from '../../../components/ui/FilterBar.jsx';
 
 const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 
-export function ClienteFiltros() {
+export function ClienteFiltros({ onBuscar, onLimpar }) {
   const [filtros, setFiltros] = useState({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '' });
   const [dataFinalErro, setDataFinalErro] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setDataFinalErro('');
+    const erro = onBuscar(filtros);
+    setDataFinalErro(erro || '');
   };
 
   const update = (field) => (event) => setFiltros((current) => ({ ...current, [field]: event.target.value }));
   const clear = () => {
     setFiltros({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '' });
     setDataFinalErro('');
+    onLimpar();
   };
 
   return (

@@ -7,20 +7,40 @@ import { Button } from '../../../../components/ui/Button.jsx';
 import { Card } from '../../../../components/ui/Card.jsx';
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx';
 import { useClientes } from '../../context/ClientesContext.jsx';
+import { clientesAPI } from '../../../../shared/api/clientes-api.js';
+import { erroClientes } from '../../model/clientes-model.js';
 import { formatarData, formatarMoeda } from '../../../../utils/format.js';
 import styles from './index.module.css';
 
 export function ClientePerfilPage() {
   const { id } = useParams();
-  const { obterCliente, inativarCliente } = useClientes();
+  const { obterCliente, excluirCliente } = useClientes();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [mostrarSucesso, setMostrarSucesso] = useState(location.state?.flash === 'salvo');
-  const [mostrarInativado, setMostrarInativado] = useState(false);
-  const mostrarPainel = searchParams.get('inativar') === '1';
+  const [cliente, setCliente] = useState(null);
+  const [erro, setErro] = useState('');
+  const [erroExclusao, setErroExclusao] = useState('');
+  const [excluindo, setExcluindo] = useState(false);
+  const [historico, setHistorico] = useState(null);
+  const [erroHistorico, setErroHistorico] = useState('');
+  const [vendaSelecionada, setVendaSelecionada] = useState(null);
+  const mostrarPainel = searchParams.get('excluir') === '1' || searchParams.get('inativar') === '1';
 
-  const cliente = obterCliente(id);
+  useEffect(() => {
+    let ativo = true;
+    Promise.all([obterCliente(id), clientesAPI.historico(id).then(
+      (data) => ({ data }), (error) => ({ error }),
+    )]).then(([data, vendas]) => {
+      if (ativo) {
+        setCliente(data); setErro(''); setHistorico(vendas.data || null);
+        setErroHistorico(vendas.error ? erroClientes(vendas.error, 'carregar o histórico') : '');
+        setVendaSelecionada(null);
+      }
+    }).catch((error) => { if (ativo) setErro(erroClientes(error)); });
+    return () => { ativo = false; };
+  }, [id, obterCliente]);
 
   useEffect(() => {
     document.title = cliente ? `${cliente.nome} · BruVi Fit` : 'Cliente não encontrado · BruVi Fit';
@@ -35,11 +55,11 @@ export function ClientePerfilPage() {
     }
   }, [cliente, mostrarPainel]);
 
-  if (!cliente) {
+  if (!cliente || cliente.id !== Number(id)) {
       return (
         <main className={styles.page}>
-        <PageHeader titulo="Cliente não encontrado" subtitulo={<Breadcrumb items={[{ label: 'Clientes', to: '/clientes' }, { label: 'Não encontrado' }]} />} />
-        <StatusPanel variante="erro" titulo="Confira o endereço ou volte à lista de clientes.">
+        <PageHeader titulo={erro ? 'Não foi possível carregar o cliente' : 'Carregando cliente...'} subtitulo={<Breadcrumb items={[{ label: 'Clientes', to: '/clientes' }]} />} />
+        <StatusPanel variante={erro ? 'erro' : 'info'} titulo={erro || 'Consultando os dados do cliente.'}>
           <div className={styles.voltarWrap}>
             <Link to="/clientes">
               <Button variant="outline">Voltar para Clientes</Button>
@@ -52,15 +72,24 @@ export function ClientePerfilPage() {
 
   const inativo = cliente.status === 'inativo';
   const endereco = cliente.endereco || {};
+  const ultimaCompra = historico?.filter((v) => v.status?.toLowerCase() === 'concluido').map((v) => v.data).sort().at(-1);
 
-  const handleConfirmar = () => {
-    inativarCliente(cliente.id);
-    setMostrarInativado(true);
-    setSearchParams({});
-    navigate(`/clientes/${cliente.id}`, { replace: true });
+  const handleConfirmar = async () => {
+    if (excluindo) return;
+    setExcluindo(true); setErroExclusao('');
+    try {
+      await excluirCliente(cliente.id);
+      navigate('/clientes', { replace: true, state: { flash: 'excluido' } });
+    } catch (error) {
+      setErroExclusao(error.response?.status === 409
+        ? 'Não foi possível excluir o cliente. Existem pedidos vinculados a este cadastro.'
+        : erroClientes(error, 'excluir o cliente'));
+    }
+    finally { setExcluindo(false); }
   };
 
   const handleCancelar = () => {
+    setErroExclusao('');
     setSearchParams({});
   };
 
@@ -89,10 +118,10 @@ export function ClientePerfilPage() {
           </button>
         </div>
       ) : null}
-      {mostrarInativado ? (
+      {erro ? (
         <div className={styles.sucessoWrap}>
-          <StatusPanel variante="sucesso" titulo="Cliente inativado">
-            {cliente.nome} não aparecerá em novas vendas. O histórico foi preservado.
+          <StatusPanel variante="erro" titulo="Operação não concluída">
+            {erro}
           </StatusPanel>
         </div>
       ) : null}
@@ -106,7 +135,7 @@ export function ClientePerfilPage() {
             </p>
             <p className={styles.micro}>
               {cliente.cpf ? `CPF ${cliente.cpf}` : 'CPF não informado'} · Última venda:{' '}
-              {cliente.ultimaCompra ? formatarData(cliente.ultimaCompra) : '—'}
+              {ultimaCompra ? formatarData(ultimaCompra) : '—'}
             </p>
           </div>
         </Card>
@@ -119,7 +148,7 @@ export function ClientePerfilPage() {
             <p>
               {endereco.bairro || '—'} · {endereco.cidade || cliente.cidade || '—'} / {endereco.uf || cliente.uf || '—'} · {endereco.cep || '—'}
             </p>
-            <p className={styles.micro}>Endereço ilustrativo para validação do formulário.</p>
+            <p className={styles.micro}>{endereco.id ? 'Endereço cadastrado no sistema.' : 'Nenhum endereço cadastrado.'}</p>
           </div>
           <Link to={`/clientes/${cliente.id}/editar`}>
             <Button variant="outline" size="sm" className={styles.btnContato}>
@@ -129,8 +158,8 @@ export function ClientePerfilPage() {
         </Card>
       </div>
       <div className={styles.historicoWrap}>
-        <Card titulo="Histórico de vendas · amostra ilustrativa">
-          {cliente.vendas && cliente.vendas.length > 0 ? (
+        <Card titulo="Histórico de vendas">
+          {erroHistorico ? <p role="alert">{erroHistorico}</p> : historico === null ? <p>Carregando histórico...</p> : historico.length > 0 ? (
             <>
               <div className={styles.tableWrapper}>
                 <table className={styles.table}>
@@ -146,7 +175,7 @@ export function ClientePerfilPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {cliente.vendas.map((venda) => (
+                    {historico.map((venda) => (
                       <tr key={venda.id}>
                         <td>#{venda.id}</td>
                         <td>{formatarData(venda.data)}</td>
@@ -154,7 +183,7 @@ export function ClientePerfilPage() {
                         <td>{venda.pagamento}</td>
                         <td>{formatarMoeda(venda.total)}</td>
                         <td>
-                          <button type="button" className={styles.linkBtn} onClick={() => console.info(`ver venda ${venda.id}`)}>
+                          <button type="button" className={styles.linkBtn} onClick={() => setVendaSelecionada(venda)}>
                             Ver venda
                           </button>
                         </td>
@@ -163,25 +192,34 @@ export function ClientePerfilPage() {
                   </tbody>
                 </table>
               </div>
-              <p className={styles.microNota}>Exemplo do perfil após a confirmação da venda #125. O histórico é preservado mesmo com o cliente inativo.</p>
+              {vendaSelecionada ? <StatusPanel variante="info" titulo={`Venda #${vendaSelecionada.id}`}>
+                <p>Status: {vendaSelecionada.status} · Total: {formatarMoeda(vendaSelecionada.total)}</p>
+                {vendaSelecionada.detalhes.map((item) => <p key={item.id}>{item.produtoNome || `Produto #${item.produtoId}`}: {item.quantidade} unidade(s) · {formatarMoeda(item.subtotal)}</p>)}
+                <Button variant="outline" onClick={() => setVendaSelecionada(null)}>Fechar detalhes</Button>
+              </StatusPanel> : null}
             </>
           ) : (
             <p className={styles.semVendas}>Este cliente ainda não tem vendas registradas.</p>
           )}
         </Card>
       </div>
-      {mostrarPainel && !inativo ? (
+      {mostrarPainel ? (
         <div id="painel-inativacao" className={styles.inativacaoWrap}>
-          <Card variante="perigo" titulo="Confirmar inativação do cliente">
+          <Card variante="perigo" titulo="Confirmar exclusão do cliente">
             <p className={styles.inativacaoTexto}>
-              Inativar {cliente.nome}? Ele deixará de ser selecionável em novas vendas. Seus dados e todas as vendas anteriores serão preservados para consulta.
+              Excluir definitivamente {cliente.nome}? O cadastro e os endereços exclusivos deste cliente serão removidos. Esta ação não pode ser desfeita. Clientes com pedidos vinculados não podem ser excluídos; nesse caso, todos os registros serão preservados.
             </p>
+            {erroExclusao ? (
+              <StatusPanel variante="erro" titulo="Não foi possível concluir a exclusão">
+                {erroExclusao}
+              </StatusPanel>
+            ) : null}
             <div className={styles.inativacaoAcoes}>
-              <Button variant="outline" onClick={handleCancelar}>
+              <Button variant="outline" disabled={excluindo} onClick={handleCancelar}>
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleConfirmar}>
-                Confirmar inativação
+              <Button variant="primary" disabled={excluindo} onClick={handleConfirmar}>
+                {excluindo ? 'Excluindo...' : 'Confirmar exclusão'}
               </Button>
             </div>
           </Card>

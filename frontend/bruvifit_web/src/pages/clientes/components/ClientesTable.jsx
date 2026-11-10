@@ -47,7 +47,7 @@ export function ClientesTable({ clientes = [] }) {
                   <div className={styles.acoes}>
                     <IconButton icon={Eye} label={`Ver perfil de ${cliente.nome}`} to={`/clientes/${cliente.id}`} />
                     <IconButton icon={Pencil} label={`Editar ${cliente.nome}`} to={`/clientes/${cliente.id}/editar`} />
-                    <IconButton icon={Archive} label={`Inativar ${cliente.nome}`} to={`/clientes/${cliente.id}?inativar=1`} />
+                    <IconButton icon={Archive} label={`Excluir ${cliente.nome}`} to={`/clientes/${cliente.id}?excluir=1`} />
                   </div>
                 </td>
               </tr>

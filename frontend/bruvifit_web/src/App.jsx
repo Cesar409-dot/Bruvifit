@@ -53,8 +53,7 @@ function ProtectedRoutes() {
   }
 
   return (
-    <ClientesProvider>
-    <Shell>
+    <ClientesProvider><Shell>
       <Routes>
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />
@@ -75,8 +74,7 @@ function ProtectedRoutes() {
         <Route path="/:modulo" element={<EmBrevePage />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
-    </Shell>
-    </ClientesProvider>
+    </Shell></ClientesProvider>
   );
 }
 

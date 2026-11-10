@@ -13,6 +13,7 @@ export function DadosPessoaisContato({ values = {}, errors = {}, onChange, onBlu
           id="nome"
           label="Nome completo"
           obrigatorio
+          maxLength={45}
           value={values.nome || ''}
           onChange={onChange}
           onBlur={onBlur}
@@ -23,7 +24,8 @@ export function DadosPessoaisContato({ values = {}, errors = {}, onChange, onBlu
           id="cpf"
           label="CPF"
           opcionalTag
-          ajuda="Se preenchido, informe 11 dígitos válidos."
+          ajuda="CPF não é disponibilizado pela API de Clientes."
+          disabled
           value={values.cpf || ''}
           onChange={onChange}
           onBlur={onBlur}
@@ -33,6 +35,8 @@ export function DadosPessoaisContato({ values = {}, errors = {}, onChange, onBlu
         <TextField
           id="email"
           label="E-mail"
+          obrigatorio
+          maxLength={45}
           ajuda="Use um endereço válido, como nome@dominio.com."
           value={values.email || ''}
           onChange={onChange}

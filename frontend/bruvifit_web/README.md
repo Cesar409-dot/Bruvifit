@@ -19,6 +19,38 @@ resposta é armazenado na sessão e enviado como `Authorization: Bearer <token>`
 ou envelope `content`. Respostas fora desse contrato são tratadas como erro,
 sem substituição por listas vazias. A consulta ocorre após a autenticação.
 
+## Integração de Clientes
+
+O CRUD usa a API real com o JWT da sessão. `VITE_API_BASE_URL` representa a URL
+base do backend (padrão `http://localhost:8080`), sem adicionar `/api`. Reinicie
+o backend após compilar para carregar a correção de exclusão física.
+
+Clientes usam `GET/POST /clientes`, `GET/PUT/DELETE /clientes/{id}` e
+`GET /clientes/indicadores`. Endereços são gravados por `POST /enderecos` e
+`PUT/DELETE /enderecos/{id}`, consultados por `GET /enderecos/cliente/{id}`.
+O perfil consulta `GET /pedidos` e `GET /api/pedidos/{id}/itens` para o histórico.
+
+A listagem retorna um array completo, sem paginação no servidor. Pesquisa,
+UF e datas de última compra são combinadas no frontend antes da paginação.
+CPF não existe no DTO de Clientes: o campo permanece visível e desabilitado.
+Endereço é opcional; quando preenchido, deve estar completo. A edição altera
+o primeiro endereço, como na listagem do backend, preservando os demais.
+
+Excluir exige confirmação e remove fisicamente o cadastro e seus endereços
+exclusivos em uma transação, desde que não haja pedidos vinculados. Clientes
+com pedidos retornam 409, preservando cadastro, endereços e histórico.
+As gravações de cliente e endereço são separadas: falha no endereço informa o
+ID já salvo e permite retomar sem repetir o cadastro.
+
+Testes de Clientes: `node --test tests/clientes-crud.test.mjs`. O teste real
+`node tests/clientes-live.mjs` exige `CLIENTES_TEST_BASE_URL` explicitamente
+apontado à versão corrigida do backend e `JWT_SECRET` no ambiente; ele cria e
+remove somente cadastros identificados de teste, sem alterar o esquema.
+Também exige `CLIENTES_TEST_DISPOSABLE_DATABASE=true`, exclusivamente para banco
+de testes descartável e autorizado. Não execute esse teste no banco principal.
+Resultados e arquivos: [especificação do CRUD](specs/004-clientes-crud/spec.md).
+Regra atual de exclusão e testes: [clientes com endereços](specs/005-exclusao-clientes-enderecos/spec.md).
+
 ## Estrutura
 
 ```text
