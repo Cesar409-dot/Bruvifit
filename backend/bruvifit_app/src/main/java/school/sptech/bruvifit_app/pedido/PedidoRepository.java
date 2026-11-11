@@ -13,6 +13,10 @@ import java.util.List;
 
 public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Pedido p WHERE p.id = :id")
+    java.util.Optional<Pedido> bloquearParaFinanceiro(@Param("id") Integer id);
+
     boolean existsByClienteId(Integer clienteId);
 
     Page<Pedido> findByClienteId(Integer clienteId, Pageable pageable);

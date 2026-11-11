@@ -1,16 +1,11 @@
 import { formatarMoeda } from '../../../utils/format.js';
-
-export const TIPO_LABEL = {
-  RECEITA: 'Entrada',
-  DESPESA: 'Saída',
-};
-
-export const labelTipo = (tipo) => TIPO_LABEL[tipo] || tipo;
+import { formaPagamento, labelTipo } from '../model/financeiro.js';
 
 const VARIANT_POR_SITUACAO = {
   concluído: 'success',
   concluido: 'success',
   pago: 'success',
+  recebido: 'success',
   pendente: 'pending',
   pending: 'pending',
   cancelado: 'inactive',
@@ -86,7 +81,7 @@ export const formasParaDonut = (formasResponse) => {
   const labels = itens.map((item) => item.forma || 'Não informado');
   const datasets = [
     {
-      data: itens.map((item) => (total > 0 ? Math.round((Number(item.valor || 0) / total) * 100) : 0)),
+      data: itens.map((item) => Number(item.valor)),
       backgroundColor: itens.map((_, index) => corParaForma(index)),
       borderColor: '--white',
       borderWidth: 2,
@@ -95,19 +90,18 @@ export const formasParaDonut = (formasResponse) => {
   const legendRows = itens.map((item, index) => ({
     label: item.forma || 'Não informado',
     percentual: item.percentual != null ? item.percentual : 0,
-    tone: corParaForma(index),
+    tone: ['primary', 'accent', 'sage', 'nude'][index % coresFormaPagamento.length],
   }));
   return { labels, datasets, legendRows, total };
 };
 
 export const movimentacaoParaLinha = (m) => ({
   id: m.id,
-  data: m.data ? m.data.split('-').reverse().join('/') : '—',
-  descricao: m.descricao || '—',
-  tipo: labelTipo(m.tipo),
-  forma: m.forma || '—',
+  data: m.dataCompetencia ? m.dataCompetencia.split('-').reverse().join('/') : '—',
+  categoria: m.categoria || '—',
+  tipo: labelTipo(m.tipo) || '—',
+  forma: formaPagamento(m.formaPagamento),
   valor: formatarMoeda(m.valor),
   situacao: m.situacao || '—',
   situacaoVariant: variantSituacao(m.situacao),
-  pedidoId: m.pedidoId,
 });

@@ -14,6 +14,7 @@ import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
 import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
 import { FinancePage } from './pages/financeiro/ui/index.jsx';
+import { LancamentoPage } from './pages/financeiro/ui/LancamentoPage.jsx';
 import { session } from './shared/auth/session.js';
 
 function ScrollToTop() {
@@ -71,6 +72,9 @@ function ProtectedRoutes() {
         />
 
         <Route path="/financeiro" element={<FinancePage />} />
+        <Route path="/financeiro/novo" element={<LancamentoPage modo="novo" />} />
+        <Route path="/financeiro/:id" element={<LancamentoPage modo="detalhe" />} />
+        <Route path="/financeiro/:id/editar" element={<LancamentoPage modo="editar" />} />
         <Route path="/:modulo" element={<EmBrevePage />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>

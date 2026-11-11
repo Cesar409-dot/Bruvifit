@@ -940,10 +940,16 @@ paths:
           description: Item de pedido removido (corpo vazio)
         '404':
           description: Item de pedido não encontrado
+  /financeiros/opcoes:
+    get:
+      summary: Retorna categorias, situações e formas de pagamento financeiras permitidas
+      responses:
+        '200':
+          description: Objeto com arrays categoria, situacao e formaPagamento
   /financeiros:
     get:
       summary: Lista todas as movimentações financeiras
-      description: Retorna uma lista de todas as movimentações financeiras cadastradas no sistema.
+      description: Retorna a lista completa, ordenada por competência e ID decrescentes. Quando a forma de pagamento não está informada no lançamento, usa a forma do pedido vinculado.
       operationId: listarFinanceiros
       tags:
         - Financeiro
@@ -969,12 +975,11 @@ paths:
             schema:
               $ref: '#/components/schemas/FinanceiroRequest'
             example:
-              tipo: "ENTRADA"
+              tipo: "RECEITA"
               categoria: "VENDA"
               valor: 1500.00
               dataCompetencia: "2024-01-15"
               situacao: "PENDENTE"
-              pedidoId: 1
       responses:
         '201':
           description: Movimentação financeira criada com sucesso
@@ -984,6 +989,7 @@ paths:
                 $ref: '#/components/schemas/FinanceiroResponse'
         '400':
           description: Dados de entrada inválidos
+  /financeiros/{id}:
     get:
       summary: Busca uma movimentação financeira pelo ID
       description: Retorna os dados de uma movimentação financeira específica identificado pelo ID. Retorna 404 se não encontrado.
@@ -1008,7 +1014,7 @@ paths:
           description: Movimentação financeira não encontrada
     put:
       summary: Atualiza uma movimentação financeira
-      description: Atualiza os dados de uma movimentação financeira existente. Retorna 404 se não encontrado.
+      description: Atualiza um lançamento manual. O vínculo com um pedido não pode ser alterado.
       operationId: atualizarFinanceiro
       tags:
         - Financeiro
@@ -1036,9 +1042,11 @@ paths:
           description: Dados de entrada inválidos
         '404':
           description: Movimentação financeira não encontrada
+        '409':
+          description: Lançamento vinculado a pedido ou tentativa de alterar o vínculo
     delete:
       summary: Remove uma movimentação financeira
-      description: Remove uma movimentação financeira do sistema pelo ID. Retorna 404 se não encontrado.
+      description: Exclui fisicamente um lançamento manual quando permitido pela integridade referencial.
       operationId: deletarFinanceiro
       tags:
         - Financeiro
@@ -1054,6 +1062,8 @@ paths:
           description: Movimentação financeira removida (corpo vazio)
         '404':
           description: Movimentação financeira não encontrada
+        '409':
+          description: Lançamento vinculado a pedido ou restrição de integridade
   /dashboard/indicadores:
     get:
       summary: Obtém indicadores do dashboard
@@ -1758,8 +1768,8 @@ components:
       properties:
         tipo:
           type: string
-          example: "ENTRADA"
-          description: Tipo da movimentação (ENTRADA ou SAIDA)
+          example: "RECEITA"
+          description: RECEITA ou DESPESA, sem distinção de maiúsculas e minúsculas.
         categoria:
           type: string
           example: "VENDA"
@@ -1768,7 +1778,10 @@ components:
           type: number
           format: decimal
           example: 1500.00
-          description: Valor da movimentação
+          minimum: 0.01
+          maximum: 99999999.99
+          multipleOf: 0.01
+          description: Valor positivo com até duas casas decimais.
         dataCompetencia:
           type: string
           format: date
@@ -1797,6 +1810,9 @@ components:
         - valor
         - dataCompetencia
         - situacao
+        - dataRecebimento
+        - formaPagamento
+        - pedidoId
     FinanceiroResponse:
       type: object
       properties:

@@ -19,20 +19,17 @@ public class FinanceiroController {
         this.service = service;
     }
 
+    @GetMapping("/opcoes")
+    public java.util.Map<String, java.util.List<String>> opcoes() { return FinanceiroRequest.opcoes(); }
+
     @GetMapping
     public ResponseEntity<List<FinanceiroResponse>> listar() {
         return ResponseEntity.status(200).body(service.listar());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Financeiro> buscarPorId(@PathVariable Integer id) {
-        Optional<Financeiro> financeiroEncontrado = service.buscarPorId(id);
-
-        if (financeiroEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).build();
-        }
-
-        return ResponseEntity.status(200).body(financeiroEncontrado.get());
+    public ResponseEntity<FinanceiroResponse> buscarPorId(@PathVariable Integer id) {
+        return ResponseEntity.of(service.buscarPorId(id));
     }
 
     @PostMapping

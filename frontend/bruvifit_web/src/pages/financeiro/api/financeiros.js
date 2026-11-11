@@ -1,43 +1,33 @@
 import { apiClient } from '../../../shared/api/axios-client.js';
 
-// ISO local: yyyy-MM-dd (sem toISOString, sem fuso). Valida antes de enviar.
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-const ehDataValida = (valor) => valor != null && valor !== '' && ISO_DATE.test(String(valor));
-
-const montoUrl = (caminho, params) => {
-  const busca = new URLSearchParams();
-  if (params) {
-    Object.entries(params).forEach(([chave, valor]) => {
-      if (ehDataValida(valor)) {
-        busca.set(chave, String(valor));
-      } else if (valor !== undefined && valor !== null && valor !== '') {
-        busca.set(chave, String(valor));
-      }
-    });
-  }
-  const query = busca.toString();
-  return query ? `${caminho}?${query}` : caminho;
-};
-
 export const financeiroApi = {
-  getResumo: (inicio, fim) =>
-    apiClient.get(montoUrl('/dashboard/financeiro', { inicio, fim })),
-
-  getEvolucao: (inicio, fim) =>
-    apiClient.get(montoUrl('/dashboard/financeiro/evolucao', { inicio, fim })),
-
-  getFormasPagamento: (inicio, fim) =>
-    apiClient.get(montoUrl('/dashboard/financeiro/formas-pagamento', { inicio, fim })),
-
-  getMovimentacoes: (inicio, fim, limite = 10) =>
-    apiClient.get(montoUrl('/dashboard/financeiro/movimentacoes', { inicio, fim, limite })),
-
-  getLancamento: (id) => apiClient.get(`/financeiros/${id}`),
-
+  opcoes: (signal) => apiClient.get('/financeiros/opcoes', { signal }),
+  pedidos: (signal) => apiClient.get('/pedidos', { signal }),
+  async listar(signal) {
+    const { data } = await apiClient.get('/financeiros', { signal });
+    if (!Array.isArray(data)) throw new Error('Resposta financeira inválida.');
+    return data;
+  },
+  getLancamento: (id, signal) => apiClient.get(`/financeiros/${id}`, { signal }),
   criar: (dados) => apiClient.post('/financeiros', dados),
-
   atualizar: (id, dados) => apiClient.put(`/financeiros/${id}`, dados),
-
   deletar: (id) => apiClient.delete(`/financeiros/${id}`),
 };
+
+export function mensagemFinanceiro(error, fallback) {
+  const status = error.response?.status;
+  if ([400, 409].includes(status) && typeof error.response?.data?.message === 'string') {
+    return error.response.data.message;
+  }
+  const messages = {
+    400: 'Confira os campos informados e tente novamente.',
+    401: 'Sessão expirada. Faça login novamente.',
+    403: 'Você não tem permissão para realizar esta operação.',
+    404: 'Lançamento não encontrado.',
+    409: 'Não foi possível concluir a operação. Existem registros vinculados ao lançamento.',
+    500: 'Ocorreu um erro no servidor. Tente novamente.',
+  };
+  return messages[status] || (error.request && !error.response
+    ? 'Não foi possível conectar ao servidor. Verifique sua conexão.'
+    : fallback);
+}

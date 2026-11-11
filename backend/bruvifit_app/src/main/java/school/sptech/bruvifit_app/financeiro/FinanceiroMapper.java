@@ -1,11 +1,6 @@
 package school.sptech.bruvifit_app.financeiro;
 
-import school.sptech.bruvifit_app.financeiro.Financeiro;
 import school.sptech.bruvifit_app.financeiro.request.FinanceiroRequest;
-import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 public class FinanceiroMapper {
 
@@ -20,20 +15,6 @@ public class FinanceiroMapper {
         financeiro.setPedidoId(request.getPedidoId());
         financeiro.setFormaPagamento(request.getFormaPagamento());
         return financeiro;
-    }
-
-    public static FinanceiroResponse toResponse(Financeiro financeiro) {
-        return new FinanceiroResponse(
-                financeiro.getId(),
-                financeiro.getTipo(),
-                financeiro.getCategoria(),
-                financeiro.getValor(),
-                financeiro.getDataCompetencia(),
-                financeiro.getDataRecebimento(),
-                financeiro.getSituacao(),
-                financeiro.getPedidoId(),
-                financeiro.getFormaPagamento()
-        );
     }
 
     public static void updateEntity(Financeiro financeiro, FinanceiroRequest request) {

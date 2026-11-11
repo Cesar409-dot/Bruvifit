@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "../../../components/ui/Button.jsx";
 import { Card } from "../../../components/ui/Card.jsx";
@@ -20,7 +21,10 @@ import { SelectField } from "../../../components/ui/SelectField.jsx";
 import { StatCard } from "../../../components/ui/StatCard.jsx";
 import { StatusBadge } from "../../../components/ui/StatusBadge.jsx";
 import { TextField } from "../../../components/ui/TextField.jsx";
-import { FinanceiroProvider, useFinanceiro } from "../context/FinanceiroContext.jsx";
+import { Pagination } from "../../../components/ui/Pagination.jsx";
+import { StatusPanel } from "../../../components/ui/StatusPanel.jsx";
+import { useFinanceiro } from "../model/use-financeiro.js";
+import { formaPagamento, initialFilters, montarDashboard, periodoFinanceiro } from "../model/financeiro.js";
 import {
   resumoParaCards,
   evolucaoParaGrafico,
@@ -41,7 +45,7 @@ Chart.register(
   Tooltip,
 );
 
-const initialFilters = { startDate: "", endDate: "", type: "", payment: "" };
+const PAGE_SIZE = 10;
 
 function FinanceChart({ type, labels, datasets, ariaLabel, className = "" }) {
   const canvasRef = useRef(null);
@@ -76,7 +80,7 @@ function FinanceChart({ type, labels, datasets, ariaLabel, className = "" }) {
           tooltip: {
             callbacks: {
               label: (context) =>
-                `${context.dataset.label ? `${context.dataset.label}: ` : ""}${context.formattedValue}${isDoughnut ? "%" : ""}`,
+                `${context.dataset.label || context.label}: ${formatarMoeda(context.raw)}`,
             },
           },
         },
@@ -167,7 +171,7 @@ function PaymentCard({ labels, datasets, legendRows, total, vazio }) {
           <FinanceChart
             type="doughnut"
             labels={labels}
-            ariaLabel="Gráfico de rosca da distribuição de recebimentos por forma de pagamento"
+            ariaLabel="Gráfico de rosca da distribuição das entradas por forma de pagamento"
             className={styles.donutChart}
             datasets={datasets}
           />
@@ -187,16 +191,16 @@ function PaymentCard({ labels, datasets, legendRows, total, vazio }) {
         </div>
       </div>
       {total > 0 && !vazio && (
-        <p className={styles.helper}>Total recebido no período: {formatarMoeda(total)}</p>
+        <p className={styles.helper}>Total de entradas no período: {formatarMoeda(total)}</p>
       )}
     </article>
   );
 }
 
-function MovementsTable({ linhas, vazio, onDetalhe }) {
+function MovementsTable({ linhas, vazio, onDetalhe, pagina, totalPaginas, onPageChange }) {
   const headings = [
     "Data",
-    "Descrição",
+        "Categoria",
     "Tipo",
     "Forma",
     "Valor",
@@ -224,9 +228,9 @@ function MovementsTable({ linhas, vazio, onDetalhe }) {
               </tr>
             ) : (
               linhas.map((movement) => (
-                <tr key={`${movement.data}-${movement.descricao}-${movement.id}`}>
+                <tr key={movement.id}>
                   <td className={styles.boldCell}>{movement.data}</td>
-                  <td>{movement.descricao}</td>
+                  <td>{movement.categoria}</td>
                   <td>{movement.tipo}</td>
                   <td>{movement.forma}</td>
                   <td className={styles.boldCell}>{movement.valor}</td>
@@ -250,6 +254,9 @@ function MovementsTable({ linhas, vazio, onDetalhe }) {
           </tbody>
         </table>
       </div>
+      {totalPaginas > 1 && (
+        <Pagination pagina={pagina} totalPaginas={totalPaginas} onPageChange={onPageChange} />
+      )}
       <p className={styles.helper}>
         As movimentações exibidas são registros individuais; os indicadores
         representam a visão gerencial do período.
@@ -259,26 +266,13 @@ function MovementsTable({ linhas, vazio, onDetalhe }) {
 }
 
 export function FinancePage() {
-  return (
-    <FinanceiroProvider>
-      <FinanceContent />
-    </FinanceiroProvider>
-  );
-}
-
-function FinanceContent() {
-  const {
-    resumo,
-    evolucao,
-    formasPagamento,
-    movimentacoes,
-    carregando,
-    erro,
-    carregar,
-  } = useFinanceiro();
-  const [draftFilters, setDraftFilters] = useState(initialFilters);
-  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { registros, carregando, erro, recarregar } = useFinanceiro();
+  const [draftFilters, setDraftFilters] = useState(state?.filters ?? initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(state?.filters ?? initialFilters);
   const [filterError, setFilterError] = useState("");
+  const [pagina, setPagina] = useState(1);
 
   useEffect(() => {
     document.title = 'Financeiro · BruViFit';
@@ -287,11 +281,8 @@ function FinanceContent() {
 
   const aplicarFiltros = (event) => {
     event.preventDefault();
-    if (
-      draftFilters.startDate &&
-      draftFilters.endDate &&
-      draftFilters.startDate > draftFilters.endDate
-    ) {
+    const { inicio, fim } = periodoFinanceiro(draftFilters);
+    if (inicio && fim && inicio > fim) {
       setFilterError(
         "A data inicial deve ser anterior ou igual à data final.",
       );
@@ -299,14 +290,14 @@ function FinanceContent() {
     }
     setFilterError("");
     setAppliedFilters(draftFilters);
-    carregar(draftFilters.startDate || undefined, draftFilters.endDate || undefined);
+    setPagina(1);
   };
 
   const limparFiltros = () => {
     setDraftFilters(initialFilters);
     setAppliedFilters(initialFilters);
     setFilterError("");
-    carregar(undefined, undefined);
+    setPagina(1);
   };
 
   const atualizarStartDate = (event) => {
@@ -319,40 +310,19 @@ function FinanceContent() {
     }));
   };
 
-  const inicio = appliedFilters.startDate || undefined;
-  const fim = appliedFilters.endDate || undefined;
-
-  const linhasFiltradas = useMemo(() => {
-    let lista = (movimentacoes || []).map(movimentacaoParaLinha);
-    if (appliedFilters.type) {
-      lista = lista.filter((l) => l.tipo === appliedFilters.type);
-    }
-    if (appliedFilters.payment) {
-      lista = lista.filter((l) => l.forma === appliedFilters.payment);
-    }
-    return lista;
-  }, [movimentacoes, appliedFilters.type, appliedFilters.payment]);
-
-  const evolucaoVazia = !evolucao || (evolucao.pontos || []).length === 0;
-  const formasVazias = !formasPagamento || (formasPagamento.itens || []).length === 0;
-  const tabelaVazia = linhasFiltradas.length === 0;
-
-  const cards = useMemo(() => (resumo ? resumoParaCards(resumo) : []), [resumo]);
-
-  const grafico = useMemo(() => {
-    if (!evolucao) return { labels: [], datasets: [], granularidadeLabel: "por dia" };
-    return evolucaoParaGrafico(evolucao);
-  }, [evolucao]);
-
-  const donut = useMemo(() => {
-    if (!formasPagamento) return { labels: [], datasets: [], legendRows: [], total: 0 };
-    return formasParaDonut(formasPagamento);
-  }, [formasPagamento]);
-
-  const lidarErro = () => {
-    setFilterError("");
-    carregar(inicio, fim);
-  };
+  const { resumo, evolucao, formasPagamento, linhas } = useMemo(
+    () => montarDashboard(registros, appliedFilters), [registros, appliedFilters],
+  );
+  const pagamentos = useMemo(() => Array.from(new Set([
+    "Pix", "Crédito", "Débito", "Dinheiro", ...registros.map((item) => formaPagamento(item.formaPagamento)),
+  ])).sort((a, b) => a.localeCompare(b, "pt-BR")), [registros]);
+  const totalPaginas = Math.max(1, Math.ceil(linhas.length / PAGE_SIZE));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const linhasDaPagina = linhas.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE).map(movimentacaoParaLinha);
+  const cards = resumoParaCards(resumo);
+  const grafico = useMemo(() => evolucaoParaGrafico(evolucao), [evolucao]);
+  const donut = useMemo(() => formasParaDonut(formasPagamento), [formasPagamento]);
+  const abrir = (path) => navigate(path, { state: { filters: appliedFilters } });
 
   return (
     <main className={styles.page}>
@@ -361,17 +331,26 @@ function FinanceContent() {
             titulo="Financeiro"
             subtitulo="Acompanhe suas movimentações"
             acoes={
-              <Button variant="primary" size="sm" icon={Plus}>
+              <Button variant="primary" size="sm" icon={Plus} onClick={() => abrir("/financeiro/novo")}>
                 Novo lançamento
               </Button>
             }
           />
+          {state?.feedback && <StatusPanel variante="sucesso">{state.feedback}</StatusPanel>}
           <Card titulo="Busca e filtros" className={styles.filterCard}>
             <FilterBar onSubmit={aplicarFiltros} onClear={limparFiltros}>
+              <TextField
+                id="financeiro-busca"
+                label="Pesquisar lançamentos"
+                type="search"
+                value={draftFilters.search}
+                onChange={(event) => setDraftFilters((current) => ({ ...current, search: event.target.value }))}
+              />
               <TextField
                 id="financeiro-data-inicial"
                 label="Data inicial"
                 type="date"
+                max="9999-12-31"
                 value={draftFilters.startDate}
                 onChange={atualizarStartDate}
                 erro={filterError}
@@ -380,6 +359,7 @@ function FinanceContent() {
                 id="financeiro-data-final"
                 label="Data final"
                 type="date"
+                max="9999-12-31"
                 min={draftFilters.startDate || undefined}
                 value={draftFilters.endDate}
                 onChange={(event) =>
@@ -402,8 +382,8 @@ function FinanceContent() {
                 }
               >
                 <option value="">Todos</option>
-                <option value="Entrada">Entrada</option>
-                <option value="Saída">Saída</option>
+                <option value="RECEITA">Entrada</option>
+                <option value="DESPESA">Saída</option>
               </SelectField>
               <SelectField
                 id="financeiro-pagamento"
@@ -417,10 +397,7 @@ function FinanceContent() {
                 }
               >
                 <option value="">Todos</option>
-                <option value="Pix">Pix</option>
-                <option value="Crédito">Crédito</option>
-                <option value="Débito">Débito</option>
-                <option value="Dinheiro">Dinheiro</option>
+                {pagamentos.map((forma) => <option key={forma}>{forma}</option>)}
               </SelectField>
             </FilterBar>
           </Card>
@@ -431,8 +408,8 @@ function FinanceContent() {
             </div>
           ) : erro ? (
             <div className={styles.erro}>
-              <p>{erro}</p>
-              <Button variant="primary" onClick={lidarErro}>
+              <StatusPanel variante="erro">{erro}</StatusPanel>
+              <Button variant="primary" onClick={recarregar}>
                 Tentar novamente
               </Button>
             </div>
@@ -454,20 +431,23 @@ function FinanceContent() {
                   labels={grafico.labels}
                   datasets={grafico.datasets}
                   granularidadeLabel={grafico.granularidadeLabel}
-                  vazio={evolucaoVazia}
+                  vazio={evolucao.pontos.length === 0}
                 />
                 <PaymentCard
                   labels={donut.labels}
                   datasets={donut.datasets}
                   legendRows={donut.legendRows}
                   total={donut.total}
-                  vazio={formasVazias}
+                  vazio={formasPagamento.itens.length === 0 || donut.total <= 0}
                 />
               </section>
               <MovementsTable
-                linhas={linhasFiltradas}
-                vazio={tabelaVazia}
-                onDetalhe={() => {}}
+                linhas={linhasDaPagina}
+                vazio={linhas.length === 0}
+                pagina={paginaAtual}
+                totalPaginas={totalPaginas}
+                onPageChange={setPagina}
+                onDetalhe={(id) => abrir(`/financeiro/${id}`)}
               />
             </>
           )}

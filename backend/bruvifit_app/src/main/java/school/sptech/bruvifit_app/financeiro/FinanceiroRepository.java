@@ -6,11 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import school.sptech.bruvifit_app.pedido.Pedido;
+import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Situacoes de cancelamento/estorno sao exclusas das agregacoes do dashboard para
@@ -19,6 +20,20 @@ import java.util.List;
  * ESTORNADO, ESTORNADA.
  */
 public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer> {
+
+    String CONSULTA_COM_FORMA_PAGAMENTO = """
+        SELECT new school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse(
+            f.id, f.tipo, f.categoria, f.valor, f.dataCompetencia, f.dataRecebimento,
+            f.situacao, f.pedidoId, COALESCE(f.formaPagamento, p.formaPagamento))
+        FROM Financeiro f
+        LEFT JOIN Pedido p ON p.id = f.pedidoId
+        """;
+
+    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "ORDER BY f.dataCompetencia DESC, f.id DESC")
+    List<FinanceiroResponse> listarComFormaPagamento();
+
+    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "WHERE f.id = :id")
+    Optional<FinanceiroResponse> buscarComFormaPagamento(@Param("id") Integer id);
 
     Page<Financeiro> findByTipo(String tipo, Pageable pageable);
 

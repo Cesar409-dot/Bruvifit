@@ -40,6 +40,11 @@ public class Financeiro {
     @Column(name = "pedido_id")
     private Integer pedidoId;
 
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @jakarta.persistence.JoinColumn(name = "pedido_id", insertable = false, updatable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private school.sptech.bruvifit_app.pedido.Pedido pedido;
+
     @Column(name = "forma_pagamento", length = 45)
     private String formaPagamento;
 
