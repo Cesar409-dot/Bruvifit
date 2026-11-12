@@ -1,0 +1,45 @@
+.page { position: fixed; z-index: 60; inset: 0; display: flex; min-height: 100vh; flex-direction: column; overflow: auto; background: var(--cor-fundo); color: var(--cor-texto); }
+.header { display: flex; min-height: 192px; align-items: center; gap: 32px; padding: 24px 40px; background: var(--cor-primaria); color: var(--cor-superficie); }
+.brand { display: grid; width: 184px; height: 144px; flex: 0 0 184px; place-items: center; overflow: hidden; padding: 0; border: 0; border-radius: 8px; background: var(--cor-fundo); cursor: pointer; }
+.brand img { width: 160px; height: 120px; object-fit: contain; }
+.heading { display: flex; min-width: 0; flex-direction: column; gap: 8px; }
+.heading > p { color: var(--cor-borda); font-size: 11px; }
+.heading h1 { font: 700 32px/1.25 var(--fonte-titulo); }
+.heading > span { color: var(--cor-borda); font-size: 13px; }
+.content { display: flex; flex: 1; flex-direction: column; gap: 24px; padding: 40px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 24px; }
+.card { display: flex; min-width: 0; min-height: 657px; flex-direction: column; gap: 18px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--cor-superficie); }
+.card.error { border-color: var(--cor-secundaria); }
+.stateId { display: flex; align-items: center; gap: 12px; }
+.icon { display: grid; width: 48px; height: 48px; flex: 0 0 48px; place-items: center; border-radius: 12px; background: var(--cor-verde-suave); color: var(--cor-primaria); }
+.error .icon { background: var(--cor-rosa-suave); color: var(--cor-erro); }
+.stateId > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.stateId strong { color: var(--cor-primaria); font: 700 12px/1.4 var(--fonte-corpo); }
+.error .stateId strong { color: var(--cor-erro); }
+.stateId small { color: var(--cor-texto-secundario); font-size: 11px; }
+.card h2 { font: 700 23px/1.25 var(--fonte-titulo); }
+.description { min-height: 42px; color: var(--cor-texto-secundario); font-size: 13px; line-height: 1.5; }
+.fields { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; color: var(--cor-texto-secundario); font-size: 12px; }
+.field > strong { font-size: 12px; }
+.field > span { display: flex; min-height: 46px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--cor-superficie); color: var(--cor-texto); font-size: 13px; }
+.field > .invalidField { border: 1.5px solid var(--cor-erro); }
+.fieldError { color: var(--cor-erro); font: 700 11px/1.5 var(--fonte-corpo); }
+.notice { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 8px; background: var(--cor-rosa-suave); color: var(--cor-primaria); }
+.notice > svg { flex: 0 0 20px; }
+.error .notice { background: var(--cor-rosa-suave); color: var(--cor-erro); }
+.success .notice { background: var(--cor-verde-suave); }
+.notice strong { display: block; margin-bottom: 4px; font: 700 13px/1.5 var(--fonte-corpo); }
+.notice p { color: var(--cor-texto-secundario); font-size: 12px; line-height: 1.5; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.destination { margin-top: auto; color: var(--cor-texto-secundario); font-size: 11px; }
+.network { padding: 14px; border-radius: 8px; background: var(--cor-verde-suave); }
+.network > div { display: flex; align-items: flex-start; gap: 12px; color: var(--cor-primaria); }
+.network svg { flex: 0 0 20px; }
+.network strong { font: 700 13px/1.5 var(--fonte-corpo); }
+.network p { margin-top: 3px; color: var(--cor-texto-secundario); font-size: 12px; line-height: 1.5; }
+.retryRow { display: flex; align-items: center; gap: 12px; }
+.retryRow > span { color: var(--cor-primaria); font-size: 12px; }
+
+@media (max-width: 1050px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .content { padding: 24px; } }
+@media (max-width: 720px) { .header { min-height: unset; align-items: flex-start; flex-direction: column; gap: 16px; padding: 18px; } .brand { width: 132px; height: 80px; flex-basis: 80px; } .brand img { width: 116px; height: 66px; } .heading h1 { font-size: 26px; } .content { padding: 18px; } .cards { grid-template-columns: 1fr; } .card { min-height: unset; padding: 18px; } }
