@@ -15,6 +15,15 @@ import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
 import { FinancePage } from './pages/financeiro/ui/index.jsx';
 import { LancamentoPage } from './pages/financeiro/ui/LancamentoPage.jsx';
+import { InventoryPage } from './pages/estoque/ui/index.jsx';
+import { InventoryAdjustmentPage } from './pages/estoque/ajuste/ui/index.jsx';
+import { InventoryStatesPage } from './pages/estoque/estados/ui/index.jsx';
+import { InventoryHistoryPage } from './pages/estoque/historico/ui/index.jsx';
+import { SalesPage } from './pages/vendas/ui/index.jsx';
+import { NewSalePage } from './pages/vendas/nova/ui/index.jsx';
+import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
+import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
+import { SalesStatesPage } from './pages/vendas/estados/ui/index.jsx';
 import { session } from './shared/auth/session.js';
 
 function ScrollToTop() {
@@ -32,6 +41,8 @@ function getSectionLabel(pathname) {
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/clientes') || pathname === '/estados') return 'Clientes';
   if (pathname.startsWith('/financeiro')) return 'Financeiro';
+  if (pathname.startsWith('/estoque')) return 'Estoque';
+  if (pathname.startsWith('/vendas')) return 'Vendas';
 
   return 'BruVi Fit';
 }
@@ -48,10 +59,14 @@ function Shell({ children }) {
 
 function ProtectedRoutes() {
   const currentUser = session.getUser();
+  const { pathname } = useLocation();
 
   if (!session.isAuthenticated()) {
     return <Navigate to="/acesso" replace />;
   }
+
+  if (pathname === '/estoque/estados') return <InventoryStatesPage />;
+  if (pathname === '/vendas/estados') return <SalesStatesPage />;
 
   return (
     <ClientesProvider><Shell>
@@ -65,6 +80,14 @@ function ProtectedRoutes() {
         <Route path="/produtos" element={<ProductsPage />} />
         <Route path="/produtos/novo" element={<ProductCreatePage />} />
         <Route path="/produtos/:id" element={<ProductDetailPage />} />
+
+        <Route path="/estoque/ajuste" element={<InventoryAdjustmentPage />} />
+        <Route path="/estoque/historico" element={<InventoryHistoryPage />} />
+        <Route path="/estoque" element={<InventoryPage />} />
+        <Route path="/vendas/nova" element={<NewSalePage />} />
+        <Route path="/vendas/revisar" element={<SaleReviewPage />} />
+        <Route path="/vendas/:id" element={<SaleDetailPage />} />
+        <Route path="/vendas" element={<SalesPage />} />
 
         <Route
           path="/funcionarios/*"
