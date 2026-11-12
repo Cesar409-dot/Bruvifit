@@ -6,6 +6,8 @@ import { InventoryPage } from '../../pages/estoque/ui/index.jsx'
 import { SalesPage } from '../../pages/vendas/ui/index.jsx'
 import { ClientsPage } from '../../pages/clientes/ui/index.jsx'
 import { SuppliersPage } from '../../pages/fornecedores/ui/index.jsx'
+import { SupplierFormPage } from '../../pages/fornecedores/cadastro/ui/index.jsx'
+import { SupplierDetailPage } from '../../pages/fornecedores/detalhe/ui/index.jsx'
 import { FinancePage } from '../../pages/financeiro/ui/index.jsx'
 import { ReportsPage } from '../../pages/relatorios/ui/index.jsx'
 import { EmployeesPage } from '../../pages/funcionarios/ui/index.jsx'
@@ -39,5 +41,20 @@ export const moduleRoutes = [
     path: '/produtos/:id',
     label: 'Produtos',
     component: ProductDetailPage,
+  },
+  {
+    path: '/fornecedores/novo',
+    label: 'Fornecedores',
+    component: SupplierFormPage,
+  },
+  {
+    path: '/fornecedores/:id/editar',
+    label: 'Fornecedores',
+    component: SupplierFormPage,
+  },
+  {
+    path: '/fornecedores/:id',
+    label: 'Fornecedores',
+    component: SupplierDetailPage,
   },
 ]

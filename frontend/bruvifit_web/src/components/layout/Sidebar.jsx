@@ -44,6 +44,7 @@ export function Sidebar() {
               !(
                 item.to === "/clientes" ||
                 item.to === "/produtos" ||
+                item.to === "/fornecedores" ||
                 item.to === "/funcionarios"
               )
             }

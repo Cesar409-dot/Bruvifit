@@ -1,0 +1,14 @@
+.page { display: flex; min-width: 0; flex-direction: column; gap: var(--espaco-24); }
+.sampleNotice, .footer { color: var(--cor-texto-secundario); font-size: 12px; line-height: 1.5; }
+.sampleNotice { margin-top: -12px; }
+.form { display: flex; flex-direction: column; gap: var(--espaco-24); }
+.grid2, .grid3 { display: grid; gap: 18px 20px; }
+.grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; }
+.field { display: flex; min-width: 0; flex-direction: column; gap: 7px; color: var(--cor-texto-secundario); font-size: 13px; font-weight: 700; }
+.field input, .field select { width: 100%; min-height: var(--controle-altura); border: 1px solid var(--cor-borda-suave); border-radius: var(--raio-input); background: var(--cor-superficie); padding: 0 14px; color: var(--cor-texto); font: inherit; font-size: 14px; font-weight: 400; }
+.field input:focus-visible, .field select:focus-visible { outline: var(--foco); outline-offset: var(--foco-offset); }
+.field small { color: var(--cor-texto-secundario); font-size: 12px; font-weight: 400; }
+.formActions { display: flex; justify-content: flex-end; gap: var(--espaco-12); }
+.footer { border-top: 1px solid var(--cor-borda-suave); padding-top: var(--espaco-12); }
+@media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } .formActions { justify-content: flex-start; flex-wrap: wrap; } }
