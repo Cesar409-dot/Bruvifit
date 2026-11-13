@@ -11,6 +11,9 @@ import { AppLayout } from './components/layout/AppLayout.jsx';
 import { ProductsPage } from './pages/produtos/ui/index.jsx';
 import { ProductCreatePage } from './pages/produtos/cadastro/ui/index.jsx';
 import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
+import { SuppliersPage } from './pages/fornecedores/ui/index.jsx';
+import { SupplierFormPage } from './pages/fornecedores/cadastro/ui/index.jsx';
+import { SupplierDetailPage } from './pages/fornecedores/detalhe/ui/index.jsx';
 import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
 import { FinancePage } from './pages/financeiro/ui/index.jsx';
@@ -38,6 +41,7 @@ function ScrollToTop() {
 
 function getSectionLabel(pathname) {
   if (pathname.startsWith('/produtos')) return 'Produtos';
+  if (pathname.startsWith('/fornecedores')) return 'Fornecedores';
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/clientes') || pathname === '/estados') return 'Clientes';
   if (pathname.startsWith('/financeiro')) return 'Financeiro';
@@ -88,6 +92,10 @@ function ProtectedRoutes() {
         <Route path="/vendas/revisar" element={<SaleReviewPage />} />
         <Route path="/vendas/:id" element={<SaleDetailPage />} />
         <Route path="/vendas" element={<SalesPage />} />
+        <Route path="/fornecedores" element={<SuppliersPage />} />
+        <Route path="/fornecedores/novo" element={<SupplierFormPage />} />
+        <Route path="/fornecedores/:id/editar" element={<SupplierFormPage />} />
+        <Route path="/fornecedores/:id" element={<SupplierDetailPage />} />
 
         <Route
           path="/funcionarios/*"

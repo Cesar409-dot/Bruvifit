@@ -52,7 +52,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar currentPath={route.path.startsWith('/produtos/') ? '/produtos' : route.path} />
+      <Sidebar currentPath={route.path.startsWith('/produtos/') ? '/produtos' : route.path.startsWith('/fornecedores/') ? '/fornecedores' : route.path} />
       <MainLayout currentLabel={currentLabel}>
         <Page params={route.params} />
       </MainLayout>
