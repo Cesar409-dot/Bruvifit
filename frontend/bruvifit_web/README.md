@@ -139,6 +139,10 @@ src/
 
 As telas de módulo são pontos de partida para a implementação das interfaces. A navegação e a configuração central de módulos ficam em `src/app/router/module-routes.js`.
 
+### Relatórios
+
+A rota autenticada `/relatorios` apresenta a prévia dos fluxos de seleção de relatório, filtros, resultado e exportação conforme `figma-relatorio`. Os dados são demonstrativos; a exportação CSV é local e a ação identificada como PDF ainda gera um arquivo textual demonstrativo, sem integração com API nem geração real de PDF. Não usar os resultados como totais operacionais.
+
 ## Padrão de implementação
 
 Cada módulo começa como uma fatia em `pages/<modulo>/`. Organize a fatia por responsabilidade conforme ela cresce:
