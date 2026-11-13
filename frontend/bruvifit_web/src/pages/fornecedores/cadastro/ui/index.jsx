@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { PageHeader } from '../../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../../components/ui/Button.jsx'
@@ -12,8 +12,9 @@ function Field({ id, label, children, hint }) {
   return <label className={styles.field} htmlFor={id}><span>{label}</span>{children}{hint ? <small>{hint}</small> : null}</label>
 }
 
-export function SupplierFormPage({ params = {} }) {
+export function SupplierFormPage() {
   const navigate = useNavigate()
+  const params = useParams()
   const isEdit = Boolean(params.id && params.id !== 'novo')
   const original = demoSuppliers.find((item) => item.id === params.id) || demoSuppliers[0]
   const [form, setForm] = useState(() => isEdit ? { ...original } : { ...blankSupplier })
