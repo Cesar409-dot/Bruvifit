@@ -1,77 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Download, FileBarChart2, FileText, RotateCcw } from 'lucide-react';
 import { Button } from '../../../components/ui/Button.jsx';
 import { Card } from '../../../components/ui/Card.jsx';
 import { PageHeader } from '../../../components/layout/PageHeader.jsx';
+import { formatReportDate, initialReportFilters, sampleSalesReport } from '../model/reports-model.js';
+import { useReports } from '../model/use-reports.js';
 import styles from './index.module.css';
-
-const reportTypes = [
-  {
-    type: 'Vendas',
-    title: 'Relatório de vendas',
-    description: 'Vendas por período, forma de pagamento e categoria.',
-    filters: ['Período', 'Pagamento', 'Categoria'],
-    export: 'PDF',
-  },
-  {
-    type: 'Estoque',
-    title: 'Relatório de estoque',
-    description: 'Produtos em estoque, baixo giro e valorização.',
-    filters: ['Depósito', 'Fornecedor', 'Nível crítico'],
-    export: 'CSV',
-  },
-  {
-    type: 'Financeiro',
-    title: 'Relatório financeiro',
-    description: 'Entradas, saídas e resultado financeiro.',
-    filters: ['Conta', 'Centro de custo', 'Status'],
-    export: 'PDF',
-  },
-  {
-    type: 'Produtos',
-    title: 'Relatório de produtos',
-    description: 'Mais vendidos, margem e desempenho dos produtos.',
-    filters: ['Categoria', 'Marca', 'Margem'],
-    export: 'CSV',
-  },
-];
-
-const initialFilters = {
-  start: '2026-01-10',
-  end: '2026-01-10',
-  customer: 'Todos',
-  payment: 'Todos',
-  category: 'Todas',
-  status: 'Todos',
-};
-
-function formatDate(value) {
-  if (!value) return '—';
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
-}
-
-function downloadReport(format, filters) {
-  const rows = [
-    ['Venda / data', 'Cliente', 'Produto', 'Quantidade', 'Pagamento', 'Total'],
-    ['#125 · 10/01/2026', 'João Silva', 'Camiseta Basic', '2', 'Pix à vista', 'R$ 99,80'],
-  ];
-  const contents = format === 'CSV'
-    ? `\uFEFF${rows.map((row) => row.join(';')).join('\r\n')}`
-    : [
-      'BRUVI FIT — RELATÓRIO DE VENDAS',
-      `Período: ${formatDate(filters.start)} a ${formatDate(filters.end)}`,
-      `Filtros: Cliente ${filters.customer} · Pagamento ${filters.payment} · Categoria ${filters.category} · Status ${filters.status}`,
-      '',
-      ...rows.map((row) => row.join(' | ')),
-    ].join('\n');
-  const blob = new Blob([contents], { type: format === 'CSV' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `relatorio-vendas-${filters.start || 'periodo'}.${format.toLowerCase()}`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 function ReportCard({ report, onConfigure, onExport }) {
   return (
@@ -98,12 +32,12 @@ function ReportField({ label, children }) {
   return <label className={styles.field}><span>{label}</span>{children}</label>;
 }
 
-function ReportsHome({ onConfigure, onExport }) {
+function ReportsHome({ reports, onConfigure, onExport }) {
   return (
     <>
       <PageHeader titulo="Relatórios" subtitulo="Analise os dados da sua loja" />
       <section className={styles.reportGrid} aria-label="Tipos de relatório">
-        {reportTypes.map((report) => (
+        {reports.map((report) => (
           <ReportCard
             key={report.type}
             report={report}
@@ -121,10 +55,10 @@ function ReportsHome({ onConfigure, onExport }) {
   );
 }
 
-function ConfigScreen({ type, setType, filters, setFilters, onBack, onGenerate }) {
-  const selectedReport = reportTypes.find((report) => report.type === type) || reportTypes[0];
+function ConfigScreen({ reports, type, setType, filters, setFilters, onBack, onGenerate }) {
+  const selectedReport = reports.find((report) => report.type === type) || reports[0];
   const update = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }));
-  const resetFilters = () => setFilters({ ...initialFilters });
+  const resetFilters = () => setFilters({ ...initialReportFilters });
 
   return (
     <>
@@ -135,7 +69,7 @@ function ConfigScreen({ type, setType, filters, setFilters, onBack, onGenerate }
       />
       <Card titulo="Tipo de relatório" className={styles.formCard}>
         <div className={styles.typeButtons} role="group" aria-label="Tipo de relatório">
-          {reportTypes.map((report) => (
+          {reports.map((report) => (
             <Button key={report.type} variant={type === report.type ? 'primary' : 'secondary'} aria-pressed={type === report.type} onClick={() => setType(report.type)}>
               {report.type}
             </Button>
@@ -143,8 +77,8 @@ function ConfigScreen({ type, setType, filters, setFilters, onBack, onGenerate }
         </div>
         <p className={styles.muted}>Selecionado: {selectedReport.title}. Os filtros são aplicados a este recorte.</p>
       </Card>
-      <form className={styles.formCard} onSubmit={(event) => { event.preventDefault(); onGenerate(); }}>
-        <Card titulo="Período e filtros">
+      <form onSubmit={(event) => { event.preventDefault(); onGenerate(); }}>
+        <Card titulo="Período e filtros" className={styles.formCard}>
           <div className={styles.fieldsGrid}>
             <ReportField label="Data inicial *"><input type="date" value={filters.start} max={filters.end} onChange={update('start')} required /></ReportField>
             <ReportField label="Data final *"><input type="date" value={filters.end} min={filters.start} onChange={update('end')} required /></ReportField>
@@ -178,7 +112,7 @@ function ConfigScreen({ type, setType, filters, setFilters, onBack, onGenerate }
   );
 }
 
-function ResultScreen({ filters, onEdit, onExport }) {
+function ResultScreen({ filters, report, onEdit, onExport }) {
   const filterSummary = useMemo(() => [
     `Cliente: ${filters.customer}`,
     `Pagamento: ${filters.payment}`,
@@ -190,7 +124,7 @@ function ResultScreen({ filters, onEdit, onExport }) {
     <>
       <PageHeader
         titulo="Relatório de vendas"
-        subtitulo={`Período: ${formatDate(filters.start)} a ${formatDate(filters.end)} · Prévia demonstrativa`}
+        subtitulo={`Período: ${formatReportDate(filters.start)} a ${formatReportDate(filters.end)} · Prévia demonstrativa`}
         acoes={<Button variant="secondary" onClick={onEdit}>Alterar filtros</Button>}
       />
       <div className={styles.notice}>
@@ -198,18 +132,18 @@ function ResultScreen({ filters, onEdit, onExport }) {
         <p><strong>Amostra ilustrativa · não representa o total da loja</strong><br />{filterSummary}</p>
       </div>
       <section className={styles.metrics} aria-label="Resumo do relatório">
-        <article className={styles.metricFeatured}><span>Vendas na amostra</span><strong>1</strong></article>
-        <article className={styles.metric}><span>Unidades vendidas</span><strong>2</strong></article>
-        <article className={styles.metric}><span>Total da amostra</span><strong>R$ 99,80</strong></article>
+        <article className={styles.metricFeatured}><span>Vendas na amostra</span><strong>{report.count}</strong></article>
+        <article className={styles.metric}><span>Unidades vendidas</span><strong>{report.units}</strong></article>
+        <article className={styles.metric}><span>Total da amostra</span><strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.total)}</strong></article>
       </section>
       <Card titulo="Resultado detalhado" className={styles.resultCard}>
         <div className={styles.tableWrap}>
           <table>
             <thead><tr><th scope="col">Venda / data</th><th scope="col">Cliente</th><th scope="col">Produto</th><th scope="col">Qtd.</th><th scope="col">Pagamento</th><th scope="col">Total</th></tr></thead>
-            <tbody><tr><td><strong>#125 · 10/01/26</strong></td><td>João Silva</td><td>Camiseta Basic<br />CAM-001 · M Preto</td><td>2</td><td>Pix à vista</td><td><strong>R$ 99,80</strong></td></tr></tbody>
+            <tbody>{report.rows.map((row) => <tr key={row.id}><td><strong>{row.id} · {row.date}</strong></td><td>{row.customer}</td><td>{row.product}<br />{row.sku}</td><td>{row.quantity}</td><td>{row.payment}</td><td><strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(row.total)}</strong></td></tr>)}</tbody>
           </table>
         </div>
-        <p className={styles.muted}>1 registro · Total: R$ 99,80 · Preço unitário: R$ 49,90 · Sem desconto.</p>
+        <p className={styles.muted}>{report.count} registro · Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.total)} · Preço unitário: R$ 49,90 · Sem desconto.</p>
         <div className={styles.actions}>
           <Button variant="secondary" onClick={onEdit}>Alterar período e filtros</Button>
           <Button variant="secondary" onClick={() => onExport('CSV')}>Exportar CSV</Button>
@@ -225,23 +159,14 @@ function ResultScreen({ filters, onEdit, onExport }) {
 }
 
 export function ReportsPage() {
-  const [view, setView] = useState('home');
-  const [type, setType] = useState('Vendas');
-  const [filters, setFilters] = useState({ ...initialFilters });
-  const [notice, setNotice] = useState('');
-
-  const exportFile = (format) => {
-    downloadReport(format, filters);
-    setNotice(`Arquivo ${format} demonstrativo exportado.`);
-    window.setTimeout(() => setNotice(''), 4000);
-  };
+  const reports = useReports();
 
   return (
     <div className={styles.page}>
-      {view === 'home' && <ReportsHome onConfigure={(nextType) => { setType(nextType); setView('config'); }} onExport={exportFile} />}
-      {view === 'config' && <ConfigScreen type={type} setType={setType} filters={filters} setFilters={setFilters} onBack={() => setView('home')} onGenerate={() => setView('result')} />}
-      {view === 'result' && <ResultScreen filters={filters} onEdit={() => setView('config')} onExport={exportFile} />}
-      {notice && <div className={styles.toast} role="status" aria-live="polite"><strong>Exportação demonstrativa</strong><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Fechar aviso">×</button></div>}
+      {reports.view === 'home' && <ReportsHome reports={reports.reportTypes} onConfigure={reports.configure} onExport={reports.exportFile} />}
+      {reports.view === 'config' && <ConfigScreen reports={reports.reportTypes} type={reports.type} setType={reports.setType} filters={reports.filters} setFilters={reports.setFilters} onBack={() => reports.setView('home')} onGenerate={reports.generate} />}
+      {reports.view === 'result' && <ResultScreen filters={reports.filters} report={sampleSalesReport} onEdit={() => reports.setView('config')} onExport={reports.exportFile} />}
+      {reports.notice && <div className={styles.toast} role="status" aria-live="polite"><strong>Exportação demonstrativa</strong><span>{reports.notice}</span><button type="button" onClick={reports.dismissNotice} aria-label="Fechar aviso">×</button></div>}
     </div>
   );
 }
