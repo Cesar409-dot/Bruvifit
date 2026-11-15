@@ -66,7 +66,7 @@ public class DashboardService {
         List<Produto> produtosSemEstoque = produtoRepository.findProdutosSemEstoque();
         indicadores.put("produtosSemEstoque", produtosSemEstoque.size());
 
-        long totalPedidos = pedidoRepository.count();
+        long totalPedidos = pedidoRepository.countByClienteAtivo();
         indicadores.put("totalPedidos", totalPedidos);
 
         long totalAlertas = alertaRepository.countByAtivo(true);

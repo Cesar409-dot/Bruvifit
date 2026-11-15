@@ -12,6 +12,8 @@ import school.sptech.bruvifit_app.pedido.request.PedidoRequest;
 import school.sptech.bruvifit_app.pedido.response.PedidoResponse;
 import school.sptech.bruvifit_app.produto.Produto;
 import school.sptech.bruvifit_app.produto.ProdutoRepository;
+import school.sptech.bruvifit_app.cliente.Cliente;
+import school.sptech.bruvifit_app.cliente.ClienteRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,13 +27,16 @@ public class PedidoService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final ItemPedidoService itemPedidoService;
     private final ProdutoRepository produtoRepository;
+    private final ClienteRepository clienteRepository;
 
     public PedidoService(PedidoRepository repository, ItemPedidoRepository itemPedidoRepository,
-                         ItemPedidoService itemPedidoService, ProdutoRepository produtoRepository) {
+                         ItemPedidoService itemPedidoService, ProdutoRepository produtoRepository,
+                         ClienteRepository clienteRepository) {
         this.repository = repository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.itemPedidoService = itemPedidoService;
         this.produtoRepository = produtoRepository;
+        this.clienteRepository = clienteRepository;
     }
 
     public List<PedidoResponse> listar() {
@@ -63,9 +68,7 @@ public class PedidoService {
 
     @Transactional
     public Pedido cadastrar(PedidoRequest pedidoRequest) {
-        if (!repository.existsById(pedidoRequest.getClienteId())) {
-            throw new ConflitoDeDadosException("Cliente não encontrado");
-        }
+        validarClienteAtivo(pedidoRequest.getClienteId());
         if (!repository.existsById(pedidoRequest.getUsuarioId())) {
             throw new ConflitoDeDadosException("Usuário não encontrado");
         }
@@ -84,6 +87,7 @@ public class PedidoService {
 
     @Transactional
     public Pedido cadastrarComItens(PedidoComItensRequest request) {
+        validarClienteAtivo(request.getClienteId());
         Pedido pedido = new Pedido();
         pedido.setDataPedido(request.getDataPedido());
         pedido.setStatus(request.getStatus());
@@ -129,6 +133,14 @@ public class PedidoService {
 
         pedidoSalvo.setValorTotal(valorTotal);
         return repository.save(pedidoSalvo);
+    }
+
+    private void validarClienteAtivo(Integer clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new ConflitoDeDadosException("Cliente não encontrado"));
+        if (!Boolean.TRUE.equals(cliente.getAtivo())) {
+            throw new ConflitoDeDadosException("Cliente inativo não pode participar de novos pedidos");
+        }
     }
 
     @Transactional

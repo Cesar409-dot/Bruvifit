@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.cliente.request.ClienteRequest;
+import school.sptech.bruvifit_app.cliente.request.ClienteStatusRequest;
 import school.sptech.bruvifit_app.cliente.response.ClienteResponse;
 
 import java.util.HashMap;
@@ -22,8 +23,8 @@ public class ClienteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ClienteResponse>> listar() {
-        List<ClienteResponse> clientes = service.listar();
+    public ResponseEntity<List<ClienteResponse>> listar(@RequestParam(required = false) Boolean ativo) {
+        List<ClienteResponse> clientes = service.listar(ativo);
 
         return ResponseEntity.status(200).body(clientes);
     }
@@ -72,13 +73,26 @@ public class ClienteController {
     public ResponseEntity<Void> deletar(
             @PathVariable Integer id) {
 
-        boolean deletado = service.deletar(id);
+        Optional<Cliente> clienteAtualizado = service.alterarStatus(id, false);
 
-        if (!deletado) {
+        if (clienteAtualizado.isEmpty()) {
             return ResponseEntity.status(404).build();
         }
 
         return ResponseEntity.status(204).build();
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Cliente> alterarStatus(
+            @PathVariable Integer id,
+            @Valid @RequestBody ClienteStatusRequest request) {
+        Optional<Cliente> clienteAtualizado = service.alterarStatus(id, request.getAtivo());
+
+        if (clienteAtualizado.isEmpty()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.status(200).body(clienteAtualizado.get());
     }
 
 

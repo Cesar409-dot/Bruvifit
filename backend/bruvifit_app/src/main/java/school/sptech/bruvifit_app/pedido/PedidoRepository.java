@@ -41,7 +41,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     @Query("""
         SELECT COUNT(DISTINCT p.clienteId)
         FROM Pedido p
-        WHERE LOWER(p.status) = 'concluido'
+        JOIN Cliente c ON c.id = p.clienteId
+        WHERE c.ativo = true
+        AND LOWER(p.status) = 'concluido'
         AND p.clienteId IN (
             SELECT p2.clienteId
             FROM Pedido p2
@@ -51,6 +53,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
         )
     """)
     Long countClientesRecorrentes();
+
+    @Query("SELECT COUNT(p) FROM Pedido p JOIN Cliente c ON c.id = p.clienteId WHERE c.ativo = true")
+    long countByClienteAtivo();
 
     // Busca a data da última compra concluída de um cliente específico.
     @Query("""

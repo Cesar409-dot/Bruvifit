@@ -27,12 +27,13 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
             f.situacao, f.pedidoId, COALESCE(f.formaPagamento, p.formaPagamento))
         FROM Financeiro f
         LEFT JOIN Pedido p ON p.id = f.pedidoId
+        LEFT JOIN Cliente c ON c.id = p.clienteId
         """;
 
-    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "ORDER BY f.dataCompetencia DESC, f.id DESC")
+    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "WHERE f.pedidoId IS NULL OR c.ativo = true ORDER BY f.dataCompetencia DESC, f.id DESC")
     List<FinanceiroResponse> listarComFormaPagamento();
 
-    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "WHERE f.id = :id")
+    @Query(CONSULTA_COM_FORMA_PAGAMENTO + "WHERE f.id = :id AND (f.pedidoId IS NULL OR c.ativo = true)")
     Optional<FinanceiroResponse> buscarComFormaPagamento(@Param("id") Integer id);
 
     Page<Financeiro> findByTipo(String tipo, Pageable pageable);
@@ -48,7 +49,10 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
 
     @Query("""
         SELECT SUM(f.valor) FROM Financeiro f
-        WHERE UPPER(f.tipo) = 'RECEITA'
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE UPPER(f.tipo) = 'RECEITA'
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND f.dataCompetencia BETWEEN :inicio AND :fim
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         """)
@@ -56,7 +60,10 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
 
     @Query("""
         SELECT SUM(f.valor) FROM Financeiro f
-        WHERE UPPER(f.tipo) = 'DESPESA'
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE UPPER(f.tipo) = 'DESPESA'
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND f.dataCompetencia BETWEEN :inicio AND :fim
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         """)
@@ -64,7 +71,10 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
 
     @Query("""
         SELECT COUNT(f) FROM Financeiro f
-        WHERE UPPER(f.tipo) = 'RECEITA'
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE UPPER(f.tipo) = 'RECEITA'
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND f.dataCompetencia BETWEEN :inicio AND :fim
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         """)
@@ -72,7 +82,10 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
 
     @Query("""
         SELECT COUNT(f) FROM Financeiro f
-        WHERE UPPER(f.tipo) = 'DESPESA'
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE UPPER(f.tipo) = 'DESPESA'
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND f.dataCompetencia BETWEEN :inicio AND :fim
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         """)
@@ -82,8 +95,11 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
         SELECT f.dataCompetencia,
                SUM(CASE WHEN UPPER(f.tipo) = 'RECEITA' THEN f.valor ELSE 0 END),
                SUM(CASE WHEN UPPER(f.tipo) = 'DESPESA' THEN f.valor ELSE 0 END)
-        FROM Financeiro f
-        WHERE f.dataCompetencia BETWEEN :inicio AND :fim
+         FROM Financeiro f
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE f.dataCompetencia BETWEEN :inicio AND :fim
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         GROUP BY f.dataCompetencia
         """)
@@ -93,10 +109,12 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
         SELECT COALESCE(f.formaPagamento, p.formaPagamento),
                COUNT(f),
                SUM(f.valor)
-        FROM Financeiro f
-        LEFT JOIN Pedido p ON p.id = f.pedidoId
-        WHERE f.dataCompetencia BETWEEN :inicio AND :fim
-        AND UPPER(f.tipo) = 'RECEITA'
+         FROM Financeiro f
+         LEFT JOIN Pedido p ON p.id = f.pedidoId
+         LEFT JOIN Cliente c ON c.id = p.clienteId
+         WHERE f.dataCompetencia BETWEEN :inicio AND :fim
+         AND UPPER(f.tipo) = 'RECEITA'
+         AND (f.pedidoId IS NULL OR c.ativo = true)
         AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
         GROUP BY COALESCE(f.formaPagamento, p.formaPagamento)
         """)
@@ -107,8 +125,10 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer>
            COALESCE(f.formaPagamento, p.formaPagamento),
            f.valor, f.situacao, f.pedidoId
     FROM Financeiro f
-    LEFT JOIN Pedido p ON p.id = f.pedidoId
+     LEFT JOIN Pedido p ON p.id = f.pedidoId
+     LEFT JOIN Cliente c ON c.id = p.clienteId
     WHERE f.dataCompetencia BETWEEN :inicio AND :fim
+    AND (f.pedidoId IS NULL OR c.ativo = true)
     AND (f.situacao IS NULL OR UPPER(f.situacao) NOT IN ('CANCELADO', 'CANCELADA', 'ESTORNADO', 'ESTORNADA'))
     """)
     List<Object[]> movimentacoesPorPeriodo(

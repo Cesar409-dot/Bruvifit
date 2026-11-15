@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
@@ -40,6 +41,28 @@ class ClienteServiceTest {
         verify(enderecos).flush();
         verify(pedidos).existsByClienteId(1);
         verifyNoMoreInteractions(enderecos, pedidos);
+    }
+
+    @Test
+    void alteraStatusSemRemoverHistoricoOuEnderecos() {
+        Cliente cliente = new Cliente();
+        cliente.setAtivo(true);
+        when(clientes.findById(1)).thenReturn(Optional.of(cliente));
+        when(clientes.save(cliente)).thenReturn(cliente);
+
+        assertSame(cliente, service.alterarStatus(1, false).orElseThrow());
+        assertFalse(cliente.getAtivo());
+        verify(clientes).save(cliente);
+        verifyNoInteractions(enderecos, pedidos);
+    }
+
+    @Test
+    void statusDeClienteInexistenteNaoAlteraDados() {
+        when(clientes.findById(1)).thenReturn(Optional.empty());
+
+        assertTrue(service.alterarStatus(1, false).isEmpty());
+        verifyNoInteractions(enderecos, pedidos);
+        verify(clientes, never()).save(any());
     }
 
     @Test
@@ -149,25 +172,26 @@ class ClienteServiceTest {
     }
 
     @Test
-    void deleteHttpRetorna409ComExplicacaoSobrePedidos() throws Exception {
+    void statusHttpInativaCliente() throws Exception {
         when(clientes.findById(1)).thenReturn(Optional.of(new Cliente()));
-        when(pedidos.existsByClienteId(1)).thenReturn(true);
+        when(clientes.save(any(Cliente.class))).thenAnswer(invocation -> invocation.getArgument(0));
         MockMvcBuilders.standaloneSetup(new ClienteController(service))
                 .setControllerAdvice(new GlobalExceptionHandler()).build()
-                .perform(delete("/clientes/1")).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", containsString("pedidos vinculados")));
+                .perform(put("/clientes/1/status").contentType("application/json").content("{\"ativo\":false}"))
+                .andExpect(status().isOk());
         verifyNoInteractions(enderecos);
     }
 
     @Test
-    void deleteHttpComEnderecoRetorna204() throws Exception {
+    void deleteHttpMantemCadastroEInativaCliente() throws Exception {
         when(clientes.findById(1)).thenReturn(Optional.of(new Cliente()));
-        Endereco endereco = new Endereco(); endereco.setClienteId(1);
-        when(enderecos.findByClienteId(1)).thenReturn(List.of(endereco));
+        when(clientes.save(any(Cliente.class))).thenAnswer(invocation -> invocation.getArgument(0));
         MockMvcBuilders.standaloneSetup(new ClienteController(service))
                 .setControllerAdvice(new GlobalExceptionHandler()).build()
-                .perform(delete("/clientes/1")).andExpect(status().isNoContent());
-        verify(enderecos).deleteAll(List.of(endereco));
-        verify(clientes).delete(any());
+                .perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/clientes/1"))
+                .andExpect(status().isNoContent());
+        verify(clientes, never()).delete(any());
+        verify(clientes).save(any(Cliente.class));
+        verifyNoInteractions(enderecos, pedidos);
     }
 }

@@ -32,8 +32,9 @@ public class ClienteService {
         this.pedidoRepository = pedidoRepository;
     }
 
-    public List<ClienteResponse> listar() {
-        return repository.findAll()
+    public List<ClienteResponse> listar(Boolean ativo) {
+        List<Cliente> clientes = ativo == null ? repository.findAll() : repository.findByAtivo(ativo);
+        return clientes
                 .stream()
                 .map(this::converterParaResponse)
                 .toList();
@@ -88,6 +89,19 @@ public class ClienteService {
     }
 
     @Transactional
+    public Optional<Cliente> alterarStatus(Integer id, Boolean ativo) {
+        Optional<Cliente> clienteEncontrado = repository.findById(id);
+
+        if (clienteEncontrado.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Cliente cliente = clienteEncontrado.get();
+        cliente.setAtivo(ativo);
+        return Optional.of(repository.save(cliente));
+    }
+
+    @Transactional
     public boolean deletar(Integer id) {
 
         Optional<Cliente> clienteEncontrado = repository.findById(id);
@@ -110,7 +124,7 @@ public class ClienteService {
     }
 
     public Integer totalClientes() {
-        return (int) repository.count();
+        return repository.findByAtivoTrue().size();
     }
 
     public Integer clientesAtivos() {

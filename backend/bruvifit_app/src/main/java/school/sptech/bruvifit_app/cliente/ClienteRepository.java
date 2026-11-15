@@ -28,4 +28,6 @@ public interface ClienteRepository
     List<Cliente> findByTelefoneContaining(String telefone);
 
     List<Cliente> findByAtivoTrue();
+
+    List<Cliente> findByAtivo(Boolean ativo);
 }

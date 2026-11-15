@@ -360,8 +360,8 @@ paths:
         '404':
           description: Cliente não encontrado
     delete:
-      summary: Remove um cliente
-      description: Remove um cliente do sistema pelo ID. Retorna 404 se o cliente não for encontrado.
+      summary: Inativa um cliente
+      description: Mantém o cadastro, endereços e histórico, alterando somente o status para inativo.
       operationId: deletarCliente
       tags:
         - Clientes
@@ -374,7 +374,40 @@ paths:
             type: integer
       responses:
         '204':
-          description: Cliente removido (corpo vazio)
+          description: Cliente inativado (corpo vazio)
+        '404':
+          description: Cliente não encontrado
+  /clientes/{id}/status:
+    put:
+      summary: Altera o status de um cliente
+      description: Ativa ou inativa um cliente sem remover seu cadastro ou histórico.
+      operationId: alterarStatusCliente
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do cliente
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteStatusRequest'
+            example:
+              ativo: false
+      responses:
+        '200':
+          description: Status do cliente atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '400':
+          description: Status inválido
         '404':
           description: Cliente não encontrado
   /produtos:
@@ -1350,6 +1383,15 @@ components:
           type: boolean
           example: true
           description: Status do cliente
+    ClienteStatusRequest:
+      type: object
+      properties:
+        ativo:
+          type: boolean
+          example: false
+          description: Define se o cliente participa das operações e indicadores
+      required:
+        - ativo
     ProdutoRequest:
       type: object
       properties:
