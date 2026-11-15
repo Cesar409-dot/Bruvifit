@@ -13,3 +13,9 @@
 .span2 {
   grid-column: span 2;
 }
+
+.cepField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

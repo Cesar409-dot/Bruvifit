@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, UserPlus } from 'lucide-react';
 import { PageHeader } from '../../../../components/layout/PageHeader.jsx';
@@ -6,6 +6,7 @@ import { Breadcrumb } from '../../../../components/ui/Breadcrumb.jsx';
 import { Button } from '../../../../components/ui/Button.jsx';
 import { DadosPessoaisContato, EnderecoForm } from '../../components/ClienteFormSections.jsx';
 import { useClientes } from '../../context/ClientesContext.jsx';
+import { clientesAPI } from '../../../../shared/api/clientes-api.js';
 import { clienteVazio, dadosFormulario, validarCliente, erroClientes } from '../../model/clientes-model.js';
 import styles from './index.module.css';
 
@@ -19,6 +20,8 @@ export function ClienteFormPage() {
   const [carregando, setCarregando] = useState(Boolean(id));
   const [salvando, setSalvando] = useState(false);
   const [salvoId, setSalvoId] = useState(null);
+  const [cepStatus, setCepStatus] = useState('');
+  const cepRequest = useRef(0);
   const modoEdicao = Boolean(id || salvoId);
 
   useEffect(() => {
@@ -39,6 +42,29 @@ export function ClienteFormPage() {
     const { id: campo, value } = event.target;
     setValues((prev) => ({ ...prev, [campo]: value }));
     setErrors((prev) => ({ ...prev, [campo]: '' }));
+    if (campo === 'cep') setCepStatus('');
+  };
+
+  const handleBlur = () => {};
+
+  const buscarCep = async (valor = values.cep) => {
+    if (valor.replace(/\D/g, '').length !== 8) {
+      setErrors((prev) => ({ ...prev, cep: 'Informe um CEP com oito dígitos.' }));
+      return;
+    }
+    const requestId = ++cepRequest.current;
+    setCepStatus('Consultando CEP...');
+    setErrors((prev) => ({ ...prev, cep: '' }));
+    try {
+      const endereco = await clientesAPI.consultarCep(valor);
+      if (requestId !== cepRequest.current) return;
+      setValues((prev) => ({ ...prev, logradouro: endereco.logradouro, bairro: endereco.bairro, cidade: endereco.localidade, uf: endereco.uf }));
+      setCepStatus('Endereço preenchido. Confira e complete o número.');
+    } catch (error) {
+      if (requestId !== cepRequest.current) return;
+      setCepStatus('');
+      setErrors((prev) => ({ ...prev, cep: error.message || 'Não foi possível consultar o CEP.' }));
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -75,7 +101,7 @@ export function ClienteFormPage() {
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <fieldset disabled={salvando || carregando} style={{ border: 0, padding: 0, margin: 0, minWidth: 0, display: 'contents' }}>
           <DadosPessoaisContato values={values} errors={errors} touched={touched} onChange={handleChange} modoCriar={!modoEdicao} />
-          <EnderecoForm values={values} errors={errors} touched={touched} onChange={handleChange} />
+          <EnderecoForm values={values} errors={errors} touched={touched} onChange={handleChange} onBlur={handleBlur} onBuscarCep={buscarCep} cepStatus={cepStatus} />
           <div className={styles.acoes}>
             <Link to={destinoCancelar}><Button variant="outline" icon={ArrowLeft}>Cancelar</Button></Link>
             <Button variant="primary" type="submit" disabled={Boolean(id && erro && !values.nome)} loading={salvando} icon={modoEdicao ? Save : UserPlus}>

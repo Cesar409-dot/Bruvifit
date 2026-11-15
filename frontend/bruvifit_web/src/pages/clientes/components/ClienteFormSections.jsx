@@ -1,6 +1,8 @@
 import { TextField } from '../../../components/ui/TextField.jsx';
 import { SelectField } from '../../../components/ui/SelectField.jsx';
 import { Card } from '../../../components/ui/Card.jsx';
+import { Button } from '../../../components/ui/Button.jsx';
+import { Search } from 'lucide-react';
 import styles from './ClienteFormSections.module.css';
 
 const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -60,20 +62,14 @@ export function DadosPessoaisContato({ values = {}, errors = {}, onChange, onBlu
   );
 }
 
-export function EnderecoForm({ values = {}, errors = {}, onChange, onBlur, touched = {}, cepStatus }) {
+export function EnderecoForm({ values = {}, errors = {}, onChange, onBlur, onBuscarCep, touched = {}, cepStatus }) {
   return (
     <Card titulo="Endereço">
       <div className={styles.grid3}>
-        <TextField
-          id="cep"
-          label="CEP"
-          ajuda={cepStatus || undefined}
-          value={values.cep || ''}
-          onChange={onChange}
-          onBlur={onBlur}
-          erro={touched.cep ? errors.cep : ''}
-          placeholder="00000-000"
-        />
+        <div className={styles.cepField}>
+          <TextField id="cep" label="CEP" ajuda={cepStatus || undefined} value={values.cep || ''} onChange={onChange} onBlur={onBlur} erro={touched.cep ? errors.cep : ''} placeholder="00000-000" />
+          <Button type="button" variant="outline" size="sm" icon={Search} onClick={() => onBuscarCep(values.cep)}>Buscar endereço</Button>
+        </div>
         <TextField
           id="logradouro"
           label="Logradouro"

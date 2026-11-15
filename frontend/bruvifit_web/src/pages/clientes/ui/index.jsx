@@ -57,7 +57,7 @@ export function ClientesListPage() {
         }
       />
 
-      {location.state?.flash === 'excluido' ? <p role="status">Cliente excluído definitivamente.</p> : null}
+      {location.state?.flash === 'status' ? <p role="status">Status do cliente atualizado.</p> : null}
       <div className={styles.stats}>
         <StatCard
           rotulo="Total clientes"

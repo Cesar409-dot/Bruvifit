@@ -2,6 +2,7 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { apiClient } from '../src/shared/api/axios-client.js';
 import { clientesAPI } from '../src/shared/api/clientes-api.js';
+import { consultarCep } from '../src/shared/api/cep-api.js';
 import { clienteVazio, normalizarCliente, dadosFormulario, validarCliente, validarFiltros,
   filtrarClientes, filtrosIniciais, paginarClientes, erroClientes } from '../src/pages/clientes/model/clientes-model.js';
 
@@ -82,11 +83,24 @@ test('GET por ID diferencia cliente inexistente de endereço não cadastrado', a
   await assert.rejects(clientesAPI.porId(99), (error) => error.response.status === 404);
 });
 
-test('DELETE propaga conflito e não executa exclusões em endereços/pedidos', async () => {
+test('PUT de status propaga conflito sem remover endereços ou pedidos', async () => {
   let calls = 0;
-  adapter((config) => { calls++; assert.equal(config.url, '/clientes/42'); assert.equal(config.method, 'delete'); throw httpError(409); });
-  await assert.rejects(clientesAPI.excluir(42), (error) => error.response.status === 409);
+  adapter((config) => { calls++; assert.equal(config.url, '/clientes/42/status'); assert.equal(config.method, 'put'); throw httpError(409); });
+  await assert.rejects(clientesAPI.alterarStatus(42, false), (error) => error.response.status === 409);
   assert.equal(calls, 1);
+});
+
+test('filtro padrão oculta inativos e checkbox permite consultá-los', () => {
+  const rows = [{ id: 1, nome: 'Ativo', status: 'ativo' }, { id: 2, nome: 'Inativo', status: 'inativo' }];
+  assert.deepEqual(filtrarClientes(rows, filtrosIniciais).map((cliente) => cliente.id), [1]);
+  assert.deepEqual(filtrarClientes(rows, { ...filtrosIniciais, incluirInativos: true }).map((cliente) => cliente.id), [1, 2]);
+});
+
+test('PUT de status envia o valor ativo e retorna o cliente atualizado', async () => {
+  let body;
+  adapter((config, payload) => { body = payload; assert.equal(config.url, '/clientes/42/status'); return { id: 42, nome: 'Cliente', ativo: false }; });
+  assert.equal((await clientesAPI.alterarStatus(42, false)).ativo, false);
+  assert.deepEqual(body, { ativo: false });
 });
 
 test('mensagens distinguem validação, sessão, permissão, ausência, vínculos e erro interno', () => {
@@ -115,4 +129,21 @@ test('objetos de cadastro e indicadores inválidos produzem erro explícito', as
   await assert.rejects(clientesAPI.indicadores(), { code: 'ERR_CLIENTES_CONTRACT' });
   adapter(() => [{ id: 42 }]);
   await assert.rejects(clientesAPI.listar(), { code: 'ERR_CLIENTES_CONTRACT' });
+});
+
+test('consulta CEP aceita somente oito dígitos e mapeia campos do ViaCEP', async () => {
+  let requested;
+  const data = await consultarCep('01001-000', async (url) => {
+    requested = url;
+    return { ok: true, json: async () => ({ logradouro: 'Praça da Sé', bairro: 'Sé', localidade: 'São Paulo', uf: 'SP' }) };
+  });
+  assert.equal(requested, 'https://viacep.com.br/ws/01001000/json/');
+  assert.deepEqual(data, { logradouro: 'Praça da Sé', bairro: 'Sé', localidade: 'São Paulo', uf: 'SP' });
+  assert.equal(await consultarCep('123', async () => { throw new Error('não deveria consultar'); }), null);
+});
+
+test('consulta CEP rejeita resposta inexistente ou inválida', async () => {
+  await assert.rejects(consultarCep('01001000', async () => ({ ok: true, json: async () => ({ erro: true }) })), { code: 'ERR_CEP_NOT_FOUND' });
+  await assert.rejects(consultarCep('01001000', async () => ({ ok: true, json: async () => ({}) })), { code: 'ERR_CEP_CONTRACT' });
+  await assert.rejects(consultarCep('01001000', async () => ({ ok: false, json: async () => ({}) })), { code: 'ERR_CEP_NETWORK' });
 });

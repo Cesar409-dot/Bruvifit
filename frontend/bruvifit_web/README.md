@@ -15,6 +15,9 @@ Use a URL base do backend, sem acrescentar `/api` (ex.: `http://localhost:8080`)
 Reinicie o Vite após mudar essa variável. Não há proxy configurado no Vite.
 O login usa `POST /api/auth/login` com `{ email, senha }`; o campo `token` da
 resposta é armazenado na sessão e enviado como `Authorization: Bearer <token>`.
+Durante o desenvolvimento local, `VITE_DEV_BYPASS_AUTH=true` em `.env.local`
+libera somente a navegação do React para Clientes; não cria sessão nem autoriza
+requisições no backend. O valor de referência é `false`.
 `GET /clientes` retorna diretamente `List<ClienteResponse>` em JSON, sem paginação
 ou envelope `content`. Respostas fora desse contrato são tratadas como erro,
 sem substituição por listas vazias. A consulta ocorre após a autenticação.
@@ -25,20 +28,30 @@ O CRUD usa a API real com o JWT da sessão. `VITE_API_BASE_URL` representa a URL
 base do backend (padrão `http://localhost:8080`), sem adicionar `/api`. Reinicie
 o backend após compilar para carregar a correção de exclusão física.
 
-Clientes usam `GET/POST /clientes`, `GET/PUT/DELETE /clientes/{id}` e
+Clientes usam `GET/POST /clientes`, `GET/PUT /clientes/{id}` e
 `GET /clientes/indicadores`. Endereços são gravados por `POST /enderecos` e
 `PUT/DELETE /enderecos/{id}`, consultados por `GET /enderecos/cliente/{id}`.
 O perfil consulta `GET /pedidos` e `GET /api/pedidos/{id}/itens` para o histórico.
+
+`GET /clientes?ativo=true` retorna somente clientes ativos. Sem o parâmetro, a
+resposta inclui ativos e inativos para permitir o filtro administrativo da tela.
+`PUT /clientes/{id}/status` recebe `{ "ativo": false }` para inativar ou
+`{ "ativo": true }` para reativar. A inativação preserva cadastro, endereços e
+histórico; clientes inativos não podem participar de novos pedidos e não entram
+nos indicadores ou agregações operacionais.
 
 A listagem retorna um array completo, sem paginação no servidor. Pesquisa,
 UF e datas de última compra são combinadas no frontend antes da paginação.
 CPF não existe no DTO de Clientes: o campo permanece visível e desabilitado.
 Endereço é opcional; quando preenchido, deve estar completo. A edição altera
 o primeiro endereço, como na listagem do backend, preservando os demais.
+Ao sair do campo CEP com oito dígitos, o frontend consulta o ViaCEP e preenche
+logradouro, bairro, cidade e UF; número e complemento permanecem editáveis.
 
-Excluir exige confirmação e remove fisicamente o cadastro e seus endereços
-exclusivos em uma transação, desde que não haja pedidos vinculados. Clientes
-com pedidos retornam 409, preservando cadastro, endereços e histórico.
+Arquivar exige confirmação e altera somente o status do cadastro. Clientes
+inativos continuam disponíveis para consulta histórica e aparecem identificados
+como inativos quando o histórico é consultado. A reativação faz o cadastro voltar
+a participar das operações e indicadores.
 As gravações de cliente e endereço são separadas: falha no endereço informa o
 ID já salvo e permite retomar sem repetir o cadastro.
 

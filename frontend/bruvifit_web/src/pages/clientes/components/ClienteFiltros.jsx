@@ -6,7 +6,7 @@ import { FilterBar } from '../../../components/ui/FilterBar.jsx';
 const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 
 export function ClienteFiltros({ onBuscar, onLimpar }) {
-  const [filtros, setFiltros] = useState({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '' });
+  const [filtros, setFiltros] = useState({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '', incluirInativos: false });
   const [dataFinalErro, setDataFinalErro] = useState('');
 
   const handleSubmit = (e) => {
@@ -17,7 +17,7 @@ export function ClienteFiltros({ onBuscar, onLimpar }) {
 
   const update = (field) => (event) => setFiltros((current) => ({ ...current, [field]: event.target.value }));
   const clear = () => {
-    setFiltros({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '' });
+    setFiltros({ pesquisar: '', estado: '', dataInicial: '', dataFinal: '', incluirInativos: false });
     setDataFinalErro('');
     onLimpar();
   };
@@ -44,6 +44,10 @@ export function ClienteFiltros({ onBuscar, onLimpar }) {
           erro={dataFinalErro}
           onBlur={() => setDataFinalErro('')}
         />
+        <label htmlFor="cliente-incluir-inativos">
+          <input id="cliente-incluir-inativos" type="checkbox" checked={filtros.incluirInativos} onChange={(event) => setFiltros((current) => ({ ...current, incluirInativos: event.target.checked }))} />
+          Incluir clientes inativos
+        </label>
     </FilterBar>
   );
 }

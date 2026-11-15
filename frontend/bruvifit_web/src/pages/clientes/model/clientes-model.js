@@ -1,6 +1,6 @@
 import { validarNome, validarTelefone, validarEmail, validarCep } from '../../../utils/validators.js';
 
-export const filtrosIniciais = { pesquisar: '', estado: '', dataInicial: '', dataFinal: '' };
+export const filtrosIniciais = { pesquisar: '', estado: '', dataInicial: '', dataFinal: '', incluirInativos: false };
 export const clienteVazio = { nome: '', email: '', telefone: '', cpf: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', enderecoId: null };
 
 export function normalizarCliente(cliente, endereco) {
@@ -58,7 +58,8 @@ const texto = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\
 export function filtrarClientes(clientes, filtros) {
   const busca = texto(filtros.pesquisar.trim());
   const inicio = dataFiltro(filtros.dataInicial), fim = dataFiltro(filtros.dataFinal);
-  return clientes.filter((c) => (!busca || [c.nome, c.email, c.telefone, c.cidade].some((value) => texto(value).includes(busca)))
+  return clientes.filter((c) => (filtros.incluirInativos || c.status !== 'inativo')
+    && (!busca || [c.nome, c.email, c.telefone, c.cidade].some((value) => texto(value).includes(busca)))
     && (!filtros.estado || c.uf === filtros.estado)
     && (!inicio || (c.ultimaCompra && c.ultimaCompra >= inicio))
     && (!fim || (c.ultimaCompra && c.ultimaCompra <= fim)))

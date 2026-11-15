@@ -12,7 +12,7 @@ export function ClientesProvider({ children }) {
 
   const carregarClientes = useCallback(async () => {
     try {
-      const [dados, indicadores] = await Promise.all([clientesAPI.listar(), clientesAPI.indicadores()]);
+      const [dados, indicadores] = await Promise.all([clientesAPI.listar({ incluirInativos: true }), clientesAPI.indicadores()]);
       setClientes(dados.map((c) => normalizarCliente(c)));
       setResumo(indicadores);
       setErro('');
@@ -46,14 +46,14 @@ export function ClientesProvider({ children }) {
     return cliente;
   }, [carregarClientes]);
 
-  const excluirCliente = useCallback(async (id) => {
-    await clientesAPI.excluir(id);
-    setClientes((anteriores) => anteriores.filter((c) => c.id !== Number(id)));
+  const alterarStatusCliente = useCallback(async (id, ativo) => {
+    await clientesAPI.alterarStatus(id, ativo);
+    setClientes((anteriores) => anteriores.map((cliente) => cliente.id === Number(id) ? { ...cliente, ativo, status: ativo ? 'ativo' : 'inativo' } : cliente));
     await carregarClientes().catch(() => {});
   }, [carregarClientes]);
 
   const value = useMemo(() => ({ clientes, resumo, carregando, erro, obterCliente, salvarCliente,
-    excluirCliente, carregarClientes: recarregar }), [clientes, resumo, carregando, erro, obterCliente, salvarCliente, excluirCliente, recarregar]);
+    alterarStatusCliente, carregarClientes: recarregar }), [clientes, resumo, carregando, erro, obterCliente, salvarCliente, alterarStatusCliente, recarregar]);
   return <ClientesContext.Provider value={value}>{children}</ClientesContext.Provider>;
 }
 

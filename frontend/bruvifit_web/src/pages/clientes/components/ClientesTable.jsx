@@ -1,4 +1,4 @@
-import { Eye, Pencil, Archive } from 'lucide-react';
+import { Eye, Pencil, Archive, RotateCcw } from 'lucide-react';
 import { IconButton } from '../../../components/ui/IconButton.jsx';
 import { StatusBadge } from '../../../components/ui/StatusBadge.jsx';
 import styles from './ClientesTable.module.css';
@@ -47,7 +47,7 @@ export function ClientesTable({ clientes = [] }) {
                   <div className={styles.acoes}>
                     <IconButton icon={Eye} label={`Ver perfil de ${cliente.nome}`} to={`/clientes/${cliente.id}`} />
                     <IconButton icon={Pencil} label={`Editar ${cliente.nome}`} to={`/clientes/${cliente.id}/editar`} />
-                    <IconButton icon={Archive} label={`Excluir ${cliente.nome}`} to={`/clientes/${cliente.id}?excluir=1`} />
+                    <IconButton icon={inativo ? RotateCcw : Archive} label={`${inativo ? 'Reativar' : 'Inativar'} ${cliente.nome}`} to={`/clientes/${cliente.id}?inativar=1`} />
                   </div>
                 </td>
               </tr>

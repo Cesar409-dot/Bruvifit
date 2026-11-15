@@ -14,7 +14,7 @@ import styles from './index.module.css';
 
 export function ClientePerfilPage() {
   const { id } = useParams();
-  const { obterCliente, excluirCliente } = useClientes();
+  const { obterCliente, alterarStatusCliente } = useClientes();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,11 +22,11 @@ export function ClientePerfilPage() {
   const [cliente, setCliente] = useState(null);
   const [erro, setErro] = useState('');
   const [erroExclusao, setErroExclusao] = useState('');
-  const [excluindo, setExcluindo] = useState(false);
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
   const [historico, setHistorico] = useState(null);
   const [erroHistorico, setErroHistorico] = useState('');
   const [vendaSelecionada, setVendaSelecionada] = useState(null);
-  const mostrarPainel = searchParams.get('excluir') === '1' || searchParams.get('inativar') === '1';
+  const mostrarPainel = searchParams.get('inativar') === '1';
 
   useEffect(() => {
     let ativo = true;
@@ -75,17 +75,15 @@ export function ClientePerfilPage() {
   const ultimaCompra = historico?.filter((v) => v.status?.toLowerCase() === 'concluido').map((v) => v.data).sort().at(-1);
 
   const handleConfirmar = async () => {
-    if (excluindo) return;
-    setExcluindo(true); setErroExclusao('');
+    if (alterandoStatus) return;
+    setAlterandoStatus(true); setErroExclusao('');
     try {
-      await excluirCliente(cliente.id);
-      navigate('/clientes', { replace: true, state: { flash: 'excluido' } });
+      await alterarStatusCliente(cliente.id, inativo);
+      navigate('/clientes', { replace: true, state: { flash: 'status' } });
     } catch (error) {
-      setErroExclusao(error.response?.status === 409
-        ? 'Não foi possível excluir o cliente. Existem pedidos vinculados a este cadastro.'
-        : erroClientes(error, 'excluir o cliente'));
+      setErroExclusao(erroClientes(error, inativo ? 'reativar o cliente' : 'inativar o cliente'));
     }
-    finally { setExcluindo(false); }
+    finally { setAlterandoStatus(false); }
   };
 
   const handleCancelar = () => {
@@ -124,6 +122,11 @@ export function ClientePerfilPage() {
             {erro}
           </StatusPanel>
         </div>
+      ) : null}
+      {inativo ? (
+        <StatusPanel variante="info" titulo="Cliente inativo">
+          Este cadastro e seu histórico estão preservados, mas não participam das operações e indicadores enquanto estiver inativo.
+        </StatusPanel>
       ) : null}
       <div className={styles.grid2}>
         <Card titulo="Contato">
@@ -205,9 +208,11 @@ export function ClientePerfilPage() {
       </div>
       {mostrarPainel ? (
         <div id="painel-inativacao" className={styles.inativacaoWrap}>
-          <Card variante="perigo" titulo="Confirmar exclusão do cliente">
+          <Card variante={inativo ? 'sucesso' : 'perigo'} titulo={inativo ? 'Reativar cliente' : 'Inativar cliente'}>
             <p className={styles.inativacaoTexto}>
-              Excluir definitivamente {cliente.nome}? O cadastro e os endereços exclusivos deste cliente serão removidos. Esta ação não pode ser desfeita. Clientes com pedidos vinculados não podem ser excluídos; nesse caso, todos os registros serão preservados.
+              {inativo
+                ? `Reativar ${cliente.nome}? O cliente voltará a aparecer nas operações e indicadores da aplicação.`
+                : `Inativar ${cliente.nome}? O cadastro e o histórico serão preservados, mas o cliente deixará de aparecer nas operações e indicadores enquanto estiver inativo.`}
             </p>
             {erroExclusao ? (
               <StatusPanel variante="erro" titulo="Não foi possível concluir a exclusão">
@@ -215,11 +220,11 @@ export function ClientePerfilPage() {
               </StatusPanel>
             ) : null}
             <div className={styles.inativacaoAcoes}>
-              <Button variant="outline" disabled={excluindo} onClick={handleCancelar}>
+              <Button variant="outline" disabled={alterandoStatus} onClick={handleCancelar}>
                 Cancelar
               </Button>
-              <Button variant="primary" disabled={excluindo} onClick={handleConfirmar}>
-                {excluindo ? 'Excluindo...' : 'Confirmar exclusão'}
+              <Button variant="primary" disabled={alterandoStatus} onClick={handleConfirmar}>
+                {alterandoStatus ? 'Atualizando...' : inativo ? 'Ativar cliente' : 'Inativar cliente'}
               </Button>
             </div>
           </Card>

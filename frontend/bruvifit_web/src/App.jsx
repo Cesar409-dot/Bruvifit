@@ -29,6 +29,7 @@ import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
 import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
 import { SalesStatesPage } from './pages/vendas/estados/ui/index.jsx';
 import { session } from './shared/auth/session.js';
+import { devAuthBypass } from './shared/config/dev-auth.js';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -67,7 +68,7 @@ function ProtectedRoutes() {
   const currentUser = session.getUser();
   const { pathname } = useLocation();
 
-  if (!session.isAuthenticated()) {
+  if (!devAuthBypass && !session.isAuthenticated()) {
     return <Navigate to="/acesso" replace />;
   }
 
@@ -122,7 +123,7 @@ export default function App() {
       <ScrollToTop />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/acesso" replace />} />
+        <Route path="/" element={<Navigate to={devAuthBypass ? '/clientes' : '/acesso'} replace />} />
         <Route path="/acesso" element={<AccessPage />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>

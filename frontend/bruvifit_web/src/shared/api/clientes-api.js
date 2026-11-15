@@ -1,4 +1,5 @@
 import { apiClient } from './axios-client.js';
+import { consultarCep } from './cep-api.js';
 
 function lista(data, endpoint) {
   if (!Array.isArray(data)) throw Object.assign(new Error(`Resposta inválida de ${endpoint}: esperada uma lista JSON sem paginação.`), { code: 'ERR_CLIENTES_CONTRACT' });
@@ -13,7 +14,11 @@ function clienteValido(data) {
 }
 
 export const clientesAPI = {
-  async listar() { return lista((await apiClient.get('/clientes')).data, '/clientes').map(clienteValido); },
+  consultarCep,
+  async listar({ incluirInativos = false } = {}) {
+    const params = incluirInativos ? {} : { ativo: true };
+    return lista((await apiClient.get('/clientes', { params })).data, '/clientes').map(clienteValido);
+  },
   async indicadores() {
     const { data } = await apiClient.get('/clientes/indicadores');
     if (!['totalClientes', 'clientesAtivos', 'clientesRecorrentes'].every((key) => Number.isInteger(data?.[key]) && data[key] >= 0)) {
@@ -54,7 +59,10 @@ export const clientesAPI = {
     }
     return cliente;
   },
-  async excluir(id) { await apiClient.delete(`/clientes/${id}`); },
+  async alterarStatus(id, ativo) {
+    const { data } = await apiClient.put(`/clientes/${id}/status`, { ativo });
+    return clienteValido(data);
+  },
   async historico(id) {
     const pedidos = lista((await apiClient.get('/pedidos')).data, '/pedidos').filter((p) => p.clienteId === Number(id));
     return Promise.all(pedidos.map(async (p) => {
