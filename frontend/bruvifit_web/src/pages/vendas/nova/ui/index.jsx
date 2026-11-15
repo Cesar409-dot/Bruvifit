@@ -22,6 +22,7 @@ export function NewSalePage() {
   const [error, setError] = useState('')
   const [errorTitle, setErrorTitle] = useState('Confira os dados da venda')
   const activeProducts = products.filter((product) => product.status === 'Ativo')
+  const activeClients = clients.filter((client) => client.ativo !== false && client.status !== 'inativo')
 
   const cart = useMemo(() => items.map((item) => {
     const product = products.find((entry) => String(entry.id) === String(item.produtoId))
@@ -91,7 +92,7 @@ export function NewSalePage() {
           <section className={styles.panel} aria-labelledby="sale-data-title">
             <h2 id="sale-data-title">Dados da venda</h2>
             <SelectField id="sale-client" label="Cliente" obrigatorio value={clienteId} onChange={(event) => setClienteId(event.target.value)}>
-              <option value="">Selecione um cliente</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.nome}</option>)}
+               <option value="">Selecione um cliente</option>{activeClients.map((client) => <option key={client.id} value={client.id}>{client.nome}</option>)}
             </SelectField>
             <SelectField id="sale-payment" label="Forma de pagamento" obrigatorio value={formaPagamento} onChange={(event) => setFormaPagamento(event.target.value)}>
               {payments.map((payment) => <option key={payment}>{payment}</option>)}
