@@ -5,6 +5,8 @@ CREATE DATABASE IF NOT EXISTS bruvifit
 
 USE bruvifit;
 
+-- Use TINYINT without (1): Connector/J may expose TINYINT(1) as BIT,
+-- while Hibernate is configured to validate Boolean fields as TINYINT.
 CREATE TABLE usuario (
     id INT NOT NULL AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
@@ -243,6 +245,27 @@ CREATE TABLE item_pedido (
         FOREIGN KEY (produto_id) REFERENCES produto (id)
 );
 
+-- Itens dos pedidos de exemplo, usados no histórico de Clientes.
+INSERT INTO item_pedido
+(quantidade, preco_unitario, subtotal, pedido_id, produto_id)
+VALUES
+-- João: 3 pedidos concluídos
+(3, 50.00, 150.00, 1, 1),
+(1, 200.00, 200.00, 2, 3),
+(1, 50.00, 50.00, 2, 1),
+(3, 50.00, 150.00, 3, 1),
+(1, 200.00, 200.00, 3, 3),
+-- Maria: 2 pedidos concluídos
+(4, 50.00, 200.00, 4, 1),
+(2, 90.00, 180.00, 5, 2),
+-- Pedro: 1 pedido concluído
+(2, 90.00, 180.00, 6, 2),
+(2, 120.00, 240.00, 6, 4),
+-- Ana: 1 pedido pendente
+(1, 120.00, 120.00, 7, 4),
+-- Lucas: 1 pedido cancelado
+(1, 90.00, 90.00, 8, 2);
+
 CREATE TABLE produto_fornecedor (
     id INT NOT NULL AUTO_INCREMENT,
     custo_compra DECIMAL(10, 2),
@@ -322,3 +345,12 @@ CREATE TABLE alerta (
     criado_em DATETIME,
     ativo TINYINT NOT NULL DEFAULT 1
 );
+
+USE bruvifit;
+
+SHOW COLUMNS FROM alerta LIKE 'ativo';
+
+SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, DATA_TYPE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'bruvifit'
+  AND COLUMN_NAME IN ('ativo', 'aprovado');
