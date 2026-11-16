@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { Button } from '../../../../components/ui/Button.jsx'
 import { errorMessage, productsRepository } from '../../api/products-repository.js'
-import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct } from '../../model/product-model.js'
+import { PRODUCT_CATEGORIES, PRODUCT_COLORS, PRODUCT_SIZES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct } from '../../model/product-model.js'
 import { goToProducts } from '../../model/navigation.js'
 import styles from './index.module.css'
 
@@ -41,13 +41,17 @@ function ProductDetailNotFound({ id, isValidId, navigate }) {
   )
 }
 
-function ProductDetailForm({ product: loadedProduct, navigate, created = false }) {
+function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, navigate, created = false }) {
   const [product, setProduct] = useState(loadedProduct)
+  const [variants, setVariants] = useState(loadedVariants)
   const [form, setForm] = useState(() => productToForm(product))
   const [initialForm, setInitialForm] = useState(() => productToForm(product))
   const [feedback, setFeedback] = useState(created ? { tone: 'sucesso', title: 'Produto cadastrado.', text: 'O produto foi salvo e os dados abaixo foram carregados da API.' } : null)
   const [confirmAction, setConfirmAction] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [variantModal, setVariantModal] = useState(false)
+  const [variantForm, setVariantForm] = useState({ sku: '', size: '', color: '', stock: '0', minimum: '0' })
+  const actionType = typeof confirmAction === 'string' ? confirmAction : confirmAction?.type
 
   const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm), [form, initialForm])
 
@@ -86,17 +90,33 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
   async function confirmActionHandler() {
     if (saving) return
 
-    if (confirmAction === 'cancel') {
+    if (actionType === 'cancel') {
       goToProducts(navigate)
       return
     }
 
-     if (confirmAction === 'deactivate') {
+    if (actionType === 'deactivateVariant') {
+       setSaving(true)
+       try {
+          const updated = await productsRepository.deactivate(confirmAction.variant.id)
+          setVariants((items) => items.map((item) => item.id === updated.id ? updated : item))
+          setFeedback({ tone: 'sucesso', title: 'Variação inativada.', text: `${updated.sku || updated.name} permanece disponível no histórico.` })
+          setConfirmAction(null)
+       } catch (err) {
+          setFeedback({ tone: 'erro', title: 'Não foi possível inativar a variação.', text: errorMessage(err, 'deactivate') })
+       } finally {
+         setSaving(false)
+       }
+       return
+      }
+
+    if (actionType === 'deactivate') {
       setSaving(true)
       setFeedback(null)
       try {
-         const updated = await productsRepository.deactivate(product.id)
-         setProduct(updated)
+          const updated = await productsRepository.deactivate(product.id)
+          setProduct(updated)
+          setVariants((items) => items.map((item) => item.id === updated.id ? updated : item))
          setForm(productToForm(updated))
          setInitialForm(productToForm(updated))
          setFeedback({ tone: 'sucesso', title: 'Produto inativado.', text: 'O produto permanece disponível para consulta histórica.' })
@@ -131,6 +151,34 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
     } finally {
       setSaving(false)
       setConfirmAction(null)
+    }
+  }
+
+  async function createVariant(event) {
+    event.preventDefault()
+    if (saving) return
+    setSaving(true)
+    try {
+      const saved = await productsRepository.create({
+        ...product,
+        ...variantForm,
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        cost: product.cost,
+        price: product.price,
+        stock: variantForm.stock,
+        minimum: variantForm.minimum,
+        status: product.status,
+      })
+      setVariants((items) => [...items, saved])
+      setVariantForm({ sku: '', size: '', color: '', stock: '0', minimum: '0' })
+      setVariantModal(false)
+      setFeedback({ tone: 'sucesso', title: 'Variação adicionada.', text: 'O novo SKU foi persistido na API.' })
+    } catch (err) {
+      setFeedback({ tone: 'erro', title: 'Não foi possível adicionar a variação.', text: errorMessage(err) })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -260,32 +308,35 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
       </form>
 
       <section className={styles.formCard} aria-labelledby="variations-title">
-        <h2 id="variations-title" className={styles.sectionTitle}>Variações</h2>
+        <div className={styles.sectionHeading}>
+          <div><h2 id="variations-title" className={styles.sectionTitle}>Variações</h2><p className={styles.tableNote}>Cada SKU possui tamanho, cor, saldo, mínimo e status próprios.</p></div>
+          <button type="button" className={styles.primary} onClick={() => setVariantModal(true)}>Adicionar variação</button>
+        </div>
         <div className={styles.tableScroll}>
           <table className={styles.variationTable}>
             <thead>
               <tr>
-                {['SKU', 'Tamanho', 'Cor', 'Saldo', 'Mínimo', 'Status'].map((header) => (
+                {['SKU', 'Tamanho', 'Cor', 'Saldo', 'Mínimo', 'Status', 'Ações'].map((header) => (
                   <th scope="col" key={header}>{header}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className={styles.strong}>{form.sku || '—'}</td>
-                <td>{product.tamanho || product.size || '—'}</td>
-                <td>{product.cor || product.color || '—'}</td>
-                <td>{product.stock}</td>
-                <td>{form.minimum}</td>
-                <td><span className={styles.badge}>{form.status}</span></td>
-              </tr>
+              {variants.map((variant) => (
+                <tr key={variant.id}>
+                  <td className={styles.strong}>{variant.sku || '—'}</td>
+                  <td>{variant.size || variant.tamanho || '—'}</td>
+                  <td>{variant.color || variant.cor || '—'}</td>
+                  <td>{variant.stock}</td>
+                  <td>{variant.minimum}</td>
+                  <td><span className={styles.badge}>{variant.status}</span></td>
+                  <td><div className={styles.tableActions}><button type="button" className={styles.tableButton} onClick={() => navigate(`/produtos/${variant.id}`)}>Editar</button><button type="button" className={styles.tableButton} disabled={variant.status === PRODUCT_STATUS.INACTIVE} onClick={() => setConfirmAction({ type: 'deactivateVariant', variant })}>Inativar</button></div></td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-        <p className={styles.tableNote}>
-          Enquanto não houver cadastro de variações, a linha acima representa o próprio produto
-          (tamanho, cor, saldo e mínimo).
-        </p>
+        <p className={styles.tableNote}>Produtos existentes com o mesmo nome e categoria são agrupados aqui para preservar compatibilidade com a API atual.</p>
       </section>
 
       <section className={`${styles.formCard} ${styles.dangerCard}`} aria-labelledby="deactivation-title">
@@ -321,19 +372,19 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
                 <h2 id="product-confirm-title">
-                  {confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'deactivate' ? 'Inativar produto' : 'Descartar alterações'}
+                   {actionType === 'save' ? 'Confirmar salvamento' : actionType === 'deactivateVariant' ? 'Inativar variação' : actionType === 'deactivate' ? 'Inativar produto' : 'Descartar alterações'}
                 </h2>
                 <p className={styles.modalSubtitle}>{form.name}</p>
               </div>
-              <span className={styles.modalBadge}>{confirmAction === 'save' ? 'Salvar' : confirmAction === 'deactivate' ? 'Status' : 'Sair'}</span>
+               <span className={styles.modalBadge}>{actionType === 'save' ? 'Salvar' : actionType?.startsWith('deactivate') ? 'Status' : 'Sair'}</span>
             </div>
 
             <div className={styles.modalBody}>
-              {confirmAction === 'save' ? (
+               {actionType === 'save' ? (
                 <StatusPanel variante="sucesso" className={styles.confirmationPanel} titulo="As alterações serão persistidas">
                   Confirme para gravar as informações editadas no produto.
                 </StatusPanel>
-              ) : confirmAction === 'deactivate' ? (
+               ) : actionType?.startsWith('deactivate') ? (
                 <StatusPanel variante="info" titulo="O produto ficará inativo">
                   O cadastro e o histórico serão preservados. Confirme para alterar o status na API.
                 </StatusPanel>
@@ -350,9 +401,29 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
                 Continuar editando
               </Button>
               <Button size="sm" disabled={saving} onClick={() => { void confirmActionHandler() }}>
-                 {saving ? 'Processando...' : confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'deactivate' ? 'Confirmar inativação' : 'Descartar e sair'}
+                  {saving ? 'Processando...' : actionType === 'save' ? 'Confirmar salvamento' : actionType?.startsWith('deactivate') ? 'Confirmar inativação' : 'Descartar e sair'}
               </Button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {variantModal && (
+        <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => { if (!saving) setVariantModal(false) }}>
+          <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="add-variant-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeading}><div><span className={styles.modalEyebrow}>Produto e variações</span><h2 id="add-variant-title">Adicionar variação</h2><p className={styles.modalSubtitle}>{product.name}</p></div><span className={styles.modalBadge}>Novo SKU</span></div>
+            <form onSubmit={createVariant}>
+              <div className={styles.modalBody}>
+                <div className={`${styles.formGrid} ${styles.thirds}`}>
+                  <Field label="SKU *"><input className={styles.control} required value={variantForm.sku} onChange={(event) => setVariantForm((current) => ({ ...current, sku: event.target.value }))} /></Field>
+                  <Field label="Tamanho"><select className={styles.control} value={variantForm.size} onChange={(event) => setVariantForm((current) => ({ ...current, size: event.target.value }))}><option value="">Selecione</option>{PRODUCT_SIZES.map((size) => <option key={size}>{size}</option>)}</select></Field>
+                  <Field label="Cor"><select className={styles.control} value={variantForm.color} onChange={(event) => setVariantForm((current) => ({ ...current, color: event.target.value }))}><option value="">Selecione</option>{PRODUCT_COLORS.map((color) => <option key={color}>{color}</option>)}</select></Field>
+                  <Field label="Saldo inicial"><input className={styles.control} type="number" min="0" step="1" value={variantForm.stock} onChange={(event) => setVariantForm((current) => ({ ...current, stock: event.target.value }))} /></Field>
+                  <Field label="Estoque mínimo"><input className={styles.control} type="number" min="0" step="1" value={variantForm.minimum} onChange={(event) => setVariantForm((current) => ({ ...current, minimum: event.target.value }))} /></Field>
+                </div>
+              </div>
+              <div className={styles.modalActions}><Button variant="outline" size="sm" type="button" onClick={() => setVariantModal(false)} disabled={saving}>Cancelar</Button><Button size="sm" type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar variação'}</Button></div>
+            </form>
           </section>
         </div>
       )}
@@ -367,6 +438,7 @@ export function ProductDetailPage({ params }) {
   const id = params?.id ?? routeParams.id
   const isValidId = /^\d+$/.test(String(id ?? ''))
   const [product, setProduct] = useState(null)
+  const [variants, setVariants] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [reload, setReload] = useState(0)
@@ -385,8 +457,10 @@ export function ProductDetailPage({ params }) {
 
       try {
         const row = await productsRepository.get(id)
+        const related = await productsRepository.variants(row)
         if (!active) return
         setProduct(row)
+        setVariants(related.length ? related : [row])
         setError(null)
       } catch (err) {
         if (!active) return
@@ -426,5 +500,5 @@ export function ProductDetailPage({ params }) {
     )
   }
 
-  return <ProductDetailForm key={id} product={product} navigate={navigate} created={location.state?.flash === 'criado'} />
+  return <ProductDetailForm key={id} product={product} variants={variants} navigate={navigate} created={location.state?.flash === 'criado'} />
 }

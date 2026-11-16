@@ -20,6 +20,18 @@
   font-family: var(--fonte-titulo);
 }
 
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionHeading .sectionTitle {
+  margin-bottom: 4px;
+}
+
 .title {
   font-size: 32px;
   line-height: 1.2;
@@ -325,6 +337,27 @@ select.control {
   line-height: 1.45;
 }
 
+.tableActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tableButton {
+  padding: 6px 9px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  background: var(--cor-superficie);
+  color: var(--cor-primaria);
+  font: 700 12px var(--fonte-corpo), sans-serif;
+  cursor: pointer;
+}
+
+.tableButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .strong {
   font-family: var(--fonte-corpo), sans-serif;
 }
@@ -425,6 +458,11 @@ select.control {
 
   .formCard {
     padding: 20px;
+  }
+
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .formGrid,

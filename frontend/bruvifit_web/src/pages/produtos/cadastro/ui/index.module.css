@@ -79,6 +79,50 @@
   box-shadow: 0 4px 18px rgb(23 63 53 / 3%);
 }
 
+.variantsHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.variantsHeading .sectionTitle {
+  margin-bottom: 4px;
+}
+
+.variantList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.variantCard {
+  padding: 16px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  background: var(--cor-fundo);
+}
+
+.variantHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--cor-primaria);
+  font-size: 14px;
+}
+
+.removeVariant {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--cor-erro);
+  font: inherit;
+  cursor: pointer;
+}
+
 .sectionTitle {
   margin-bottom: 20px;
   font-size: 18px;
@@ -247,6 +291,11 @@ select.control {
 }
 
 @media (max-width: 640px) {
+  .variantsHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .headingRow {
     align-items: flex-start;
     flex-direction: column;

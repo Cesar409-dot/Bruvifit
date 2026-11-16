@@ -35,6 +35,10 @@ export function createApiProductsRepository(client = apiClient) {
       const { data } = await client.get(`/produtos/${encodeURIComponent(id)}`)
       return normalizeProduct(readProduct(data))
     },
+    async variants(product) {
+      const items = await this.list()
+      return items.filter((item) => item.name === product.name && item.category === product.category)
+    },
     async create(form) {
       assertValid(form)
       const { data } = await client.post('/produtos', buildCreateProductPayload(form))
