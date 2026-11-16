@@ -42,10 +42,10 @@ export function normalizeEmployee(raw = {}) {
   return {
     id: String(raw.id ?? raw.funcionarioId ?? ''),
     name: raw.name ?? raw.nomeCompleto ?? raw.nome ?? '',
-    email: raw.email ?? '', phone: raw.phone ?? raw.telefone ?? '',
+    email: raw.email ?? '', cpf: raw.cpf ?? '', phone: raw.phone ?? raw.telefone ?? '',
     address: raw.address ?? raw.endereco ?? '',
     role: aliases[role] ?? ROLE.SELLER,
-    status: aliases[status] ?? STATUS.ACTIVE,
+    status: raw.ativo === false ? STATUS.INACTIVE : (aliases[status] ?? STATUS.ACTIVE),
   };
 }
 export function validateEmployee(form) {
@@ -54,12 +54,15 @@ export function validateEmployee(form) {
   else if (form.name.trim().length < 3) errors.name = 'O nome deve ter pelo menos 3 caracteres.';
   if (!form.email?.trim()) errors.email = 'Informe o e-mail.';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Informe um e-mail válido.';
+  const cpf = form.cpf?.replace(/\D/g, '') ?? '';
+  if (cpf.length !== 11) errors.cpf = 'Informe um CPF com 11 dígitos.';
+  if (!form.password || form.password.length < 6 || form.password.length > 100) errors.password = 'A senha deve ter entre 6 e 100 caracteres.';
   if (!roleOptions.some((r) => r.value === form.role)) errors.role = 'Selecione um perfil.';
   return errors;
 }
 export function toEmployeePayload(form) {
   return {
     name: form.name.trim(), email: form.email.trim().toLowerCase(),
-    phone: form.phone.trim(), address: form.address.trim(), role: form.role,
+    cpf: form.cpf.replace(/\D/g, ''), password: form.password, role: form.role,
   };
 }

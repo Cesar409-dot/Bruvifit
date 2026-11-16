@@ -2,13 +2,8 @@
 import { useMemo } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { FuncionariosContext } from '../model/funcionariosContext.jsx';
-import { demoCurrentUser } from '../model/demoData.js';
 import { apiClient } from '../../../shared/api/axios-client.js';
-import {
-  createApiRepository,
-  createDemoRepository,
-} from '../api/funcionariosRepository.js';
-import { LoadingState } from '../../../components/ui/StateView.jsx';
+import { createApiRepository } from '../api/funcionariosRepository.js';
 import Listagem from './Listagem.jsx';
 import Cadastro from './Cadastro.jsx';
 import Detalhe from './Detalhe.jsx';
@@ -18,25 +13,19 @@ import ConviteEnviado from './ConviteEnviado.jsx';
 import styles from './FuncionariosPage.module.css';
 
 export function EmployeesPage({ currentUser }) {
-  const mockMode = import.meta.env.VITE_FUNCIONARIOS_MOCK === 'true';
-
   const repository = useMemo(
-    () =>
-      mockMode
-        ? createDemoRepository()
-        : createApiRepository(apiClient),
-    [mockMode],
+    () => createApiRepository(apiClient),
+    [],
   );
 
-  const user = currentUser ?? (mockMode ? demoCurrentUser : null);
+  const user = currentUser;
 
   const context = useMemo(
     () => ({
       repository,
       user,
-      mockMode,
     }),
-    [repository, user, mockMode],
+    [repository, user],
   );
 
   if (!user) {

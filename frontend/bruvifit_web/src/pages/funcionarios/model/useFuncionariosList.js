@@ -7,7 +7,6 @@ export default function useFuncionariosList(repository) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [busyId, setBusyId] = useState(null);
   const [draft, setDraft] = useState({ query: '', role: '', status: '' });
   const [filters, setFilters] = useState({ query: '', role: '', status: '' });
   const [page, setPage] = useState(1);
@@ -22,8 +21,8 @@ export default function useFuncionariosList(repository) {
     void Promise.resolve().then(refresh);
   }, [refresh]);
   const stats = useMemo(() => ({
-    active: employees.length,
-    inativos: 0,
+    active: employees.filter((e) => e.status === 'ACTIVE').length,
+    inativos: employees.filter((e) => e.status === 'INACTIVE').length,
     admins: employees.filter((e) => e.role === ROLE.ADMIN).length,
   }), [employees]);
   const filtered = useMemo(() => employees.filter((e) => {
@@ -36,12 +35,6 @@ export default function useFuncionariosList(repository) {
   const visible = filtered.slice((Math.min(page, pages) - 1) * pageSize, Math.min(page, pages) * pageSize);
   function apply() { setPage(1); setFilters({ ...draft }); }
   function clear() { const reset = { query: '', role: '', status: '' }; setDraft(reset); setFilters(reset); setPage(1); }
-  async function resend(id) {
-    setFeedback(''); setBusyId(id);
-    try { await repository.resend(id); setFeedback('Convite reenviado com sucesso.'); await refresh(); }
-    catch (e) { setError(friendlyError(e)); }
-    finally { setBusyId(null); }
-  }
-  return { employees, loading, error, setError, feedback, setFeedback, busyId, draft, setDraft,
-    filtered, visible, page, setPage, pages, stats, refresh, apply, clear, resend };
+  return { employees, loading, error, setError, feedback, setFeedback, draft, setDraft,
+    filtered, visible, page, setPage, pages, stats, refresh, apply, clear };
 }

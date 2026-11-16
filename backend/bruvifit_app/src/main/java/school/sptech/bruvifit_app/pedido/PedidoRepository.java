@@ -19,6 +19,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     boolean existsByClienteId(Integer clienteId);
 
+    boolean existsByUsuarioId(Integer usuarioId);
+
     Page<Pedido> findByClienteId(Integer clienteId, Pageable pageable);
 
     Page<Pedido> findByUsuarioId(Integer usuarioId, Pageable pageable);

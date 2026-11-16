@@ -14,14 +14,14 @@ export default function Detalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { repository, mockMode } = useFuncionarios();
+  const { repository } = useFuncionarios();
   const vm = useFuncionarioDetail(repository, id);
   if (vm.loading) return <LoadingState/>;
   if (!vm.employee) return <ErrorState message={vm.error || 'Funcionário não encontrado.'} onRetry={vm.load} />;
   const employee = vm.employee;
   const permissions = PERMISSIONS[employee.role] ?? PERMISSIONS[ROLE.SELLER];
   return <>
-    <PageHeader titulo={employee.name} subtitulo={<>{employee.email} · {roleLabel(employee.role)} · {statusLabel(employee.status)} {mockMode ? '· Perfil ilustrativo' : ''}</>}
+    <PageHeader titulo={employee.name} subtitulo={<>{employee.email} · {roleLabel(employee.role)} · {statusLabel(employee.status)}</>}
       acoes={<Button icon={Pencil} onClick={() => navigate(`/funcionarios/${id}/editar`)}>Editar funcionário</Button>} />
     {state?.success && <StatusPanel variante="sucesso" titulo="Alterações salvas">{state.success}</StatusPanel>}
     {vm.error && <StatusPanel variante="erro" titulo="Não foi possível concluir">{vm.error}</StatusPanel>}
@@ -33,15 +33,13 @@ export default function Detalhe() {
       </table></div>
     </Card>
     <div className={styles.bottomGrid}>
-      <Card className={styles.deactivate} titulo="Confirmar desativação">
-        {employee.status === STATUS.ACTIVE ? <>
-          <p>Desativar {employee.name}? Seu acesso será bloqueado e as sessões deverão ser encerradas pelo back-end. Vendas e demais registros de sua autoria serão preservados.</p>
-          {vm.lastAdmin ? <StatusPanel variante="erro" titulo="Operação indisponível">Este é o último administrador ativo.</StatusPanel> :
-            vm.confirmOpen ? <div className={styles.buttons}>
-              <Button variant="outline" onClick={() => vm.setConfirmOpen(false)}>Cancelar</Button>
-              <Button disabled={vm.busy} onClick={vm.deactivate}>{vm.busy ? 'Desativando...' : 'Confirmar desativação'}</Button>
-            </div> : <Button variant="outline" onClick={() => vm.setConfirmOpen(true)}>Desativar funcionário</Button>}
-        </> : <><p>{employee.status === STATUS.PENDING ? 'Este funcionário ainda não aceitou o convite. A desativação será disponibilizada após a ativação.' : 'Este funcionário já está desativado. Seus registros anteriores foram mantidos.'}</p></>}
+      <Card className={styles.deactivate} titulo="Excluir funcionário">
+        <p>Excluir {employee.name}? A exclusão só será concluída quando não houver pedidos vinculados ao cadastro.</p>
+        {employee.status === STATUS.ACTIVE && vm.lastAdmin ? <StatusPanel variante="erro" titulo="Operação indisponível">Este é o último administrador ativo.</StatusPanel> :
+          vm.confirmOpen ? <div className={styles.buttons}>
+            <Button variant="outline" onClick={() => vm.setConfirmOpen(false)}>Cancelar</Button>
+            <Button disabled={vm.busy} onClick={vm.deactivate}>{vm.busy ? 'Excluindo...' : 'Confirmar exclusão'}</Button>
+          </div> : <Button variant="outline" onClick={() => vm.setConfirmOpen(true)}>Excluir funcionário</Button>}
       </Card>
       <Card titulo="Proteção do administrador">
         <StatusPanel titulo="Último administrador não pode ser desativado">

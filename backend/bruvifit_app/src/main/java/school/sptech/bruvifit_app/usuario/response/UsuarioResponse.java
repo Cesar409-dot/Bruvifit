@@ -7,13 +7,15 @@ public class UsuarioResponse {
     private String email;
     private String cpf;
     private String cargo;
+    private Boolean ativo;
 
-    public UsuarioResponse(Integer id, String nome, String email, String cpf, String cargo) {
+    public UsuarioResponse(Integer id, String nome, String email, String cpf, String cargo, Boolean ativo) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.cpf = cpf;
         this.cargo = cargo;
+        this.ativo = ativo;
     }
 
     public Integer getId() {
@@ -34,5 +36,9 @@ public class UsuarioResponse {
 
     public String getCargo() {
         return cargo;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
     }
 }

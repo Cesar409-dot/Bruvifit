@@ -27,8 +27,8 @@ export default function useFuncionarioDetail(repository, id) {
   async function deactivate() {
     if (!confirmOpen || lastAdmin || employee?.status !== STATUS.ACTIVE) return;
     setBusy(true); setError('');
-    try { await repository.deactivate(id); navigate('/funcionarios', { replace: true, state: { success: 'Funcionário desativado. O histórico permanece preservado.' } }); }
-    catch (err) { setError(friendlyError(err)); setConfirmOpen(false); }
+    try { await repository.remove(id); navigate('/funcionarios', { replace: true, state: { success: 'Funcionário excluído com sucesso.' } }); }
+    catch (err) { setError(friendlyError(err)); }
     finally { setBusy(false); }
   }
   return { employee, all, loading, error, busy, confirmOpen, setConfirmOpen, lastAdmin, load, deactivate };

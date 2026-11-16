@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Pencil, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PageHeader } from '../../../components/layout/PageHeader.jsx';
 import { Button } from '../../../components/ui/Button.jsx';
 import { Card } from '../../../components/ui/Card.jsx';
@@ -11,7 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/Sta
 import { StatusBadge } from '../../../components/ui/StatusBadge.jsx';
 import { TextField } from '../../../components/ui/TextField.jsx';
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx';
-import { roleOptions, roleLabel, STATUS, statusLabel, statusOptions } from '../model/funcionariosModel.js';
+import { roleOptions, roleLabel, statusLabel, statusOptions } from '../model/funcionariosModel.js';
 import { useFuncionarios } from '../model/funcionariosContext.jsx';
 import useFuncionariosList from '../model/useFuncionariosList.js';
 import styles from './Listagem.module.css';
@@ -51,10 +51,7 @@ export default function Listagem() {
           <div className={styles.tableScroll}><table className={styles.table}>
             <thead><tr><th scope="col">Funcionário</th><th scope="col">E-mail</th><th scope="col">Cargo</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
             <tbody>{vm.visible.map((e) => <tr key={e.id}><td><strong>{e.name}</strong></td><td>{e.email}</td><td>{roleLabel(e.role)}</td><td><StatusBadge status={e.status}>{statusLabel(e.status)}</StatusBadge></td>
-              <td>{e.status === STATUS.PENDING ? <button className={styles.rowLink} disabled={vm.busyId === e.id} onClick={() => vm.resend(e.id)}>{vm.busyId === e.id ? 'Reenviando...' : 'Reenviar convite'}</button> :
-                <button className={styles.rowLink} onClick={() => navigate(`/funcionarios/${e.id}`)}>Ver detalhe</button>}
-                {e.status === STATUS.PENDING && <button className={styles.iconLink} title="Ver detalhes" aria-label={`Ver detalhes de ${e.name}`} onClick={() => navigate(`/funcionarios/${e.id}`)}><Pencil size={14} aria-hidden="true"/></button>}
-              </td></tr>)}</tbody>
+              <td><button className={styles.rowLink} onClick={() => navigate(`/funcionarios/${e.id}`)}>Ver detalhe</button></td></tr>)}</tbody>
           </table></div>
           <div className={styles.tableFooter}>
             <span>{vm.filtered.length} registro(s) · Página {vm.page} de {vm.pages}. Os dados vêm do back-end; nenhuma senha é exibida.</span>

@@ -48,7 +48,7 @@ paths:
         - bearerAuth: []
     post:
       summary: Cadastra um novo usuário
-      description: Cria um novo usuário no sistema. A senha deve ser fornecida como hash.
+      description: Cria um novo usuário. A senha é enviada em texto no corpo HTTPS e armazenada pelo servidor como hash.
       operationId: cadastrarUsuario
       tags:
         - Usuarios
@@ -62,7 +62,8 @@ paths:
               nome: "João Silva"
               email: "joao@email.com"
               cpf: "123.456.789-00"
-              senhaHash: "hash_senha_aqui"
+              senhaHash: "senha_segura"
+              cargo: "VENDEDOR"
       responses:
         '201':
           description: Usuário criado com sucesso
@@ -120,7 +121,8 @@ paths:
               nome: "João Silva Atualizado"
               email: "joao.atualizado@email.com"
               cpf: "123.456.789-00"
-              senhaHash: "hash_senha_atualizado"
+              senhaHash: "nova_senha_segura"
+              cargo: "VENDEDOR"
       responses:
         '200':
           description: Usuário atualizado com sucesso
@@ -132,6 +134,8 @@ paths:
           description: Dados de entrada inválidos
         '404':
           description: Usuário não encontrado
+        '409':
+          description: Exclusão bloqueada por registros vinculados
     delete:
       summary: Remove um usuário
       description: Remove um usuário do sistema pelo ID.
@@ -1267,13 +1271,20 @@ components:
           description: CPF do usuário (apenas números e pontuação)
         senhaHash:
           type: string
-          example: "hash_senha_aqui"
-          description: Hash da senha do usuário
+          minLength: 6
+          maxLength: 100
+          example: "senha_segura"
+          description: Senha em texto enviada ao servidor para armazenamento com hash
+        cargo:
+          type: string
+          enum: [ADMINISTRADOR, GERENTE, VENDEDOR]
+          example: VENDEDOR
       required:
         - nome
         - email
         - cpf
         - senhaHash
+        - cargo
     UsuarioResponse:
       type: object
       properties:
@@ -1293,6 +1304,14 @@ components:
           type: string
           example: "123.456.789-00"
           description: CPF do usuário
+        cargo:
+          type: string
+          enum: [ADMINISTRADOR, GERENTE, VENDEDOR]
+          example: VENDEDOR
+        ativo:
+          type: boolean
+          example: true
+          description: Estado atual do acesso do usuário
     FornecedorRequest:
       type: object
       properties:

@@ -20,7 +20,8 @@ public class UsuarioMapper {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getCpf(),
-                usuario.getCargo().name()
+                usuario.getCargo().name(),
+                usuario.getAtivo()
         );
     }
 

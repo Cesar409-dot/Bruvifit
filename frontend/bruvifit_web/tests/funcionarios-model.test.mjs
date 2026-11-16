@@ -1,16 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROLE, STATUS, PERMISSIONS, permissionModules, normalizeEmployee, validateEmployee, toEmployeePayload } from '../src/pages/funcionarios/model/funcionariosModel.js';
-import { demoEmployees } from '../src/pages/funcionarios/model/demoData.js';
 
-test('Validação preserva campos obrigatórios e identifica e-mail inválido', () => {
-  assert.deepEqual(Object.keys(validateEmployee({ name: '', email: '', role: '' })).sort(), ['email', 'name', 'role']);
-  assert.equal(validateEmployee({ name: 'Marina Santos', email: 'semarroba', role: ROLE.MANAGER }).email, 'Informe um e-mail válido.');
-  assert.deepEqual(validateEmployee({ name: 'Marina Santos', email: 'marina@bruvifit.com.br', role: ROLE.MANAGER }), {});
+const validEmployee = { name: 'Marina Santos', email: 'marina@bruvifit.com.br', cpf: '123.456.789-01', password: 'senha123', role: ROLE.MANAGER };
+
+test('Validação inclui os campos obrigatórios do DTO e identifica e-mail inválido', () => {
+  assert.deepEqual(Object.keys(validateEmployee({ name: '', email: '', cpf: '', password: '', role: '' })).sort(), ['cpf', 'email', 'name', 'password', 'role']);
+  assert.equal(validateEmployee({ ...validEmployee, email: 'semarroba' }).email, 'Informe um e-mail válido.');
+  assert.deepEqual(validateEmployee(validEmployee), {});
 });
 
-test('Payload normaliza e-mail e aparas espaços', () => {
-  assert.deepEqual(toEmployeePayload({ name: ' Marina Santos ', email: ' MARINA@EXEMPLO.COM ', phone: ' 11 ', address: ' SP ', role: ROLE.MANAGER }), {name:'Marina Santos',email:'marina@exemplo.com', phone:'11',address:'SP',role:ROLE.MANAGER});
+test('Payload normaliza nome, e-mail e CPF', () => {
+  assert.deepEqual(toEmployeePayload({ ...validEmployee, name: ' Marina Santos ', email: ' MARINA@EXEMPLO.COM ' }), {name:'Marina Santos',email:'marina@exemplo.com', cpf:'12345678901', password:'senha123', role:ROLE.MANAGER});
 });
 
 test('Model traduz nomes alternativos da API para o contrato da view', () => {
@@ -18,39 +19,11 @@ test('Model traduz nomes alternativos da API para o contrato da view', () => {
   assert.equal(output.id, '5'); assert.equal(output.role, ROLE.SELLER); assert.equal(output.status, STATUS.ACTIVE);
 });
 
+test('Model usa o campo ativo real do UsuarioResponse', () => {
+  assert.equal(normalizeEmployee({ id: 7, nome: 'Teste', cargo: 'GERENTE', ativo: false }).status, STATUS.INACTIVE);
+});
+
 test('Perfis possuem uma tabela para todos os módulos', () => {
   for (const role of Object.values(ROLE)) for (const section of permissionModules) assert.equal(PERMISSIONS[role][section].length, 3);
   assert.deepEqual(PERMISSIONS[ROLE.SELLER].Vendas, ['Sim','Sim','Não']);
-});
-
-test('Demonstração tem dois ativos, um convite e um administrador ativo', () => {
-  assert.equal(demoEmployees.filter((e) => e.status === STATUS.ACTIVE).length, 2);
-  assert.equal(demoEmployees.filter((e) => e.status === STATUS.PENDING).length, 1);
-  assert.equal(demoEmployees.filter((e) => e.role === ROLE.ADMIN && e.status === STATUS.ACTIVE).length, 1);
-});
-
-test('Repositório demonstrativo preserva cadastro, edição e regras de desativação', async () => {
-  const { createDemoRepository } = await import('../src/pages/funcionarios/api/funcionariosRepository.js');
-  const store = new Map();
-  const originalStorage = globalThis.localStorage;
-  globalThis.localStorage = {
-    getItem: (key) => store.get(key) ?? null,
-    setItem: (key, value) => store.set(key, value),
-  };
-  try {
-    const repository = createDemoRepository();
-    assert.equal((await repository.list()).length, 3);
-    const created = await repository.createInvite({ name: 'Carlos Mendes', email: 'carlos@bruvifit.com.br', phone: '', address: '', role: ROLE.SELLER });
-    assert.equal(created.status, STATUS.PENDING);
-    await assert.rejects(repository.createInvite({ ...created }), /e-mail pertence/);
-    const updated = await repository.update(created.id, { name: 'Carlos M.', email: created.email, phone: '', address: '', role: ROLE.SELLER });
-    assert.equal(updated.name, 'Carlos M.');
-    await repository.resend(created.id);
-    await assert.rejects(repository.deactivate('1'), /último administrador/);
-    const deactivated = await repository.deactivate('2');
-    assert.equal(deactivated.status, STATUS.INACTIVE);
-    assert.equal((await repository.list()).length, 4);
-  } finally {
-    globalThis.localStorage = originalStorage;
-  }
 });

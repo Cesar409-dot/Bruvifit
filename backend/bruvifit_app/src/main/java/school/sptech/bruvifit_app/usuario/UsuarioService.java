@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.usuario.request.UsuarioRequest;
 import school.sptech.bruvifit_app.usuario.response.UsuarioResponse;
+import school.sptech.bruvifit_app.pedido.PedidoRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,10 +20,12 @@ public class UsuarioService {
 
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final PedidoRepository pedidoRepository;
 
-    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder, PedidoRepository pedidoRepository) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.pedidoRepository = pedidoRepository;
     }
 
     public List<UsuarioResponse> listar() {
@@ -36,7 +39,8 @@ public class UsuarioService {
                             usuario.getNome(),
                             usuario.getEmail(),
                             usuario.getCpf(),
-                            usuario.getCargo().name()
+                            usuario.getCargo().name(),
+                            usuario.getAtivo()
                     );
 
             usuariosResponse.add(respostaDaVez);
@@ -59,7 +63,8 @@ public class UsuarioService {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getCpf(),
-                usuario.getCargo().name()
+                usuario.getCargo().name(),
+                usuario.getAtivo()
         );
 
         return ResponseEntity.status(200).body(resposta);
@@ -93,7 +98,8 @@ public class UsuarioService {
                 usuarioCadastrado.getNome(),
                 usuarioCadastrado.getEmail(),
                 usuarioCadastrado.getCpf(),
-                usuarioCadastrado.getCargo().name()
+                usuarioCadastrado.getCargo().name(),
+                usuarioCadastrado.getAtivo()
         );
 
         return ResponseEntity.status(201).body(resposta);
@@ -133,7 +139,8 @@ public class UsuarioService {
                 usuarioAtualizado.getNome(),
                 usuarioAtualizado.getEmail(),
                 usuarioAtualizado.getCpf(),
-                usuarioAtualizado.getCargo().name()
+                usuarioAtualizado.getCargo().name(),
+                usuarioAtualizado.getAtivo()
         );
 
         return ResponseEntity.status(200).body(resposta);
@@ -145,6 +152,10 @@ public class UsuarioService {
 
         if (usuarioEncontrado.isEmpty()) {
             return ResponseEntity.status(404).build();
+        }
+
+        if (pedidoRepository.existsByUsuarioId(id)) {
+            throw new ConflitoDeDadosException("Não foi possível excluir o funcionário. Existem registros vinculados a este cadastro.");
         }
 
         repository.deleteById(id);
