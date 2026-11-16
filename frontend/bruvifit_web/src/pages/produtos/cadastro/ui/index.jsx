@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { createProduct } from '../api/create-product.js'
 import { goToProducts } from '../../model/navigation.js'
 import { createEmptyProductForm } from '../model/product-form.js'
-import { PRODUCT_CATEGORIES } from '../../model/product-model.js'
+import { PRODUCT_CATEGORIES, PRODUCT_COLORS, PRODUCT_SIZES } from '../../model/product-model.js'
 import { errorMessage } from '../../api/products-repository.js'
 import styles from './index.module.css'
 const infoIcon = '/assets/a0377.svg'
@@ -122,15 +122,15 @@ export function ProductCreatePage() {
             <Field label="Nome do produto" name="nome" placeholder="Ex.: Camiseta Basic" required maxLength={45} />
             <Field label="Descrição" name="descricao" type="textarea" maxLength={200} />
             <Field label="Categoria" name="categoria" placeholder="Selecione uma categoria" options={PRODUCT_CATEGORIES} required />
-            <Field label="SKU" name="sku" placeholder="Ex.: CAM-001" required maxLength={45} />
+             <Field label="Código interno / SKU" name="sku" placeholder="Opcional · Ex.: CAM-001" maxLength={45} />
             <Field label="Preço de custo" name="custo" type="number" placeholder="R$ 0,00" required />
             <Field label="Preço de venda" name="venda" type="number" placeholder="R$ 0,00" required />
             <Field label="Estoque inicial" name="estoque" type="number" defaultValue={0} />
             <Field label="Estoque mínimo" name="minimo" type="number" defaultValue={0} />
           </div>
           <div className={`${styles.formGrid} ${styles.thirds}`}>
-            <Field label="Tamanho" name="tamanho" options={['PP', 'P', 'M', 'G', 'GG']} />
-            <Field label="Cor" name="cor" options={['Preto', 'Branco', 'Verde', 'Rosa']} />
+            <Field label="Tamanho" name="tamanho" options={PRODUCT_SIZES} />
+            <Field label="Cor" name="cor" options={PRODUCT_COLORS} />
             <Field label="Status" name="status" defaultValue="Ativo" disabled />
           </div>
         </section>

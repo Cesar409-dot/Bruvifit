@@ -189,7 +189,15 @@
 }
 
 .modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 22px 28px 26px;
+}
+
+.confirmationPanel {
+  border: 1px solid var(--cor-borda);
+  box-shadow: var(--sombra-card);
 }
 
 .modalText {
@@ -201,7 +209,9 @@
 .modalActions {
   display: flex;
   justify-content: flex-end;
-  padding: 0 28px 24px;
+  gap: 12px;
+  padding: 16px 28px 24px;
+  border-top: 1px solid var(--cor-borda-suave);
 }
 
 .formCard {

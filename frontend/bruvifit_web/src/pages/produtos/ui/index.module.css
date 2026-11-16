@@ -228,6 +228,13 @@
   font-family: var(--fonte-corpo), sans-serif;
 }
 
+.productMeta {
+  display: block;
+  margin-top: 3px;
+  color: var(--cor-texto-secundario);
+  font-size: 11px;
+}
+
 .badge {
   display: inline-flex;
   padding: 5px 9px;

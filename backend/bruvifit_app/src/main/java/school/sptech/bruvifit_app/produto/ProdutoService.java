@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.produto.ProdutoMapper;
 import school.sptech.bruvifit_app.produto.request.ProdutoRequest;
+import school.sptech.bruvifit_app.produto.request.ProdutoStatusRequest;
 import school.sptech.bruvifit_app.produto.response.ProdutoResponse;
 
 import java.util.List;
@@ -62,13 +63,13 @@ public class ProdutoService {
     }
 
     @Transactional
-    public ResponseEntity<Void> deletar(Integer id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        repository.deleteById(id);
-        repository.flush();
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Produto> alterarStatus(Integer id, ProdutoStatusRequest request) {
+        return repository.findById(id)
+                .map(produto -> {
+                    produto.setAtivo(request.getAtivo());
+                    return ResponseEntity.ok(repository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     private void normalizarSku(Produto produto) {

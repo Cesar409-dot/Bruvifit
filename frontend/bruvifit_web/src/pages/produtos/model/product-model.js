@@ -56,8 +56,7 @@ export function validateProduct(form, products = [], excludeId = null, editing =
   if (!PRODUCT_CATEGORIES.includes(form.category)) errors.category = 'Selecione uma categoria.'
 
   const sku = String(form.sku || '').trim().toUpperCase()
-  if (!sku) errors.sku = 'Informe um SKU.'
-  else if (products.some((p) => String(p.sku).trim().toUpperCase() === sku && String(p.id) !== String(excludeId))) {
+  if (sku && products.some((p) => String(p.sku).trim().toUpperCase() === sku && String(p.id) !== String(excludeId))) {
     errors.sku = 'Este SKU já existe. Use um código único.'
   }
 

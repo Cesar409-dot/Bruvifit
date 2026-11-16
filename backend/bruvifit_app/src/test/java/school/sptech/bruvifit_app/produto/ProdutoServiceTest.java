@@ -12,6 +12,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.sptech.bruvifit_app.exception.GlobalExceptionHandler;
 import school.sptech.bruvifit_app.produto.request.ProdutoRequest;
+import school.sptech.bruvifit_app.produto.request.ProdutoStatusRequest;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -122,34 +123,35 @@ class ProdutoServiceTest {
     }
 
     @Test
-    void exclusaoFisicaExecutaDeleteEFlushSemSave() throws Exception {
-        when(repository.existsById(7)).thenReturn(true);
+    void inativacaoAtualizaStatusEPreservaCadastro() throws Exception {
+        Produto produto = new Produto(); produto.setId(7); produto.setAtivo(true);
+        when(repository.findById(7)).thenReturn(Optional.of(produto));
+        when(repository.save(produto)).thenReturn(produto);
         MockMvcBuilders.standaloneSetup(new ProdutoController(service)).setControllerAdvice(new GlobalExceptionHandler()).build()
-                .perform(delete("/produtos/7")).andExpect(status().isNoContent());
-        var order = inOrder(repository);
-        order.verify(repository).deleteById(7); order.verify(repository).flush();
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void exclusaoInexistenteRetorna404SemDelete() {
-        assertEquals(404, service.deletar(7).getStatusCode().value());
+                .perform(put("/produtos/7/status").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ativo\":false}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.ativo").value(false));
+        assertFalse(produto.getAtivo());
+        verify(repository).save(produto);
         verify(repository, never()).deleteById(any());
     }
 
     @Test
-    void vinculoHistoricoGera409ERollbackSemCommit() throws Exception {
-        when(repository.existsById(7)).thenReturn(true);
-        doThrow(new DataIntegrityViolationException("Foreign key historica")).when(repository).flush();
-        var manager = mock(PlatformTransactionManager.class);
-        var transaction = mock(TransactionStatus.class);
-        when(manager.getTransaction(any())).thenReturn(transaction);
-        var factory = new ProxyFactory(service); factory.setProxyTargetClass(true);
-        factory.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
-        var proxy = (ProdutoService) factory.getProxy();
-        MockMvcBuilders.standaloneSetup(new ProdutoController(proxy)).setControllerAdvice(new GlobalExceptionHandler()).build()
-                .perform(delete("/produtos/7")).andExpect(status().isConflict());
-        verify(manager).rollback(transaction); verify(manager, never()).commit(any());
+    void inativacaoInexistenteRetorna404SemSave() {
+        ProdutoStatusRequest request = new ProdutoStatusRequest(); request.setAtivo(false);
+        assertEquals(404, service.alterarStatus(7, request).getStatusCode().value());
+        verify(repository, never()).deleteById(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void statusAusenteRetorna400SemAlterarProduto() throws Exception {
+        Produto produto = new Produto(); produto.setId(7); produto.setAtivo(true);
+        when(repository.findById(7)).thenReturn(Optional.of(produto));
+        MockMvcBuilders.standaloneSetup(new ProdutoController(service)).setControllerAdvice(new GlobalExceptionHandler()).build()
+                .perform(put("/produtos/7/status").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        assertTrue(produto.getAtivo());
         verify(repository, never()).save(any());
     }
 }
