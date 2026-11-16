@@ -67,8 +67,8 @@ Regra atual de exclusão e testes: [clientes com endereços](specs/005-exclusao-
 ## Integração de Produtos
 
 Produtos usa exclusivamente o Axios compartilhado e o JWT da sessão; não há
-fallback para demonstração ou localStorage. Endpoints: `GET/POST /produtos` e
-`GET/PUT/DELETE /produtos/{id}`. A listagem retorna um array completo; nome/SKU,
+fallback para demonstração ou localStorage. Endpoints: `GET/POST /produtos`,
+`GET/PUT /produtos/{id}` e `PUT /produtos/{id}/status`. A listagem retorna um array completo; nome/SKU,
 categoria, status e situação de estoque são filtrados em conjunto antes da paginação local.
 
 O cadastro navega para o ID retornado pela API. A edição preserva custo, margem,
@@ -76,6 +76,10 @@ tamanho, cor e saldo não editados. A descrição é opcional e aceita até 200
 caracteres. Cadastro e edição exigem uma categoria entre Camisetas, Calças e
 Acessórios. O status existente continua visível e
 pode ser usado para filtrar a lista.
+
+Inativar produto envia `{ "ativo": false }` para `PUT /produtos/{id}/status`.
+O backend preserva o registro, estoque e vínculos para histórico; o produto
+inativo não deve ser usado em novos pedidos.
 
 Para atualizar um banco existente, revise o comando abaixo antes de aplicar a
 nova versão do backend. O Hibernate usa `ddl-auto=validate` e exige as colunas
@@ -111,11 +115,10 @@ restrição de valores.
 ALTER TABLE bruvifit.produto MODIFY COLUMN categoria VARCHAR(45) NOT NULL;
 ```
 
-Excluir é uma remoção física com confirmação. Itens de pedidos, movimentações
-de estoque ou vínculos com fornecedores bloqueiam a remoção por integridade
-referencial; não há cascata nem exclusão lógica. O erro 409 aparece no modal,
-e o produto só sai da tela após sucesso da API. Reinicie o backend para carregar
-a preservação de saldo no PUT e o flush explícito de exclusão.
+Inativar exige confirmação e envia `{ "ativo": false }` para
+`PUT /produtos/{id}/status`. O registro, estoque, histórico e vínculos são
+preservados; produtos inativos não devem ser usados em novos pedidos. O status
+retornado pela API atualiza a listagem sem remover o produto.
 
 Testes: `node --test tests/products-api.test.mjs tests/products-ui.test.mjs`.
 Contratos, arquivos e limitações: [integração de Produtos](specs/006-produtos-crud/spec.md).

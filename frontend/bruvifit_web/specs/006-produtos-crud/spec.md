@@ -1,5 +1,19 @@
 # Integração real de Produtos
 
+> Atualização: o contrato de status descrito neste adendo substitui o fluxo de
+> exclusão física para Produtos. O histórico abaixo registra a implementação
+> anterior e não deve ser usado como contrato vigente.
+
+## Contrato vigente de inativação
+
+- `PUT /produtos/{id}/status` recebe `{ "ativo": false }` para inativar e
+  `{ "ativo": true }` para reativar.
+- O endpoint retorna o `Produto` atualizado ou `404` quando o ID não existe.
+- A operação altera somente `produto.ativo`; não remove vínculos, estoque ou
+  histórico.
+- A coluna `produto.ativo TINYINT NOT NULL DEFAULT 1` já existe em
+  `database.sql`; nenhuma migration é necessária.
+
 Solicitação aprovada nesta tarefa: integrar o CRUD existente de Produtos sem
 redesenhar telas, alterar Clientes, autenticação ou esquema SQL. Sem commit/push.
 
