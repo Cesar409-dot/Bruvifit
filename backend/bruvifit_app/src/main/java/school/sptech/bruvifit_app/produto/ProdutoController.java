@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.sptech.bruvifit_app.produto.request.ProdutoRequest;
+import school.sptech.bruvifit_app.produto.request.ProdutoStatusRequest;
 import school.sptech.bruvifit_app.produto.response.ProdutoResponse;
 
 import java.util.List;
@@ -46,8 +47,10 @@ public class ProdutoController {
         return service.atualizar(id, produtoRequest);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
-        return service.deletar(id);
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Produto> alterarStatus(
+            @PathVariable Integer id,
+            @Valid @RequestBody ProdutoStatusRequest request) {
+        return service.alterarStatus(id, request);
     }
 }
