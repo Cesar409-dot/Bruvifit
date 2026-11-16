@@ -56,7 +56,10 @@ export function createApiProductsRepository(client = apiClient) {
       const { data } = await client.put(`/produtos/${encodeURIComponent(id)}`, payload)
       return normalizeProduct(readProduct(data))
     },
-    async remove(id) { await client.delete(`/produtos/${encodeURIComponent(id)}`) },
+    async deactivate(id) {
+      const { data } = await client.put(`/produtos/${encodeURIComponent(id)}/status`, { ativo: false })
+      return normalizeProduct(readProduct(data))
+    },
   }
 }
 
@@ -65,7 +68,7 @@ export const productsRepository = createApiProductsRepository()
 
 export function errorMessage(error, operation = '') {
   const status = error?.response?.status ?? error?.status
-  if (status === 409 && operation === 'delete') return 'Não foi possível excluir o produto. Existem registros vinculados a este cadastro.'
+  if (status === 409 && operation === 'deactivate') return error?.response?.data?.message || 'Não foi possível inativar o produto.'
   if (status === 409) return error?.response?.data?.message || error.message || 'Este SKU já existe. Use um código único.'
   if (status === 401) return 'Sua sessão expirou. Entre novamente.'
   if (status === 403) return 'Você não tem permissão para realizar esta operação.'

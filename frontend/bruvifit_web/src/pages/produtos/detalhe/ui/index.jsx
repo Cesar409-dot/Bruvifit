@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
+import { Button } from '../../../../components/ui/Button.jsx'
 import { errorMessage, productsRepository } from '../../api/products-repository.js'
 import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct } from '../../model/product-model.js'
 import { goToProducts } from '../../model/navigation.js'
@@ -90,14 +91,18 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
       return
     }
 
-    if (confirmAction === 'delete') {
+     if (confirmAction === 'deactivate') {
       setSaving(true)
       setFeedback(null)
       try {
-        await productsRepository.remove(product.id)
-        goToProducts(navigate)
+         const updated = await productsRepository.deactivate(product.id)
+         setProduct(updated)
+         setForm(productToForm(updated))
+         setInitialForm(productToForm(updated))
+         setFeedback({ tone: 'sucesso', title: 'Produto inativado.', text: 'O produto permanece disponível para consulta histórica.' })
+         setConfirmAction(null)
       } catch (err) {
-        setFeedback({ tone: 'erro', title: 'Não foi possível excluir.', text: errorMessage(err, 'delete') })
+         setFeedback({ tone: 'erro', title: 'Não foi possível inativar.', text: errorMessage(err, 'deactivate') })
       } finally {
         setSaving(false)
       }
@@ -166,13 +171,12 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
                 maxLength={45}
               />
             </Field>
-            <Field label="SKU *">
+             <Field label="Código interno / SKU">
               <input
                 className={styles.control}
                 value={form.sku}
                 onChange={(event) => updateField('sku', event.target.value)}
-                required
-                maxLength={45}
+                 maxLength={45}
               />
             </Field>
             <Field label="Categoria *">
@@ -285,17 +289,17 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
       </section>
 
       <section className={`${styles.formCard} ${styles.dangerCard}`} aria-labelledby="deactivation-title">
-        <h2 id="deactivation-title" className={styles.sectionTitle}>Excluir produto</h2>
+           <h2 id="deactivation-title" className={styles.sectionTitle}>Inativar produto</h2>
         <p className={styles.dangerText}>
-          Excluir definitivamente {form.name || 'este produto'}? Produtos com pedidos,
-          movimentações ou outros registros vinculados não podem ser excluídos. Nenhum histórico será apagado.
+           Inativar {form.name || 'este produto'}? O cadastro continuará no histórico,
+           mas não deverá ser usado em novos pedidos.
         </p>
         <div className={styles.dangerActions}>
           <button type="button" className={styles.secondary} onClick={requestCancel}>
             Cancelar
           </button>
-          <button type="button" className={styles.primary} onClick={() => { setFeedback(null); setConfirmAction('delete') }} disabled={saving}>
-            Excluir produto
+           <button type="button" className={styles.primary} onClick={() => { setFeedback(null); setConfirmAction('deactivate') }} disabled={saving}>
+             Inativar produto
           </button>
         </div>
       </section>
@@ -317,21 +321,21 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
                 <h2 id="product-confirm-title">
-                  {confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Excluir produto' : 'Descartar alterações'}
+                  {confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'deactivate' ? 'Inativar produto' : 'Descartar alterações'}
                 </h2>
                 <p className={styles.modalSubtitle}>{form.name}</p>
               </div>
-              <span className={styles.modalBadge}>{confirmAction === 'save' ? 'Salvar' : 'Sair'}</span>
+              <span className={styles.modalBadge}>{confirmAction === 'save' ? 'Salvar' : confirmAction === 'deactivate' ? 'Status' : 'Sair'}</span>
             </div>
 
             <div className={styles.modalBody}>
               {confirmAction === 'save' ? (
-                <StatusPanel variante="info" titulo="As alterações serão persistidas">
+                <StatusPanel variante="sucesso" className={styles.confirmationPanel} titulo="As alterações serão persistidas">
                   Confirme para gravar as informações editadas no produto.
                 </StatusPanel>
-              ) : confirmAction === 'delete' ? (
-                <StatusPanel variante="info" titulo="O produto será excluído definitivamente">
-                  Esta ação não pode ser desfeita. A exclusão será bloqueada se houver registros vinculados.
+              ) : confirmAction === 'deactivate' ? (
+                <StatusPanel variante="info" titulo="O produto ficará inativo">
+                  O cadastro e o histórico serão preservados. Confirme para alterar o status na API.
                 </StatusPanel>
               ) : (
                 <StatusPanel variante="info" titulo="Descartar alterações não salvas">
@@ -342,12 +346,12 @@ function ProductDetailForm({ product: loadedProduct, navigate, created = false }
             </div>
 
             <div className={styles.modalActions}>
-              <button type="button" className={styles.secondary} autoFocus disabled={saving} onClick={() => { setConfirmAction(null); setFeedback(null) }}>
+              <Button variant="outline" size="sm" autoFocus disabled={saving} onClick={() => { setConfirmAction(null); setFeedback(null) }}>
                 Continuar editando
-              </button>
-              <button type="button" className={styles.primary} disabled={saving} onClick={() => { void confirmActionHandler() }}>
-                {saving ? 'Processando...' : confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'delete' ? 'Confirmar exclusão' : 'Descartar e sair'}
-              </button>
+              </Button>
+              <Button size="sm" disabled={saving} onClick={() => { void confirmActionHandler() }}>
+                 {saving ? 'Processando...' : confirmAction === 'save' ? 'Confirmar salvamento' : confirmAction === 'deactivate' ? 'Confirmar inativação' : 'Descartar e sair'}
+              </Button>
             </div>
           </section>
         </div>
@@ -365,6 +369,7 @@ export function ProductDetailPage({ params }) {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -393,7 +398,7 @@ export function ProductDetailPage({ params }) {
     })()
 
     return () => { active = false }
-  }, [id, isValidId])
+  }, [id, isValidId, reload])
 
   if (loading) {
     return (
@@ -412,6 +417,9 @@ export function ProductDetailPage({ params }) {
         {error ? (
           <StatusPanel variante="erro" titulo="Não foi possível carregar o produto.">
             {error}
+            <button type="button" className={styles.secondary} onClick={() => { setError(null); setLoading(true); setReload((value) => value + 1) }}>
+              Tentar novamente
+            </button>
           </StatusPanel>
         ) : null}
       </main>

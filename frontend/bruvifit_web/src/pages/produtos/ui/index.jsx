@@ -8,14 +8,14 @@ import { FilterBar } from '../../../components/ui/FilterBar.jsx'
 import { TextField } from '../../../components/ui/TextField.jsx'
 import { SelectField } from '../../../components/ui/SelectField.jsx'
 import { productsRepository, errorMessage } from '../api/products-repository.js'
-import { PRODUCT_STATUS, formatMoney, stockStatus, filterProducts } from '../model/product-model.js'
+import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, stockStatus, filterProducts } from '../model/product-model.js'
 import { goToProducts } from '../model/navigation.js'
 import styles from './index.module.css'
 
 const addIcon = '/assets/2fd53.svg'
 const viewIcon = '/assets/31909.svg'
 const editIcon = '/assets/4da8b.svg'
-const archiveIcon = '/assets/c05d0.svg'
+  const archiveIcon = '/assets/c05d0.svg'
 
 const pageSize = 5
 
@@ -102,17 +102,17 @@ export function ProductsPage() {
     setPage(1)
   }
 
-  async function confirmDelete() {
+  async function confirmDeactivate() {
     if (!pendingDelete || working) return
     setWorking(true)
     setDeleteError('')
     try {
-      await productsRepository.remove(pendingDelete.id)
-      setProducts((items) => items.filter((item) => item.id !== pendingDelete.id))
-      setFeedback({ tone: 'success', title: 'Produto excluído.', text: `${pendingDelete.name} foi removido definitivamente.` })
+      const updated = await productsRepository.deactivate(pendingDelete.id)
+      setProducts((items) => items.map((item) => item.id === updated.id ? updated : item))
+      setFeedback({ tone: 'success', title: 'Produto inativado.', text: `${pendingDelete.name} foi inativado e permanece no histórico.` })
       setPendingDelete(null)
     } catch (err) {
-      setDeleteError(errorMessage(err, 'delete'))
+        setDeleteError(errorMessage(err, 'deactivate'))
     } finally {
       setWorking(false)
     }
@@ -150,7 +150,7 @@ export function ProductsPage() {
         <FilterBar onSubmit={(event) => { event.preventDefault(); applyFilters() }} onClear={resetFilters}>
           <TextField id="produto-pesquisar" label="Pesquisar" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto..." />
           <SelectField id="produto-categoria" label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option value="">Todas</option>{[...new Set(products.map((product) => product.category).filter(Boolean))].map((item) => <option key={item}>{item}</option>)}
+            <option value="">Todas</option>{PRODUCT_CATEGORIES.map((item) => <option key={item}>{item}</option>)}
           </SelectField>
           <SelectField id="produto-status" label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
             <option>Todos</option><option>Ativo</option><option>Inativo</option>
@@ -183,7 +183,12 @@ export function ProductsPage() {
             <tbody>
               {pageProducts.map((product) => (
                 <tr key={product.id}>
-                  <td><strong>{product.name}</strong></td>
+                  <td>
+                    <strong>{product.name}</strong>
+                    <span className={styles.productMeta}>
+                      {[product.sku, product.size, product.color].filter(Boolean).join(' · ') || 'Sem variação informada'}
+                    </span>
+                  </td>
                   <td>{product.category || 'Sem categoria'}</td>
                   <td><strong>{formatMoney(product.price)}</strong></td>
                   <td>
@@ -221,7 +226,7 @@ export function ProductsPage() {
                       </Button>
                       <Button
                         variant="icon"
-                        aria-label={`Excluir ${product.name}`}
+                         aria-label={`Inativar ${product.name}`}
                         onClick={() => { setDeleteError(''); setPendingDelete(product) }}
                       >
                         <img src={archiveIcon} alt="" />
@@ -286,25 +291,25 @@ export function ProductsPage() {
             <div className={styles.modalHeading}>
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
-                <h2 id="confirm-delete-title">Excluir produto</h2>
+                <h2 id="confirm-delete-title">Inativar produto</h2>
                 <p className={styles.modalSubtitle}>{pendingDelete.name}</p>
               </div>
-              <span className={styles.modalBadge}>Ação irreversível</span>
+               <span className={styles.modalBadge}>Alteração de status</span>
             </div>
 
             <div className={styles.modalBody}>
               <p className={styles.modalNote}>
-                O cadastro será removido definitivamente. Produtos com pedidos, movimentações ou outros registros vinculados não podem ser excluídos. Nenhum histórico será apagado.
+                 O produto ficará inativo e continuará disponível para consulta histórica. Produtos inativos não devem ser usados em novos pedidos.
               </p>
-              {deleteError ? <StatusPanel variante="erro" titulo="Exclusão não concluída">{deleteError}</StatusPanel> : null}
+               {deleteError ? <StatusPanel variante="erro" titulo="Inativação não concluída">{deleteError}</StatusPanel> : null}
             </div>
 
             <div className={styles.modalActions}>
               <Button variant="secondary" disabled={working} onClick={() => { setDeleteError(''); setPendingDelete(null) }}>
                 Cancelar
               </Button>
-              <Button disabled={working} onClick={() => { void confirmDelete() }}>
-                {working ? 'Excluindo...' : 'Confirmar exclusão'}
+               <Button disabled={working} onClick={() => { void confirmDeactivate() }}>
+                 {working ? 'Inativando...' : 'Confirmar inativação'}
               </Button>
             </div>
           </section>

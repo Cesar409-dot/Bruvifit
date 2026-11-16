@@ -31,6 +31,7 @@ test('cadastro envia exatamente os campos reais do DTO e retorna o ID recebido',
 
 test('validação exige uma categoria permitida e respeita tamanhos e precisão do DTO', () => {
   assert.deepEqual(validateProductForm(form), {})
+  assert.deepEqual(validateProductForm({ ...form, sku: '' }), {})
   assert.ok(validateProductForm({ ...form, name: 'a'.repeat(46) }).name)
   assert.ok(validateProductForm({ ...form, category: 'a'.repeat(46) }).category)
   assert.ok(validateProductForm({ ...form, description: 'a'.repeat(201) }).description)
@@ -76,22 +77,22 @@ test('detalhes consultam GET por ID e propagam 404 sem criar um produto substitu
   await assert.rejects(repository.get(7), (error) => error.response.status === 404)
 })
 
-test('exclusão usa DELETE e preserva a falha 409, sem PATCH de inativação', async () => {
+test('inativação usa PUT de status e propaga a falha da API', async () => {
   let count = 0
   const error = httpError(409)
-  const repository = createApiProductsRepository({ delete: async (path) => {
-    count++; assert.equal(path, '/produtos/7'); throw error
+  const repository = createApiProductsRepository({ put: async (path, payload) => {
+    count++; assert.equal(path, '/produtos/7/status'); assert.deepEqual(payload, { ativo: false }); throw error
   } })
-  await assert.rejects(repository.remove(7), (received) => received === error)
+  await assert.rejects(repository.deactivate(7), (received) => received === error)
   assert.equal(count, 1)
-  assert.equal(errorMessage(error, 'delete'), 'Não foi possível excluir o produto. Existem registros vinculados a este cadastro.')
+  assert.equal(errorMessage(error, 'deactivate'), 'Não foi possível inativar o produto.')
 })
 
-test('sucesso de exclusão exige resposta da API e não fabrica estado inativo', async () => {
-  let deleted = false
-  const repository = createApiProductsRepository({ delete: async () => { deleted = true; return { status: 204 } } })
-  assert.equal(await repository.remove(7), undefined)
-  assert.equal(deleted, true)
+test('sucesso de inativação retorna o produto atualizado', async () => {
+  const repository = createApiProductsRepository({ put: async () => ({ data: { ...raw, ativo: false } }) })
+  const updated = await repository.deactivate(7)
+  assert.equal(updated.id, '7')
+  assert.equal(updated.status, PRODUCT_STATUS.INACTIVE)
 })
 
 test('filtros combinam pesquisa de nome/SKU, status e estoque sobre a lista completa', () => {

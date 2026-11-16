@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { transformWithOxc } from 'vite'
 import { errorMessage } from '../src/pages/produtos/api/products-repository.js'
-import { PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct, filterProducts } from '../src/pages/produtos/model/product-model.js'
+import { PRODUCT_CATEGORIES, PRODUCT_COLORS, PRODUCT_SIZES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct, filterProducts } from '../src/pages/produtos/model/product-model.js'
 import { createEmptyProductForm } from '../src/pages/produtos/cadastro/model/product-form.js'
 import { goToProducts } from '../src/pages/produtos/model/navigation.js'
 import { apiClient } from '../src/shared/api/axios-client.js'
@@ -37,9 +37,9 @@ async function mount(code, name, overrides = {}, props = {}) {
     useEffect(effect) { if (!mounted) effects.push(effect) }, useMemo: (fn) => fn(),
     useNavigate: () => navigate, useLocation: () => ({}), useParams: () => ({ id: '7' }),
     jsx: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: 'Fragment',
-    StatusPanel: 'StatusPanel', StatusBadge: 'StatusBadge', PageHeader: 'PageHeader', StatCard: 'StatCard',
+     StatusPanel: 'StatusPanel', StatusBadge: 'StatusBadge', Button: 'Button', PageHeader: 'PageHeader', StatCard: 'StatCard',
     FilterBar: 'FilterBar', TextField: 'TextField', SelectField: 'SelectField',
-    styles: {}, PRODUCT_CATEGORIES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct, filterProducts,
+    styles: {}, PRODUCT_CATEGORIES, PRODUCT_COLORS, PRODUCT_SIZES, PRODUCT_STATUS, formatMoney, productToForm, stockStatus, validateProduct, filterProducts,
     errorMessage, goToProducts, createEmptyProductForm,
     productsRepository: { list: async () => [product], get: async () => product },
     window: { addEventListener() {}, removeEventListener() {} },
@@ -67,23 +67,23 @@ const find = (tree, predicate) => nodes(tree).find(predicate)
 const button = (tree, label) => find(tree, (n) => n.props?.onClick && text(n) === label)
 const dialog = (tree) => find(tree, (n) => n.props?.role === 'dialog')
 
-test('listagem mostra alerta 409 no modal, preserva linha e só remove após DELETE bem-sucedido', async () => {
-  let blocked = true, removals = 0
+test('listagem mostra alerta de falha no modal e só atualiza status após PUT bem-sucedido', async () => {
+  let blocked = true, deactivations = 0
   const view = await mount(listCode, 'ProductsPage', { productsRepository: {
-    list: async () => [product], remove: async () => { removals++; if (blocked) throw { response: { status: 409 } } },
+    list: async () => [product], deactivate: async () => { deactivations++; if (blocked) throw { response: { status: 409 } }; return { ...product, status: PRODUCT_STATUS.INACTIVE } },
   } })
-  find(view.render(), (n) => n.props?.['aria-label'] === 'Excluir Produto Teste').props.onClick()
-  button(view.render(), 'Confirmar exclusão').props.onClick(); await tick()
-  assert.match(text(dialog(view.render())), /Não foi possível excluir o produto. Existem registros vinculados a este cadastro./)
+  find(view.render(), (n) => n.props?.['aria-label'] === 'Inativar Produto Teste').props.onClick()
+  button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
+  assert.match(text(dialog(view.render())), /Não foi possível inativar o produto./)
   assert.ok(find(view.render(), (n) => n.props?.['aria-label'] === 'Editar Produto Teste'))
   button(view.render(), 'Cancelar').props.onClick()
   assert.equal(dialog(view.render()), undefined)
   blocked = false
-  find(view.render(), (n) => n.props?.['aria-label'] === 'Excluir Produto Teste').props.onClick()
-  assert.doesNotMatch(text(dialog(view.render())), /Exclusão não concluída/)
-  button(view.render(), 'Confirmar exclusão').props.onClick(); await tick()
-  assert.equal(find(view.render(), (n) => n.props?.['aria-label'] === 'Editar Produto Teste'), undefined)
-  assert.equal(removals, 2); view.cleanup()
+  find(view.render(), (n) => n.props?.['aria-label'] === 'Inativar Produto Teste').props.onClick()
+  assert.doesNotMatch(text(dialog(view.render())), /Inativação não concluída/)
+  button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
+  assert.equal(text(view.render()).includes('Inativo'), true)
+  assert.equal(deactivations, 2); view.cleanup()
 })
 
 test('paginação, nome/SKU, status e estoque funcionam sobre registros carregados', async () => {
@@ -158,11 +158,11 @@ test('edição salva e atualiza os valores exibidos, mantendo estoque como somen
   view.cleanup()
 })
 
-test('detalhe mantém modal aberto e não navega quando a exclusão retorna 409', async () => {
-  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: { remove: async () => { throw { response: { status: 409 } } } } }, { product })
-  button(view.render(), 'Excluir produto').props.onClick()
-  button(view.render(), 'Confirmar exclusão').props.onClick(); await tick()
-  assert.match(text(dialog(view.render())), /Existem registros vinculados/)
+test('detalhe mantém modal aberto quando a inativação falha', async () => {
+  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: { deactivate: async () => { throw { response: { status: 409 } } } } }, { product })
+  button(view.render(), 'Inativar produto').props.onClick()
+  button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
+  assert.match(text(dialog(view.render())), /Não foi possível inativar/)
   assert.equal(view.navigations.length, 0)
   button(view.render(), 'Continuar editando').props.onClick()
   assert.equal(dialog(view.render()), undefined); view.cleanup()
