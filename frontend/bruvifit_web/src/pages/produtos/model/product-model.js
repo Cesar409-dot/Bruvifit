@@ -98,6 +98,7 @@ export function stockStatus(product) {
 export function normalizeProduct(raw) {
   return {
     id: String(raw.id ?? ''),
+    parentId: raw.parentId ?? raw.produtoPaiId ?? null,
     name: raw.name ?? raw.nome ?? '',
     description: raw.description ?? raw.descricao ?? '',
     category: raw.category ?? raw.categoria ?? '',
@@ -126,6 +127,7 @@ export function filterProducts(products, filters) {
   const query = fold(filters.query.trim())
   return products.filter((product) => (!query || [product.name, product.sku].some((value) => fold(value).includes(query)))
     && (!filters.category || product.category === filters.category)
+    && (filters.includeInactive || filters.status === PRODUCT_STATUS.INACTIVE || product.status !== PRODUCT_STATUS.INACTIVE)
     && (filters.status === 'Todos' || product.status === filters.status)
     && (filters.stock === 'Todos' || stockStatus(product) === filters.stock))
 }

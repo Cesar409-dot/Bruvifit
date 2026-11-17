@@ -36,12 +36,18 @@ export function createApiProductsRepository(client = apiClient) {
       return normalizeProduct(readProduct(data))
     },
     async variants(product) {
-      const items = await this.list()
-      return items.filter((item) => item.name === product.name && item.category === product.category)
+      const { data } = await client.get(`/produtos/${encodeURIComponent(product.id)}/variantes`)
+      if (!Array.isArray(data)) throw new ProductRepositoryError('Resposta inválida de GET /produtos/{id}/variantes: esperada uma lista JSON.', 502)
+      return data.map((row) => normalizeProduct(readProduct(row)))
     },
     async create(form) {
       assertValid(form)
       const { data } = await client.post('/produtos', buildCreateProductPayload(form))
+      return normalizeProduct(readProduct(data))
+    },
+    async createVariant(parentId, form) {
+      assertValid(form)
+      const { data } = await client.post(`/produtos/${encodeURIComponent(parentId)}/variantes`, buildCreateProductPayload(form))
       return normalizeProduct(readProduct(data))
     },
     async update(id, form) {
@@ -60,9 +66,12 @@ export function createApiProductsRepository(client = apiClient) {
       const { data } = await client.put(`/produtos/${encodeURIComponent(id)}`, payload)
       return normalizeProduct(readProduct(data))
     },
-    async deactivate(id) {
-      const { data } = await client.put(`/produtos/${encodeURIComponent(id)}/status`, { ativo: false })
+    async updateStatus(id, ativo) {
+      const { data } = await client.put(`/produtos/${encodeURIComponent(id)}/status`, { ativo })
       return normalizeProduct(readProduct(data))
+    },
+    async deactivate(id) {
+      return this.updateStatus(id, false)
     },
   }
 }
