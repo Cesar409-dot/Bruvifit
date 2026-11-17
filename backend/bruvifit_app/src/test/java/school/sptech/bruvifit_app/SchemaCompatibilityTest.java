@@ -88,7 +88,7 @@ class SchemaCompatibilityTest {
                 assertTrue(tables.get(foreignKeys.group(2)).containsKey(foreignKeys.group(3)));
                 count++;
             }
-            assertEquals(10, count);
+            assertEquals(11, count);
             // Creating each Spring Data repository validates derived methods and JPQL without executing SQL.
             try (var sessionFactory = metadata.buildSessionFactory();
                  var entityManager = sessionFactory.createEntityManager()) {

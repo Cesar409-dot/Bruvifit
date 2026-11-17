@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.mockito.ArgumentCaptor;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.http.MediaType;
@@ -57,6 +58,25 @@ class ProdutoServiceTest {
                 .andExpect(jsonPath("$.descricao").value("Malha leve"))
                 .andExpect(jsonPath("$.categoria").value(categoria))
                 .andExpect(jsonPath("$.nome").value("Produto Teste")).andExpect(jsonPath("$.saldoEstoque").value(12));
+    }
+
+    @Test
+    void cadastroDeVariacaoVinculaSkuAoProdutoPrincipal() throws Exception {
+        Produto pai = new Produto();
+        pai.setId(7);
+        when(repository.findById(7)).thenReturn(Optional.of(pai));
+        when(repository.save(any())).thenAnswer(call -> { Produto produto = call.getArgument(0); produto.setId(8); return produto; });
+
+        MockMvcBuilders.standaloneSetup(new ProdutoController(service)).setControllerAdvice(new GlobalExceptionHandler()).build()
+                .perform(post("/produtos/7/variantes").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome":"Camiseta Basic","categoria":"Camisetas","sku":"CAM-002",
+                         "tamanho":"M","cor":"Preto","precoVenda":89.90,"saldoEstoque":8,"estoqueMinimo":2}
+                        """))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(8));
+
+        ArgumentCaptor<Produto> captor = ArgumentCaptor.forClass(Produto.class);
+        verify(repository).save(captor.capture());
+        assertEquals(7, captor.getValue().getProdutoPaiId());
     }
 
     @Test
