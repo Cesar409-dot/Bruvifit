@@ -116,8 +116,11 @@ CREATE TABLE produto (
     saldo_estoque INT,
     estoque_minimo INT,
     ativo TINYINT NOT NULL DEFAULT 1,
+    produto_pai_id INT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_produto_sku (sku),
+    KEY idx_produto_pai (produto_pai_id),
+    CONSTRAINT fk_produto_pai FOREIGN KEY (produto_pai_id) REFERENCES produto (id),
     CONSTRAINT chk_produto_categoria CHECK (
         categoria IS NULL OR CAST(categoria AS BINARY) IN (
             CAST('Camisetas' AS BINARY), CAST('Calças' AS BINARY), CAST('Acessórios' AS BINARY)
