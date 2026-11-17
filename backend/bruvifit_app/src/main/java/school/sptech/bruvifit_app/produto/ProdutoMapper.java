@@ -38,7 +38,8 @@ public class ProdutoMapper {
                 produto.getPrecoVenda(),
                 produto.getSaldoEstoque(),
                 produto.getEstoqueMinimo(),
-                produto.getAtivo()
+                produto.getAtivo(),
+                produto.getProdutoPaiId()
         );
     }
 

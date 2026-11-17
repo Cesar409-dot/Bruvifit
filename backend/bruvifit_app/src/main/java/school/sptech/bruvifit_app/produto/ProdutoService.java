@@ -3,6 +3,7 @@ package school.sptech.bruvifit_app.produto;
 
 import org.springframework.http.ResponseEntity;
 import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
+import school.sptech.bruvifit_app.exception.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.produto.ProdutoMapper;
@@ -44,6 +45,31 @@ public class ProdutoService {
         produto.setAtivo(true);
         Produto produtoCadastrado = repository.save(produto);
         return ResponseEntity.status(201).body(produtoCadastrado);
+    }
+
+    @Transactional
+    public ResponseEntity<Produto> cadastrarVariacao(Integer produtoId, ProdutoRequest produtoRequest) {
+        Produto pai = repository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
+        Produto produto = ProdutoMapper.toEntity(produtoRequest);
+        produto.setProdutoPaiId(pai.getProdutoPaiId() == null ? pai.getId() : pai.getProdutoPaiId());
+        normalizarSku(produto);
+        if (produto.getSku() != null && repository.existsBySku(produto.getSku())) {
+            throw new ConflitoDeDadosException("SKU já cadastrado");
+        }
+        produto.setAtivo(true);
+        return ResponseEntity.status(201).body(repository.save(produto));
+    }
+
+    public List<ProdutoResponse> listarVariacoes(Integer produtoId) {
+        Produto produto = repository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
+        Integer raizId = produto.getProdutoPaiId() == null ? produto.getId() : produto.getProdutoPaiId();
+        Produto raiz = repository.findById(raizId).orElseThrow(() -> new RecursoNaoEncontradoException("Produto", raizId));
+        List<Produto> variacoes = new java.util.ArrayList<>();
+        variacoes.add(raiz);
+        variacoes.addAll(repository.findByProdutoPaiId(raizId));
+        return variacoes.stream().map(ProdutoMapper::toResponse).toList();
     }
 
     @Transactional

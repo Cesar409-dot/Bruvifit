@@ -496,6 +496,61 @@ paths:
           description: Produto removido com sucesso
         '404':
           description: Produto não encontrado
+  /produtos/{id}/variantes:
+    get:
+      summary: Lista as variações de um produto
+      description: Retorna o produto principal e seus SKUs filhos, com estoque e status individuais.
+      operationId: listarVariacoesProduto
+      tags:
+        - Produtos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Variações obtidas com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProdutoResponse'
+        '404':
+          description: Produto não encontrado
+    post:
+      summary: Cadastra uma variação
+      description: Cria um novo SKU vinculado ao produto principal informado no caminho.
+      operationId: cadastrarVariacaoProduto
+      tags:
+        - Produtos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdutoRequest'
+      responses:
+        '201':
+          description: Variação criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoResponse'
+        '400':
+          description: Dados de entrada inválidos
+        '404':
+          description: Produto principal não encontrado
+        '409':
+          description: SKU já cadastrado
   /enderecos:
     get:
       summary: Lista todos os endereços
@@ -1518,6 +1573,11 @@ components:
           type: boolean
           example: true
           description: Status do produto
+        produtoPaiId:
+          type: integer
+          nullable: true
+          example: 1
+          description: ID do produto principal; nulo quando o registro é o produto principal
     EnderecoRequest:
       type: object
       properties:

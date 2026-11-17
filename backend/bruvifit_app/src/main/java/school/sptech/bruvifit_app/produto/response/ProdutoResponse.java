@@ -17,6 +17,7 @@ public class ProdutoResponse {
     private final Integer saldoEstoque;
     private final Integer estoqueMinimo;
     private final Boolean ativo;
+    private final Integer produtoPaiId;
 
     public ProdutoResponse(
             Integer id,
@@ -31,7 +32,8 @@ public class ProdutoResponse {
             BigDecimal precoVenda,
             Integer saldoEstoque,
             Integer estoqueMinimo,
-            Boolean ativo) {
+            Boolean ativo,
+            Integer produtoPaiId) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
@@ -45,6 +47,7 @@ public class ProdutoResponse {
         this.saldoEstoque = saldoEstoque;
         this.estoqueMinimo = estoqueMinimo;
         this.ativo = ativo;
+        this.produtoPaiId = produtoPaiId;
     }
 
     public Integer getId() {
@@ -97,5 +100,9 @@ public class ProdutoResponse {
 
     public Boolean getAtivo() {
         return ativo;
+    }
+
+    public Integer getProdutoPaiId() {
+        return produtoPaiId;
     }
 }

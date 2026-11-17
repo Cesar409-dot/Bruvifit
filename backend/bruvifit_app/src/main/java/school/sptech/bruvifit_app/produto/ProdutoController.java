@@ -39,6 +39,18 @@ public class ProdutoController {
         return service.cadastrar(produtoRequest);
     }
 
+    @GetMapping("/{id}/variantes")
+    public ResponseEntity<List<ProdutoResponse>> listarVariacoes(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.listarVariacoes(id));
+    }
+
+    @PostMapping("/{id}/variantes")
+    public ResponseEntity<Produto> cadastrarVariacao(
+            @PathVariable Integer id,
+            @Valid @RequestBody ProdutoRequest produtoRequest) {
+        return service.cadastrarVariacao(id, produtoRequest);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Produto> atualizar(
             @PathVariable Integer id,

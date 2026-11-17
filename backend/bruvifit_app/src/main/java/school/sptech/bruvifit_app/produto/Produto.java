@@ -54,6 +54,9 @@ public class Produto {
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
+    @Column(name = "produto_pai_id")
+    private Integer produtoPaiId;
+
     public Produto() {
     }
 
@@ -159,5 +162,13 @@ public class Produto {
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Integer getProdutoPaiId() {
+        return produtoPaiId;
+    }
+
+    public void setProdutoPaiId(Integer produtoPaiId) {
+        this.produtoPaiId = produtoPaiId;
     }
 }
