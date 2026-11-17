@@ -95,34 +95,34 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
       return
     }
 
-    if (actionType === 'deactivateVariant') {
+      if (actionType === 'statusVariant') {
        setSaving(true)
        try {
-          const updated = await productsRepository.deactivate(confirmAction.variant.id)
+          const willActivate = confirmAction.variant.status === PRODUCT_STATUS.INACTIVE
+          const updated = await productsRepository.updateStatus(confirmAction.variant.id, willActivate)
           setVariants((items) => items.map((item) => item.id === updated.id ? updated : item))
-          setFeedback({ tone: 'sucesso', title: 'Variação inativada.', text: `${updated.sku || updated.name} permanece disponível no histórico.` })
+          setFeedback({ tone: 'sucesso', title: willActivate ? 'Variação ativada.' : 'Variação inativada.', text: willActivate ? `${updated.sku || updated.name} voltou a aparecer nas operações.` : `${updated.sku || updated.name} permanece disponível no histórico.` })
           setConfirmAction(null)
        } catch (err) {
-          setFeedback({ tone: 'erro', title: 'Não foi possível inativar a variação.', text: errorMessage(err, 'deactivate') })
+          setFeedback({ tone: 'erro', title: 'Não foi possível alterar a variação.', text: errorMessage(err, 'deactivate') })
        } finally {
          setSaving(false)
        }
        return
       }
 
-    if (actionType === 'deactivate') {
+      if (actionType === 'status') {
       setSaving(true)
       setFeedback(null)
       try {
-          const updated = await productsRepository.deactivate(product.id)
+          const willActivate = product.status === PRODUCT_STATUS.INACTIVE
+          const updated = await productsRepository.updateStatus(product.id, willActivate)
           setProduct(updated)
           setVariants((items) => items.map((item) => item.id === updated.id ? updated : item))
-         setForm(productToForm(updated))
-         setInitialForm(productToForm(updated))
-         setFeedback({ tone: 'sucesso', title: 'Produto inativado.', text: 'O produto permanece disponível para consulta histórica.' })
+          setFeedback({ tone: 'sucesso', title: willActivate ? 'Produto ativado.' : 'Produto inativado.', text: willActivate ? 'O produto voltou a aparecer nas operações.' : 'O produto permanece disponível para consulta histórica.' })
          setConfirmAction(null)
       } catch (err) {
-         setFeedback({ tone: 'erro', title: 'Não foi possível inativar.', text: errorMessage(err, 'deactivate') })
+          setFeedback({ tone: 'erro', title: 'Não foi possível alterar o status.', text: errorMessage(err, 'deactivate') })
       } finally {
         setSaving(false)
       }
@@ -159,7 +159,7 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
     if (saving) return
     setSaving(true)
     try {
-      const saved = await productsRepository.create({
+      const saved = await productsRepository.createVariant(product.id, {
         ...product,
         ...variantForm,
         name: product.name,
@@ -330,7 +330,7 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
                   <td>{variant.stock}</td>
                   <td>{variant.minimum}</td>
                   <td><span className={styles.badge}>{variant.status}</span></td>
-                  <td><div className={styles.tableActions}><button type="button" className={styles.tableButton} onClick={() => navigate(`/produtos/${variant.id}`)}>Editar</button><button type="button" className={styles.tableButton} disabled={variant.status === PRODUCT_STATUS.INACTIVE} onClick={() => setConfirmAction({ type: 'deactivateVariant', variant })}>Inativar</button></div></td>
+                  <td><div className={styles.tableActions}><button type="button" className={styles.tableButton} onClick={() => navigate(`/produtos/${variant.id}`)}>Editar</button><button type="button" className={styles.tableButton} onClick={() => setConfirmAction({ type: 'statusVariant', variant })}>{variant.status === PRODUCT_STATUS.INACTIVE ? 'Ativar' : 'Inativar'}</button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -340,17 +340,18 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
       </section>
 
       <section className={`${styles.formCard} ${styles.dangerCard}`} aria-labelledby="deactivation-title">
-           <h2 id="deactivation-title" className={styles.sectionTitle}>Inativar produto</h2>
+            <h2 id="deactivation-title" className={styles.sectionTitle}>{product.status === PRODUCT_STATUS.INACTIVE ? 'Ativar produto' : 'Inativar produto'}</h2>
         <p className={styles.dangerText}>
-           Inativar {form.name || 'este produto'}? O cadastro continuará no histórico,
-           mas não deverá ser usado em novos pedidos.
+            {product.status === PRODUCT_STATUS.INACTIVE
+              ? `Ativar ${form.name || 'este produto'}? O produto voltará a aparecer nas operações e poderá ser usado em novos pedidos.`
+              : `Inativar ${form.name || 'este produto'}? O cadastro continuará no histórico, mas não deverá ser usado em novos pedidos.`}
         </p>
         <div className={styles.dangerActions}>
           <button type="button" className={styles.secondary} onClick={requestCancel}>
             Cancelar
           </button>
-           <button type="button" className={styles.primary} onClick={() => { setFeedback(null); setConfirmAction('deactivate') }} disabled={saving}>
-             Inativar produto
+           <button type="button" className={styles.primary} onClick={() => { setFeedback(null); setConfirmAction('status') }} disabled={saving}>
+             {product.status === PRODUCT_STATUS.INACTIVE ? 'Ativar produto' : 'Inativar produto'}
           </button>
         </div>
       </section>
@@ -372,11 +373,11 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
                 <h2 id="product-confirm-title">
-                   {actionType === 'save' ? 'Confirmar salvamento' : actionType === 'deactivateVariant' ? 'Inativar variação' : actionType === 'deactivate' ? 'Inativar produto' : 'Descartar alterações'}
+                    {actionType === 'save' ? 'Confirmar salvamento' : actionType === 'statusVariant' ? (confirmAction.variant.status === PRODUCT_STATUS.INACTIVE ? 'Ativar variação' : 'Inativar variação') : actionType === 'status' ? (product.status === PRODUCT_STATUS.INACTIVE ? 'Ativar produto' : 'Inativar produto') : 'Descartar alterações'}
                 </h2>
                 <p className={styles.modalSubtitle}>{form.name}</p>
               </div>
-               <span className={styles.modalBadge}>{actionType === 'save' ? 'Salvar' : actionType?.startsWith('deactivate') ? 'Status' : 'Sair'}</span>
+               <span className={styles.modalBadge}>{actionType === 'save' ? 'Salvar' : actionType?.startsWith('status') ? 'Status' : 'Sair'}</span>
             </div>
 
             <div className={styles.modalBody}>
@@ -384,9 +385,11 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
                 <StatusPanel variante="sucesso" className={styles.confirmationPanel} titulo="As alterações serão persistidas">
                   Confirme para gravar as informações editadas no produto.
                 </StatusPanel>
-               ) : actionType?.startsWith('deactivate') ? (
-                <StatusPanel variante="info" titulo="O produto ficará inativo">
-                  O cadastro e o histórico serão preservados. Confirme para alterar o status na API.
+               ) : actionType?.startsWith('status') ? (
+                 <StatusPanel variante="info" titulo={((actionType === 'statusVariant' ? confirmAction.variant.status : product.status) === PRODUCT_STATUS.INACTIVE) ? 'O registro será ativado' : 'O registro ficará inativo'}>
+                   {((actionType === 'statusVariant' ? confirmAction.variant.status : product.status) === PRODUCT_STATUS.INACTIVE)
+                     ? 'O registro voltará a aparecer nas operações e poderá ser usado em novos pedidos.'
+                     : 'O cadastro e o histórico serão preservados. Confirme para alterar o status na API.'}
                 </StatusPanel>
               ) : (
                 <StatusPanel variante="info" titulo="Descartar alterações não salvas">
@@ -401,7 +404,7 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
                 Continuar editando
               </Button>
               <Button size="sm" disabled={saving} onClick={() => { void confirmActionHandler() }}>
-                  {saving ? 'Processando...' : actionType === 'save' ? 'Confirmar salvamento' : actionType?.startsWith('deactivate') ? 'Confirmar inativação' : 'Descartar e sair'}
+                  {saving ? 'Processando...' : actionType === 'save' ? 'Confirmar salvamento' : actionType?.startsWith('status') ? (((actionType === 'statusVariant' ? confirmAction.variant.status : product.status) === PRODUCT_STATUS.INACTIVE) ? 'Confirmar ativação' : 'Confirmar inativação') : 'Descartar e sair'}
               </Button>
             </div>
           </section>

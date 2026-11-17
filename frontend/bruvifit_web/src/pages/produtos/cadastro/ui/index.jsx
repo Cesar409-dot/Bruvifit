@@ -4,7 +4,7 @@ import { createProduct } from '../api/create-product.js'
 import { goToProducts } from '../../model/navigation.js'
 import { createEmptyProductForm } from '../model/product-form.js'
 import { PRODUCT_CATEGORIES, PRODUCT_COLORS, PRODUCT_SIZES } from '../../model/product-model.js'
-import { errorMessage } from '../../api/products-repository.js'
+import { errorMessage, productsRepository } from '../../api/products-repository.js'
 import styles from './index.module.css'
 
 const infoIcon = '/assets/a0377.svg'
@@ -57,9 +57,17 @@ export function ProductCreatePage() {
     setIsSaving(true)
 
     try {
-      const saved = []
-      for (const variant of variants) {
-        saved.push(await createProduct({
+      const [rootVariant, ...childVariants] = variants
+      const saved = [await createProduct({
+          ...form,
+          sku: rootVariant.sku.trim(),
+          size: rootVariant.size,
+          color: rootVariant.color,
+          stock: getNumber(rootVariant.stock),
+          minimum: getNumber(rootVariant.minimum),
+        })]
+      for (const variant of childVariants) {
+        saved.push(await productsRepository.createVariant(saved[0].id, {
           ...form,
           sku: variant.sku.trim(),
           size: variant.size,

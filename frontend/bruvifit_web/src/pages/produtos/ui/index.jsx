@@ -40,7 +40,8 @@ export function ProductsPage() {
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState('Todos')
   const [stock, setStock] = useState('Todos')
-  const [applied, setApplied] = useState({ query: '', category: '', status: 'Todos', stock: 'Todos' })
+  const [includeInactive, setIncludeInactive] = useState(false)
+  const [applied, setApplied] = useState({ query: '', category: '', status: 'Todos', stock: 'Todos', includeInactive: false })
   const [page, setPage] = useState(1)
   const [viewingId, setViewingId] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
@@ -74,17 +75,22 @@ export function ProductsPage() {
     [products, viewingId],
   )
 
+  const principalProducts = useMemo(
+    () => products.filter((product) => !product.parentId),
+    [products],
+  )
+
   const filteredProducts = useMemo(
-    () => filterProducts(products, applied),
-    [applied, products],
+    () => filterProducts(principalProducts, applied),
+    [applied, principalProducts],
   )
 
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
   const currentPage = Math.min(page, pageCount)
   const pageProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const activeCount = products.filter((product) => product.status === PRODUCT_STATUS.ACTIVE).length
-  const lowStockCount = products.filter((product) => stockStatus(product) === 'Baixo').length
-  const inactiveCount = products.length - activeCount
+  const activeCount = principalProducts.filter((product) => product.status === PRODUCT_STATUS.ACTIVE).length
+  const lowStockCount = principalProducts.filter((product) => stockStatus(product) === 'Baixo').length
+  const inactiveCount = principalProducts.length - activeCount
   const firstVisible = filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0
   const lastVisible = Math.min(currentPage * pageSize, filteredProducts.length)
 
@@ -93,26 +99,28 @@ export function ProductsPage() {
     setCategory('')
     setStatus('Todos')
     setStock('Todos')
-    setApplied({ query: '', category: '', status: 'Todos', stock: 'Todos' })
+    setIncludeInactive(false)
+    setApplied({ query: '', category: '', status: 'Todos', stock: 'Todos', includeInactive: false })
     setPage(1)
   }
 
   const applyFilters = () => {
-    setApplied({ query, category, status, stock })
+    setApplied({ query, category, status, stock, includeInactive })
     setPage(1)
   }
 
-  async function confirmDeactivate() {
+  async function confirmStatus() {
     if (!pendingDelete || working) return
     setWorking(true)
     setDeleteError('')
+    const willActivate = pendingDelete.status === PRODUCT_STATUS.INACTIVE
     try {
-      const updated = await productsRepository.deactivate(pendingDelete.id)
+      const updated = await productsRepository.updateStatus(pendingDelete.id, willActivate)
       setProducts((items) => items.map((item) => item.id === updated.id ? updated : item))
-      setFeedback({ tone: 'success', title: 'Produto inativado.', text: `${pendingDelete.name} foi inativado e permanece no histórico.` })
+      setFeedback({ tone: 'success', title: willActivate ? 'Produto ativado.' : 'Produto inativado.', text: willActivate ? `${pendingDelete.name} voltou a aparecer nas operações.` : `${pendingDelete.name} foi inativado e permanece no histórico.` })
       setPendingDelete(null)
     } catch (err) {
-        setDeleteError(errorMessage(err, 'deactivate'))
+        setDeleteError(errorMessage(err, willActivate ? 'activate' : 'deactivate'))
     } finally {
       setWorking(false)
     }
@@ -136,7 +144,7 @@ export function ProductsPage() {
 
       <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
-          ['Total produtos', products.length],
+           ['Total produtos', principalProducts.length],
           ['Produtos ativos', activeCount],
           ['Estoque baixo', lowStockCount],
           ['Produtos inativos', inactiveCount],
@@ -155,9 +163,13 @@ export function ProductsPage() {
           <SelectField id="produto-status" label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
             <option>Todos</option><option>Ativo</option><option>Inativo</option>
           </SelectField>
-          <SelectField id="produto-estoque" label="Estoque" value={stock} onChange={(event) => setStock(event.target.value)}>
-            <option>Todos</option><option>Normal</option><option>Baixo</option><option>Sem estoque</option>
-          </SelectField>
+           <SelectField id="produto-estoque" label="Estoque" value={stock} onChange={(event) => setStock(event.target.value)}>
+             <option>Todos</option><option>Normal</option><option>Baixo</option><option>Sem estoque</option>
+           </SelectField>
+           <label className={styles.inactiveFilter} htmlFor="produto-incluir-inativos">
+             <input id="produto-incluir-inativos" type="checkbox" checked={includeInactive} onChange={(event) => setIncludeInactive(event.target.checked)} />
+             Incluir produtos inativos
+           </label>
         </FilterBar>
       </section>
 
@@ -202,7 +214,7 @@ export function ProductsPage() {
                       as="button"
                       status={product.status}
                       aria-label={`Status de ${product.name}`}
-                      title="A API não disponibiliza alteração de status."
+                       title="Use a ação ao lado para alterar o status."
                       disabled
                     >
                       {product.status}
@@ -226,8 +238,9 @@ export function ProductsPage() {
                       </Button>
                       <Button
                         variant="icon"
-                         aria-label={`Inativar ${product.name}`}
-                        onClick={() => { setDeleteError(''); setPendingDelete(product) }}
+                          aria-label={`${product.status === PRODUCT_STATUS.INACTIVE ? 'Ativar' : 'Inativar'} ${product.name}`}
+                          title={product.status === PRODUCT_STATUS.INACTIVE ? 'Ativar produto' : 'Inativar produto'}
+                          onClick={() => { setDeleteError(''); setPendingDelete(product) }}
                       >
                         <img src={archiveIcon} alt="" />
                       </Button>
@@ -291,7 +304,7 @@ export function ProductsPage() {
             <div className={styles.modalHeading}>
               <div>
                 <span className={styles.modalEyebrow}>Confirmação</span>
-                <h2 id="confirm-delete-title">Inativar produto</h2>
+                <h2 id="confirm-delete-title">{pendingDelete.status === PRODUCT_STATUS.INACTIVE ? 'Ativar produto' : 'Inativar produto'}</h2>
                 <p className={styles.modalSubtitle}>{pendingDelete.name}</p>
               </div>
                <span className={styles.modalBadge}>Alteração de status</span>
@@ -299,17 +312,19 @@ export function ProductsPage() {
 
             <div className={styles.modalBody}>
               <p className={styles.modalNote}>
-                 O produto ficará inativo e continuará disponível para consulta histórica. Produtos inativos não devem ser usados em novos pedidos.
-              </p>
-               {deleteError ? <StatusPanel variante="erro" titulo="Inativação não concluída">{deleteError}</StatusPanel> : null}
+                 {pendingDelete.status === PRODUCT_STATUS.INACTIVE
+                   ? 'O produto voltará a aparecer nas operações e poderá ser usado em novos pedidos.'
+                   : 'O produto ficará inativo e continuará disponível para consulta histórica. Produtos inativos não devem ser usados em novos pedidos.'}
+               </p>
+                {deleteError ? <StatusPanel variante="erro" titulo="Alteração não concluída">{deleteError}</StatusPanel> : null}
             </div>
 
             <div className={styles.modalActions}>
               <Button variant="secondary" disabled={working} onClick={() => { setDeleteError(''); setPendingDelete(null) }}>
                 Cancelar
               </Button>
-               <Button disabled={working} onClick={() => { void confirmDeactivate() }}>
-                 {working ? 'Inativando...' : 'Confirmar inativação'}
+               <Button disabled={working} onClick={() => { void confirmStatus() }}>
+                 {working ? 'Atualizando...' : pendingDelete.status === PRODUCT_STATUS.INACTIVE ? 'Confirmar ativação' : 'Confirmar inativação'}
               </Button>
             </div>
           </section>
