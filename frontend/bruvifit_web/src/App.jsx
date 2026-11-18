@@ -1,6 +1,6 @@
 
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { ClientesProvider } from './pages/clientes/context/ClientesContext.jsx';
 import { ClientesListPage } from './pages/clientes/ui/index.jsx';
 import { ClienteFormPage } from './pages/clientes/cadastro/ui/index.jsx';
@@ -65,8 +65,13 @@ function Shell({ children }) {
 }
 
 function ProtectedRoutes() {
+  const authState = useSyncExternalStore(session.subscribe, session.getSnapshot);
   const currentUser = session.getUser();
   const { pathname } = useLocation();
+
+  if (authState === 'expired') {
+    return <Navigate to="/acesso?motivo=sessao-expirada" replace />;
+  }
 
   if (!devAuthBypass && !session.isAuthenticated()) {
     return <Navigate to="/acesso" replace />;

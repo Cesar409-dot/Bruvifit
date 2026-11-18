@@ -6,11 +6,11 @@ import { session } from '../../../shared/auth/session.js';
 const TAMANHO_SENHA_MIN = 6;
 const TAMANHO_SENHA_MAX = 100;
 
-export function useAccessForm() {
+export function useAccessForm({ sessionExpired = false } = {}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(sessionExpired ? 'Sua sessão expirou ou não é mais válida. Entre novamente.' : '');
 
   function validate() {
     const emailTrim = (email || '').trim();

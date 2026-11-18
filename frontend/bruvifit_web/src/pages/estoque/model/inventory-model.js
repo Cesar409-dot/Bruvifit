@@ -12,20 +12,25 @@ export function filterInventory(products, filters) {
 }
 
 export function inventoryStatus(product) {
-  const quantity = Number(product.stock) || 0
+  if (product.stock == null) return 'Não informado'
+  const quantity = Number(product.stock)
   if (quantity === 0) return 'Sem estoque'
-  return quantity <= (Number(product.minimum) || 0) ? 'Baixo' : 'Normal'
+  return product.minimum == null ? 'Mínimo não informado' : quantity <= Number(product.minimum) ? 'Baixo' : 'Normal'
 }
 
 export function inventorySummary(products) {
+  const knownStock = products.every((p) => p.stock != null)
   return {
-    units: products.reduce((total, product) => total + (Number(product.stock) || 0), 0),
-    productsInStock: products.filter((product) => Number(product.stock) > 0).length,
-    low: products.filter((product) => inventoryStatus(product) === 'Baixo').length,
-    empty: products.filter((product) => inventoryStatus(product) === 'Sem estoque').length,
-    value: products.reduce((total, product) => total + (Number(product.stock) || 0) * (Number(product.cost) || 0), 0),
+    units: knownStock ? products.reduce((sum, p) => sum + p.stock, 0) : null,
+    productsInStock: knownStock ? products.filter((p) => p.stock > 0).length : null,
+    low: knownStock && products.every((p) => p.stock === 0 || p.minimum != null) ? products.filter((p) => inventoryStatus(p) === 'Baixo').length : null,
+    empty: knownStock ? products.filter((p) => p.stock === 0).length : null,
+    value: knownStock && products.every((p) => p.stock === 0 || p.cost != null)
+      ? products.reduce((cents, p) => cents + p.stock * Math.round((p.cost ?? 0) * 100), 0) / 100 : null,
   }
 }
+
+const localDay = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
 
 export function movementSeries(movements, now = new Date()) {
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -36,10 +41,11 @@ export function movementSeries(movements, now = new Date()) {
   })
 
   return days.map((day) => {
-    const dateKey = day.toISOString().slice(0, 10)
+    const dateKey = localDay(day)
     const total = movements.reduce((sum, movement) => {
       const movementDate = new Date(movement.dataMovimentacao)
-      if (Number.isNaN(movementDate.getTime()) || movementDate.toISOString().slice(0, 10) !== dateKey) return sum
+      if (Number.isNaN(movementDate.getTime()) || localDay(movementDate) !== dateKey) return sum
+      if (!['ENTRADA', 'SAIDA'].includes(String(movement.tipo).toUpperCase())) return sum
       const quantity = Number(movement.quantidade) || 0
       return sum + (String(movement.tipo).toUpperCase() === 'SAIDA' ? -quantity : quantity)
     }, 0)
@@ -48,6 +54,7 @@ export function movementSeries(movements, now = new Date()) {
       date: dateKey,
       label: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(day),
       total,
+      count: movements.filter((m) => m.dataMovimentacao && localDay(new Date(m.dataMovimentacao)) === dateKey).length,
     }
   })
 }
@@ -80,4 +87,20 @@ export function filterMovements(movements, products, query) {
         .some((value) => fold(value).includes(normalizedQuery))
     })
     .sort((first, second) => String(second.dataMovimentacao).localeCompare(String(first.dataMovimentacao)))
+}
+
+export function filterHistory(movements, products, filters) {
+  const byId = new Map(products.map((p) => [Number(p.id), p]))
+  const query = fold(filters.query.trim())
+  return movements.filter((movement) => {
+    const p = byId.get(Number(movement.produtoId))
+    const day = String(movement.dataMovimentacao || '').slice(0, 10)
+    const variant = p ? [p.size || '—', p.color || '—'].join(' · ') : ''
+    return (!query || [p?.name, p?.sku, movement.produtoId, movement.pedidoId].some((v) => fold(v).includes(query)))
+      && (!filters.from || Boolean(day) && day >= filters.from)
+      && (!filters.to || Boolean(day) && day <= filters.to)
+      && (!filters.origin || movement.origem === filters.origin)
+      && (!filters.variant || variant === filters.variant)
+      && (!filters.responsible || movement.responsavel === filters.responsible)
+  }).sort((a, b) => String(b.dataMovimentacao || '').localeCompare(String(a.dataMovimentacao || '')) || b.id - a.id)
 }

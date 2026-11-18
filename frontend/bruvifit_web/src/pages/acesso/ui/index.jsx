@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAccessForm } from '../model/use-access-form.js';
 import logo from '../../../assets/BRUVI_logo_sem_fundo.png';
 import styles from './index.module.css';
@@ -32,6 +32,8 @@ function BrandMark() {
 
 export function AccessPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionExpired = new URLSearchParams(location.search).get('motivo') === 'sessao-expirada';
   const {
     email,
     password,
@@ -44,7 +46,7 @@ export function AccessPage() {
     attemptLogin,
     showRecoveryMessage,
     showSignupMessage,
-  } = useAccessForm();
+  } = useAccessForm({ sessionExpired });
 
   async function handleSubmit(event) {
     event.preventDefault();

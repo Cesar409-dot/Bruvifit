@@ -40,16 +40,17 @@ public class ItemPedidoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ItemPedido> atualizarItem(@PathVariable Integer id,
+    public ResponseEntity<ItemPedido> atualizarItem(@PathVariable Integer pedidoId, @PathVariable Integer id,
                                                     @Valid @RequestBody ItemPedidoRequest request) {
+        request.setPedidoId(pedidoId);
         return service.atualizarItem(id, request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> removerItem(@PathVariable Integer id) {
-        boolean removido = service.removerItem(id);
+    public ResponseEntity<Void> removerItem(@PathVariable Integer pedidoId, @PathVariable Integer id) {
+        boolean removido = service.removerItem(id, pedidoId);
         if (removido) {
             return ResponseEntity.noContent().build();
         }

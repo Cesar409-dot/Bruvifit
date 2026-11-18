@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Produto p WHERE p.id = :id")
+    java.util.Optional<Produto> bloquearPorId(@org.springframework.data.repository.query.Param("id") Integer id);
+
 
     Page<Produto> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 

@@ -35,6 +35,20 @@ public class Estoque {
 
     @Column(name = "pedido_id")
     private Integer pedidoId;
+    @Column(name = "motivo", length = 200)
+    private String motivo;
+    @Column(name = "responsavel", length = 254)
+    private String responsavel;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "chave_requisicao", length = 200, unique = true)
+    private String chaveRequisicao;
+    public String getMotivo() { return motivo; }
+    public void setMotivo(String motivo) { this.motivo = motivo; }
+    public String getResponsavel() { return responsavel; }
+    public void setResponsavel(String responsavel) { this.responsavel = responsavel; }
+    public String getChaveRequisicao() { return chaveRequisicao; }
+    public void setChaveRequisicao(String chaveRequisicao) { this.chaveRequisicao = chaveRequisicao; }
+
 
     public Estoque() {
     }

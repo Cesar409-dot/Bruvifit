@@ -16,4 +16,20 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url = error.config?.url || '';
+    const isLogin = /(?:^|\/)api\/auth\/login(?:\?|$)/.test(url);
+    if (error.response?.status === 401 && !isLogin) {
+      const authorization = error.config?.headers?.get?.('Authorization')
+        ?? error.config?.headers?.Authorization ?? error.config?.headers?.authorization;
+      const failedToken = typeof authorization === 'string' && authorization.startsWith('Bearer ')
+        ? authorization.slice(7) : null;
+      session.expireSession(failedToken);
+    }
+    return Promise.reject(error);
+  },
+);
+
 export { apiClient };

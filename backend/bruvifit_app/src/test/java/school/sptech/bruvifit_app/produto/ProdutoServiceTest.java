@@ -37,11 +37,13 @@ class ProdutoServiceTest {
     }
 
     @Test
-    void saldoExplicitamenteFornecidoContinuaAceito() {
+    void edicaoDiretaDeSaldoExigeAjusteRastreavel() {
         Produto produto = new Produto(); produto.setSaldoEstoque(12);
+        when(repository.bloquearPorId(7)).thenReturn(Optional.of(produto));
         ProdutoRequest request = new ProdutoRequest(); request.setSaldoEstoque(0);
-        ProdutoMapper.updateEntity(produto, request);
-        assertEquals(0, produto.getSaldoEstoque());
+        assertThrows(school.sptech.bruvifit_app.exception.ConflitoDeDadosException.class, () -> service.atualizar(7, request));
+        assertEquals(12, produto.getSaldoEstoque());
+        verify(repository, never()).save(any());
     }
 
     @ParameterizedTest
@@ -102,6 +104,7 @@ class ProdutoServiceTest {
         produto.setNome("Produto antigo");
         produto.setSaldoEstoque(12);
         when(repository.findById(7)).thenReturn(Optional.of(produto));
+        when(repository.bloquearPorId(7)).thenReturn(Optional.of(produto));
         when(repository.findAll()).thenReturn(List.of(produto));
         when(repository.save(produto)).thenReturn(produto);
         var mvc = MockMvcBuilders.standaloneSetup(new ProdutoController(service)).build();
@@ -146,6 +149,7 @@ class ProdutoServiceTest {
     void inativacaoAtualizaStatusEPreservaCadastro() throws Exception {
         Produto produto = new Produto(); produto.setId(7); produto.setAtivo(true);
         when(repository.findById(7)).thenReturn(Optional.of(produto));
+        when(repository.bloquearPorId(7)).thenReturn(Optional.of(produto));
         when(repository.save(produto)).thenReturn(produto);
         MockMvcBuilders.standaloneSetup(new ProdutoController(service)).setControllerAdvice(new GlobalExceptionHandler()).build()
                 .perform(put("/produtos/7/status").contentType(MediaType.APPLICATION_JSON)
@@ -168,6 +172,7 @@ class ProdutoServiceTest {
     void statusAusenteRetorna400SemAlterarProduto() throws Exception {
         Produto produto = new Produto(); produto.setId(7); produto.setAtivo(true);
         when(repository.findById(7)).thenReturn(Optional.of(produto));
+        when(repository.bloquearPorId(7)).thenReturn(Optional.of(produto));
         MockMvcBuilders.standaloneSetup(new ProdutoController(service)).setControllerAdvice(new GlobalExceptionHandler()).build()
                 .perform(put("/produtos/7/status").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());

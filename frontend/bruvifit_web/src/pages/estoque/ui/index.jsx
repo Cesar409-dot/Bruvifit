@@ -4,7 +4,8 @@ import { History, Plus, Search } from 'lucide-react'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../components/ui/Button.jsx'
 import { StatusBadge } from '../../../components/ui/StatusBadge.jsx'
-import { useDemoOperations } from '../../../shared/demo-operations.js'
+import { useInventory } from '../model/use-inventory.js'
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import {
   filterInventory,
   inventoryStatus,
@@ -20,7 +21,7 @@ const pageSize = 6
 function InventoryChart({ movements }) {
   const canvasRef = useRef(null)
   const series = useMemo(() => movementSeries(movements), [movements])
-  const hasActivity = series.some((day) => day.total !== 0)
+  const hasActivity = series.some((day) => day.count > 0)
 
   useEffect(() => {
     if (!canvasRef.current || !hasActivity) return undefined
@@ -72,7 +73,8 @@ function InventoryChart({ movements }) {
 
 export function InventoryPage() {
   const navigate = useNavigate()
-  const { products, movements } = useDemoOperations()
+  const { products: allProducts, movements, loading, error, reload } = useInventory()
+  const products = useMemo(() => allProducts.filter((p) => p.status === 'Ativo'), [allProducts])
   const [filters, setFilters] = useState({ query: '', category: '', size: '', color: '', status: 'Todos' })
   const [appliedFilters, setAppliedFilters] = useState({ query: '', category: '', size: '', color: '', status: 'Todos' })
   const [page, setPage] = useState(1)
@@ -114,17 +116,17 @@ export function InventoryPage() {
         )}
       />
 
-      <p className={styles.apiNote}>
-        Dados demonstrativos locais · alterações ficam salvas neste navegador e não são enviadas ao backend.
-      </p>
+      <p className={styles.apiNote}>Saldos dos produtos ativos · dados registrados no sistema.</p>
+      {loading ? <StatusPanel variante="info" titulo="Carregando estoque" role="status">Consultando produtos e movimentações.</StatusPanel> : null}
+      {error ? <StatusPanel variante="erro" titulo="Não foi possível carregar o estoque">{error} <Button variant="outline" onClick={reload}>Tentar novamente</Button></StatusPanel> : null}
 
       <section className={styles.metrics} aria-label="Resumo do estoque">
         {[
-          ['Total em estoque', summary.units.toLocaleString('pt-BR'), true],
-          ['Produtos em estoque', summary.productsInStock],
-          ['Estoque baixo', summary.low],
-          ['Sem estoque', summary.empty],
-          ['Valor do estoque', money.format(summary.value)],
+          ['Total em estoque', loading || error ? '—' : summary.units == null ? 'Não informado' : summary.units.toLocaleString('pt-BR'), true],
+          ['Produtos em estoque', loading || error ? '—' : summary.productsInStock ?? 'Não informado'],
+          ['Estoque baixo', loading || error ? '—' : summary.low ?? 'Não informado'],
+          ['Sem estoque', loading || error ? '—' : summary.empty ?? 'Não informado'],
+          ['Valor do estoque', loading || error ? '—' : summary.value == null ? 'Não informado' : money.format(summary.value)],
         ].map(([label, value, featured]) => (
           <article className={`${styles.metric} ${featured ? styles.featured : ''}`} key={label}>
             <p>{label}</p>
@@ -187,12 +189,12 @@ export function InventoryPage() {
                 return (
                   <tr key={product.id}>
                     <td><strong>{product.name}</strong></td><td>{product.sku || '—'}</td><td>{product.category || '—'}</td>
-                    <td>{product.size || '—'}</td><td>{product.color || '—'}</td><td>{product.stock}</td><td>{product.minimum}</td>
+                    <td>{product.size || '—'}</td><td>{product.color || '—'}</td><td>{product.stock ?? '—'}</td><td>{product.minimum ?? '—'}</td>
                     <td><StatusBadge status={status} variant={status === 'Normal' ? 'success' : status === 'Baixo' ? 'pending' : 'inactive'}>{status}</StatusBadge></td>
                   </tr>
                 )
               })}
-              {visibleProducts.length === 0 ? <tr><td className={styles.empty} colSpan={8}>{products.length ? 'Nenhum produto corresponde aos filtros.' : 'Ainda não há produtos cadastrados.'}</td></tr> : null}
+              {visibleProducts.length === 0 ? <tr><td className={styles.empty} colSpan={8}>{loading ? 'Carregando…' : error ? 'Dados indisponíveis.' : products.length ? 'Nenhum produto corresponde aos filtros.' : 'Ainda não há produtos ativos cadastrados.'}</td></tr> : null}
             </tbody>
           </table>
         </div>

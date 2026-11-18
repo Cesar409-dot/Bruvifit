@@ -41,6 +41,16 @@ public class Pedido {
     @Column(name = "usuario_id", nullable = false)
     private Integer usuarioId;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "chave_requisicao", length = 100, unique = true)
+    private String chaveRequisicao;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "requisicao_hash", length = 64)
+    private String requisicaoHash;
+    public String getChaveRequisicao() { return chaveRequisicao; }
+    public void setChaveRequisicao(String value) { chaveRequisicao = value; }
+    public String getRequisicaoHash() { return requisicaoHash; }
+    public void setRequisicaoHash(String value) { requisicaoHash = value; }
     public Pedido() {
     }
 

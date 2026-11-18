@@ -17,6 +17,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     @Query("SELECT p FROM Pedido p WHERE p.id = :id")
     java.util.Optional<Pedido> bloquearParaFinanceiro(@Param("id") Integer id);
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    java.util.Optional<Pedido> findByChaveRequisicao(String chaveRequisicao);
+
     boolean existsByClienteId(Integer clienteId);
 
     boolean existsByUsuarioId(Integer usuarioId);

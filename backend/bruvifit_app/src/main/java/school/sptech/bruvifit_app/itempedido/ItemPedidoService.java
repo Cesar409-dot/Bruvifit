@@ -1,159 +1,107 @@
 package school.sptech.bruvifit_app.itempedido;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import school.sptech.bruvifit_app.exception.EstoqueInsuficienteException;
+import school.sptech.bruvifit_app.exception.*;
+import school.sptech.bruvifit_app.estoque.EstoqueService;
 import school.sptech.bruvifit_app.itempedido.request.ItemPedidoRequest;
 import school.sptech.bruvifit_app.itempedido.response.ItemPedidoResponse;
-import school.sptech.bruvifit_app.pedido.Pedido;
-import school.sptech.bruvifit_app.pedido.PedidoRepository;
-import school.sptech.bruvifit_app.produto.Produto;
-import school.sptech.bruvifit_app.produto.ProdutoRepository;
-
+import school.sptech.bruvifit_app.pedido.*;
+import school.sptech.bruvifit_app.produto.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import java.util.*;
 @Service
 public class ItemPedidoService {
-
     private final ItemPedidoRepository repository;
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
-
-    public ItemPedidoService(ItemPedidoRepository repository, PedidoRepository pedidoRepository, ProdutoRepository produtoRepository) {
+    private final EstoqueService estoque;
+    public ItemPedidoService(ItemPedidoRepository repository, PedidoRepository pedidoRepository,
+                             ProdutoRepository produtoRepository, EstoqueService estoque) {
         this.repository = repository;
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
+        this.estoque = estoque;
     }
-
-    public List<ItemPedidoResponse> listarPorPedido(Integer pedidoId) {
-        List<ItemPedido> itens = repository.findByPedidoId(pedidoId);
-        return converterParaResponse(itens);
+    @Transactional(readOnly = true)
+    public List<ItemPedidoResponse> listarPorPedido(Integer pedidoId) { return converterParaResponse(repository.findByPedidoId(pedidoId)); }
+    @Transactional
+    public Optional<ItemPedido> buscarPorId(Integer id) { return repository.findById(id); }
+    private Pedido bloquearPedido(Integer id) {
+        Pedido pedido = pedidoRepository.bloquearParaFinanceiro(id).orElseThrow(() -> new RecursoNaoEncontradoException("Pedido", id));
+        if ("CANCELADO".equalsIgnoreCase(pedido.getStatus()) || "ENTREGUE".equalsIgnoreCase(pedido.getStatus())) {
+            throw new ConflitoDeDadosException("Não é possível alterar itens de pedido cancelado ou entregue.");
+        }
+        return pedido;
     }
-
-    public Optional<ItemPedido> buscarPorId(Integer id) {
-        return repository.findById(id);
+    private void validar(ItemPedidoRequest r) {
+        if (r.getQuantidade() == null || r.getQuantidade() <= 0) throw new IllegalArgumentException("Quantidade deve ser positiva.");
+        if (r.getPrecoUnitario() == null || r.getPrecoUnitario().signum() < 0) throw new IllegalArgumentException("Preço inválido.");
     }
-
     @Transactional
     public ItemPedido adicionarItem(ItemPedidoRequest request) {
-        Pedido pedido = pedidoRepository.findById(request.getPedidoId())
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado"));
-
-        Produto produto = produtoRepository.findById(request.getProdutoId())
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado"));
-
-        if (!produto.getAtivo()) {
-            throw new IllegalArgumentException("Produto inativo");
+        validar(request);
+        Pedido pedido = bloquearPedido(request.getPedidoId());
+        String motivo = "Adição de item: quantidade " + request.getQuantidade() + ", preço " + request.getPrecoUnitario().stripTrailingZeros().toPlainString();
+        boolean processado = estoque.buscarEventoItem(request.getChaveRequisicao(), pedido.getId(), request.getProdutoId(), motivo).isPresent();
+        var existente = repository.findByPedidoIdAndProdutoId(pedido.getId(), request.getProdutoId());
+        if (processado) {
+            return existente.orElseThrow(() -> new ConflitoDeDadosException("Esta adição já foi processada e o item foi removido. Use uma nova chave para uma nova adição."));
         }
-
-        if (produto.getSaldoEstoque() != null && produto.getSaldoEstoque() < request.getQuantidade()) {
-            throw new EstoqueInsuficienteException("Estoque insuficiente. Disponível: " + produto.getSaldoEstoque());
+        if (existente.isPresent()) {
+            throw new ConflitoDeDadosException("Item já existe neste pedido. Atualize a quantidade do item existente.");
         }
-
-        if (repository.existsByPedidoIdAndProdutoId(request.getPedidoId(), request.getProdutoId())) {
-            throw new IllegalArgumentException("Item já existe neste pedido");
-        }
-
         ItemPedido item = new ItemPedido();
         item.setQuantidade(request.getQuantidade());
         item.setPrecoUnitario(request.getPrecoUnitario());
         item.setSubtotal(item.calcularSubtotal());
-        item.setPedidoId(request.getPedidoId());
+        item.setPedidoId(pedido.getId());
         item.setProdutoId(request.getProdutoId());
-
-        ItemPedido salvo = repository.save(item);
-
-        atualizarValorTotalPedido(request.getPedidoId());
-
-        if (produto.getSaldoEstoque() != null) {
-            produto.setSaldoEstoque(produto.getSaldoEstoque() - request.getQuantidade());
-            produtoRepository.save(produto);
-        }
-
+        estoque.adicionarItemPedido(item.getProdutoId(), item.getQuantidade(), pedido.getId(), motivo, request.getChaveRequisicao());
+        var salvo = repository.save(item);
+        atualizarValorTotalPedido(pedido);
         return salvo;
     }
-
     @Transactional
     public Optional<ItemPedido> atualizarItem(Integer id, ItemPedidoRequest request) {
-        Optional<ItemPedido> itemOpt = repository.findById(id);
-
-        if (itemOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        ItemPedido item = itemOpt.get();
-        Integer quantidadeAntiga = item.getQuantidade();
-
-        Produto produto = produtoRepository.findById(request.getProdutoId())
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado"));
-
-        if (!produto.getAtivo()) {
-            throw new IllegalArgumentException("Produto inativo");
-        }
-
-        int diferenca = request.getQuantidade() - quantidadeAntiga;
-        if (produto.getSaldoEstoque() != null && produto.getSaldoEstoque() < diferenca) {
-            throw new EstoqueInsuficienteException("Estoque insuficiente para atualização");
-        }
-
+        validar(request);
+        var pedidoId = repository.obterPedidoId(id);
+        if (pedidoId.isEmpty()) return Optional.empty();
+        if (request.getPedidoId() != null && !Objects.equals(request.getPedidoId(), pedidoId.get())) throw new RecursoNaoEncontradoException("Item", id);
+        Pedido pedido = bloquearPedido(pedidoId.get());
+        var opt = repository.findById(id);
+        if (opt.isEmpty()) return Optional.empty();
+        ItemPedido item = opt.get();
+        if (!Objects.equals(item.getProdutoId(), request.getProdutoId())) throw new ConflitoDeDadosException("Para trocar o produto, remova o item e adicione o novo produto.");
+        if (item.getQuantidade() == null || item.getQuantidade() <= 0) throw new ConflitoDeDadosException("Quantidade anterior do item inválida. Regularize o registro antes de alterar.");
+        int diferenca = request.getQuantidade() - item.getQuantidade();
+        if (diferenca != 0) estoque.movimentarPedido(item.getProdutoId(), diferenca > 0 ? "SAIDA" : "ENTRADA", Math.abs(diferenca), pedido.getId(), "Alteração de quantidade do item " + id);
         item.setQuantidade(request.getQuantidade());
         item.setPrecoUnitario(request.getPrecoUnitario());
         item.setSubtotal(item.calcularSubtotal());
-        item.setProdutoId(request.getProdutoId());
-
-        ItemPedido atualizado = repository.save(item);
-
-        atualizarValorTotalPedido(item.getPedidoId());
-
-        if (produto.getSaldoEstoque() != null) {
-            produto.setSaldoEstoque(produto.getSaldoEstoque() - diferenca);
-            produtoRepository.save(produto);
-        }
-
-        return Optional.of(atualizado);
+        repository.save(item);
+        atualizarValorTotalPedido(pedido);
+        return Optional.of(item);
     }
-
     @Transactional
-    public boolean removerItem(Integer id) {
-        Optional<ItemPedido> itemOpt = repository.findById(id);
-
-        if (itemOpt.isEmpty()) {
-            return false;
-        }
-
-        ItemPedido item = itemOpt.get();
-        Integer pedidoId = item.getPedidoId();
-        Integer produtoId = item.getProdutoId();
-        Integer quantidade = item.getQuantidade();
-
-        repository.deleteById(id);
-
-        atualizarValorTotalPedido(pedidoId);
-
-        Produto produto = produtoRepository.findById(produtoId).orElse(null);
-        if (produto != null && produto.getSaldoEstoque() != null) {
-            produto.setSaldoEstoque(produto.getSaldoEstoque() + quantidade);
-            produtoRepository.save(produto);
-        }
-
+    public boolean removerItem(Integer id) { return removerItem(id, null); }
+    @Transactional
+    public boolean removerItem(Integer id, Integer pedidoDaRota) {
+        var pedidoId = repository.obterPedidoId(id);
+        if (pedidoId.isEmpty()) return false;
+        if (pedidoDaRota != null && !Objects.equals(pedidoDaRota, pedidoId.get())) throw new RecursoNaoEncontradoException("Item", id);
+        Pedido pedido = bloquearPedido(pedidoId.get());
+        var opt = repository.findById(id);
+        if (opt.isEmpty()) return false;
+        ItemPedido item = opt.get();
+        estoque.movimentarPedido(item.getProdutoId(), "ENTRADA", item.getQuantidade(), pedido.getId(), "Remoção do item " + id);
+        repository.delete(item);
+        atualizarValorTotalPedido(pedido);
         return true;
     }
-
-    private void atualizarValorTotalPedido(Integer pedidoId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
-        if (pedido != null) {
-            List<ItemPedido> itens = repository.findByPedidoId(pedidoId);
-            BigDecimal total = itens.stream()
-                    .map(ItemPedido::getSubtotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            pedido.setValorTotal(total);
-            pedidoRepository.save(pedido);
-        }
+    private void atualizarValorTotalPedido(Pedido pedido) {
+        pedido.setValorTotal(repository.listarBloqueados(pedido.getId()).stream().map(ItemPedido::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add));
+        pedidoRepository.save(pedido);
     }
-
     private List<ItemPedidoResponse> converterParaResponse(List<ItemPedido> itens) {
         List<ItemPedidoResponse> responses = new ArrayList<>();
         for (ItemPedido item : itens) {
