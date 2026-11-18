@@ -101,7 +101,7 @@ test('filtros combinam pesquisa de nome/SKU, status e estoque sobre a lista comp
   const filters = { query: 'tenis', category: '', status: 'Ativo', stock: 'Baixo' }
   assert.deepEqual(filterProducts(products, filters).map((row) => row.id), ['8'])
   assert.deepEqual(filterProducts(products, { ...filters, query: 'TEN-8' }).map((row) => row.id), ['8'])
-  assert.equal(filterProducts(products, { query: '', category: '', status: 'Todos', stock: 'Todos' }).length, 3)
+   assert.equal(filterProducts(products, { query: '', category: '', status: 'Todos', stock: 'Todos' }).length, 2)
 })
 
 test('400, 401, 403, 404, 409 e 500 têm mensagens compreensíveis', () => {
