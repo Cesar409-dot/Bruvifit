@@ -139,7 +139,7 @@
 
 .modalBackdrop {
   position: fixed;
-  z-index: 30;
+  z-index: 40;
   inset: 0;
   display: grid;
   place-items: center;
@@ -150,8 +150,8 @@
 
 .modal {
   display: flex;
-  width: min(100%, 660px);
-  max-height: min(520px, calc(100dvh - 40px));
+  width: min(100%, 700px);
+  max-height: min(760px, calc(100dvh - 40px));
   flex-direction: column;
   overflow: hidden;
   border-radius: 14px;
@@ -161,6 +161,7 @@
 
 .modalHeading {
   display: flex;
+  flex: none;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
@@ -201,10 +202,41 @@
 }
 
 .modalBody {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
   padding: 22px 28px 26px;
+  overscroll-behavior: contain;
+}
+
+.variantSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: 8px;
+  background: var(--cor-fundo);
+}
+
+.variantSummary div {
+  min-width: 0;
+}
+
+.variantSummary dt {
+  color: var(--cor-texto-secundario);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.variantSummary dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
 }
 
 .confirmationPanel {

@@ -68,9 +68,9 @@ const button = (tree, label) => find(tree, (n) => n.props?.onClick && text(n) ==
 const dialog = (tree) => find(tree, (n) => n.props?.role === 'dialog')
 
 test('listagem mostra alerta de falha no modal e só atualiza status após PUT bem-sucedido', async () => {
-  let blocked = true, deactivations = 0
+  let blocked = true, statusUpdates = 0
   const view = await mount(listCode, 'ProductsPage', { productsRepository: {
-    list: async () => [product], deactivate: async () => { deactivations++; if (blocked) throw { response: { status: 409 } }; return { ...product, status: PRODUCT_STATUS.INACTIVE } },
+    list: async () => [product], updateStatus: async (id, active) => { statusUpdates++; assert.equal(id, '7'); assert.equal(active, false); if (blocked) throw { response: { status: 409 } }; return { ...product, status: PRODUCT_STATUS.INACTIVE } },
   } })
   find(view.render(), (n) => n.props?.['aria-label'] === 'Inativar Produto Teste').props.onClick()
   button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
@@ -83,7 +83,7 @@ test('listagem mostra alerta de falha no modal e só atualiza status após PUT b
   assert.doesNotMatch(text(dialog(view.render())), /Inativação não concluída/)
   button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
   assert.equal(text(view.render()).includes('Inativo'), true)
-  assert.equal(deactivations, 2); view.cleanup()
+  assert.equal(statusUpdates, 2); view.cleanup()
 })
 
 test('paginação, nome/SKU, status e estoque funcionam sobre registros carregados', async () => {
@@ -108,6 +108,15 @@ test('paginação, nome/SKU, status e estoque funcionam sobre registros carregad
   view.cleanup()
 })
 
+test('listagem inicial inclui produtos filhos junto dos produtos principais', async () => {
+  const child = { ...product, id: '8', parentId: '7', sku: 'SKU-8', size: 'G', color: 'Verde' }
+  const view = await mount(listCode, 'ProductsPage', { productsRepository: { list: async () => [product, child] } })
+  assert.match(text(view.render()), /SKU-7/)
+  assert.match(text(view.render()), /SKU-8/)
+  assert.match(text(view.render()), /2 produtos/)
+  view.cleanup()
+})
+
 test('cadastro converte o formulário em JSON válido no POST e navega para o ID retornado', async (t) => {
   const originalAdapter = apiClient.defaults.adapter
   t.after(() => { apiClient.defaults.adapter = originalAdapter })
@@ -117,6 +126,9 @@ test('cadastro converte o formulário em JSON válido no POST e navega para o ID
     return { status: 201, data: { ...request.data, id: 7, ativo: true }, config, headers: {} }
   }
   const view = await mount(createCode, 'ProductCreatePage', { createProduct })
+  const setField = (name, value) => find(view.render(), (n) => n.props?.name === name).props.onChange({ target: { value } })
+  setField('nome', 'Produto Teste'); setField('descricao', 'Malha leve\nLavagem delicada'); setField('categoria', 'Camisetas')
+  setField('custo', '25'); setField('venda', '50'); setField('sku-0', 'SKU-7'); setField('tamanho-0', 'M'); setField('cor-0', 'Preto'); setField('estoque-0', '12'); setField('minimo-0', '3')
   await find(view.render(), (n) => n.props?.id === 'product-form').props.onSubmit({ preventDefault() {}, currentTarget: {
     nome: 'Produto Teste', sku: 'SKU-7', custo: '25', venda: '50', estoque: '12', minimo: '3', tamanho: 'M', cor: 'Preto',
     descricao: 'Malha leve\nLavagem delicada', categoria: 'Camisetas',
@@ -131,7 +143,7 @@ test('cadastro converte o formulário em JSON válido no POST e navega para o ID
 
 test('detalhe obtém ID do React Router e consulta a API, sem exigir props artificiais', async () => {
   let requested
-  const view = await mount(detailCode, 'ProductDetailPage', { productsRepository: { get: async (id) => { requested = id; return product } } })
+  const view = await mount(detailCode, 'ProductDetailPage', { productsRepository: { get: async (id) => { requested = id; return product }, variants: async () => [product] } })
   assert.equal(requested, '7')
   assert.equal(view.render().props.product.id, '7'); view.cleanup()
 })
@@ -140,7 +152,7 @@ test('edição salva e atualiza os valores exibidos, mantendo estoque como somen
   let received
   const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: {
     update: async (id, data) => { received = { id, data }; return { ...product, ...data, price: Number(data.price) } },
-  } }, { product })
+  } }, { product, variants: [product] })
   find(view.render(), (n) => n.type === 'input' && n.props?.type === 'number' && n.props?.step === '0.01').props.onChange({ target: { value: '60' } })
   const description = find(view.render(), (n) => n.type === 'textarea')
   assert.equal(description.props.value, 'Malha leve')
@@ -159,11 +171,46 @@ test('edição salva e atualiza os valores exibidos, mantendo estoque como somen
 })
 
 test('detalhe mantém modal aberto quando a inativação falha', async () => {
-  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: { deactivate: async () => { throw { response: { status: 409 } } } } }, { product })
-  button(view.render(), 'Inativar produto').props.onClick()
+  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: { updateStatus: async () => { throw { response: { status: 409 } } } } }, { product, variants: [product] })
+  const statusButton = button(view.render(), 'Inativar produto')
+  statusButton.props.onClick({ currentTarget: statusButton })
   button(view.render(), 'Confirmar inativação').props.onClick(); await tick()
   assert.match(text(dialog(view.render())), /Não foi possível inativar/)
   assert.equal(view.navigations.length, 0)
   button(view.render(), 'Continuar editando').props.onClick()
   assert.equal(dialog(view.render()), undefined); view.cleanup()
+})
+
+test('detalhe reativa somente a variante selecionada e preserva os demais registros', async () => {
+  const inactiveVariant = { ...product, id: '8', sku: 'SKU-8', status: PRODUCT_STATUS.INACTIVE, stock: 4, minimum: 2 }
+  let requested
+  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: {
+    updateStatus: async (id, active) => { requested = { id, active }; return { ...inactiveVariant, status: PRODUCT_STATUS.ACTIVE } },
+  } }, { product, variants: [product, inactiveVariant] })
+  const action = button(view.render(), 'Ativar')
+  action.props.onClick({ currentTarget: action })
+  assert.match(text(dialog(view.render())), /SKU-8/)
+  assert.match(text(dialog(view.render())), /Saldo atual/)
+  button(view.render(), 'Confirmar ativação').props.onClick(); await tick()
+  assert.deepEqual(requested, { id: '8', active: true })
+  assert.equal(find(view.render(), (n) => n.type === 'StatusPanel' && n.props?.titulo === 'Variação ativada.') !== undefined, true)
+  view.cleanup()
+})
+
+test('detalhe edita a variante filha no modal sem navegar', async () => {
+  const variant = { ...product, id: '8', sku: 'SKU-8' }
+  let received
+  const view = await mount(detailCode, 'ProductDetailForm', { productsRepository: {
+    update: async (id, data) => { received = { id, data }; return { ...variant, ...data, price: Number(data.price) } },
+  } }, { product, variants: [product, variant] })
+  const edit = find(view.render(), (n) => n.props?.['aria-label'] === 'Editar SKU-8')
+  edit.props.onClick()
+  assert.match(text(dialog(view.render())), /Editar variação/)
+  const price = find(dialog(view.render()), (n) => n.type === 'input' && n.props?.type === 'number' && n.props?.step === '0.01')
+  price.props.onChange({ target: { value: '65' } })
+  find(dialog(view.render()), (n) => n.type === 'form').props.onSubmit({ preventDefault() {} }); await tick()
+  assert.deepEqual(received, { id: '8', data: { ...variant, ...productToForm(variant), status: variant.status, price: '65' } })
+  assert.equal(dialog(view.render()), undefined)
+  assert.equal(view.navigations.length, 0)
+  view.cleanup()
 })

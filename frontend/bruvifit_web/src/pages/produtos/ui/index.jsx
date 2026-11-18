@@ -75,22 +75,17 @@ export function ProductsPage() {
     [products, viewingId],
   )
 
-  const principalProducts = useMemo(
-    () => products.filter((product) => !product.parentId),
-    [products],
-  )
-
   const filteredProducts = useMemo(
-    () => filterProducts(principalProducts, applied),
-    [applied, principalProducts],
+    () => filterProducts(products, applied),
+    [applied, products],
   )
 
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
   const currentPage = Math.min(page, pageCount)
   const pageProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const activeCount = principalProducts.filter((product) => product.status === PRODUCT_STATUS.ACTIVE).length
-  const lowStockCount = principalProducts.filter((product) => stockStatus(product) === 'Baixo').length
-  const inactiveCount = principalProducts.length - activeCount
+  const activeCount = products.filter((product) => product.status === PRODUCT_STATUS.ACTIVE).length
+  const lowStockCount = products.filter((product) => stockStatus(product) === 'Baixo').length
+  const inactiveCount = products.length - activeCount
   const firstVisible = filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0
   const lastVisible = Math.min(currentPage * pageSize, filteredProducts.length)
 
@@ -144,7 +139,7 @@ export function ProductsPage() {
 
       <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
-           ['Total produtos', principalProducts.length],
+           ['Total produtos', products.length],
           ['Produtos ativos', activeCount],
           ['Estoque baixo', lowStockCount],
           ['Produtos inativos', inactiveCount],
