@@ -26,7 +26,7 @@ public class EstoqueController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Estoque> buscarPorId(
+    public ResponseEntity<EstoqueResponse> buscarPorId(
             @PathVariable Integer id) {
 
         Optional<Estoque> estoqueEncontrado =
@@ -37,16 +37,16 @@ public class EstoqueController {
         }
 
         return ResponseEntity.status(200)
-                .body(estoqueEncontrado.get());
+                .body(EstoqueMapper.toResponse(estoqueEncontrado.get()));
     }
 
     @PostMapping
-    public ResponseEntity<Estoque> cadastrar(
+    public ResponseEntity<EstoqueResponse> cadastrar(
             @Valid @RequestBody EstoqueRequest estoqueRequest) {
 
         Estoque registro = service.cadastrar(estoqueRequest);
 
-        return ResponseEntity.status(201).body(registro);
+        return ResponseEntity.status(201).body(EstoqueMapper.toResponse(registro));
     }
 
     @PutMapping("/{id}")

@@ -28,15 +28,20 @@ public class PedidoService {
     private final ItemPedidoService itemPedidoService;
     private final ProdutoRepository produtoRepository;
     private final ClienteRepository clienteRepository;
+    private final school.sptech.bruvifit_app.estoque.EstoqueService estoque;
+    private final school.sptech.bruvifit_app.estoque.EstoqueRepository movimentos;
 
     public PedidoService(PedidoRepository repository, ItemPedidoRepository itemPedidoRepository,
                          ItemPedidoService itemPedidoService, ProdutoRepository produtoRepository,
-                         ClienteRepository clienteRepository) {
+                         ClienteRepository clienteRepository, school.sptech.bruvifit_app.estoque.EstoqueService estoque,
+                         school.sptech.bruvifit_app.estoque.EstoqueRepository movimentos) {
         this.repository = repository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.itemPedidoService = itemPedidoService;
         this.produtoRepository = produtoRepository;
         this.clienteRepository = clienteRepository;
+        this.estoque = estoque;
+        this.movimentos = movimentos;
     }
 
     public List<PedidoResponse> listar() {
@@ -87,6 +92,23 @@ public class PedidoService {
 
     @Transactional
     public Pedido cadastrarComItens(PedidoComItensRequest request) {
+        String chave;
+        try { chave = java.util.UUID.fromString(request.getChaveRequisicao()).toString(); }
+        catch (Exception ex) { throw new IllegalArgumentException("chaveRequisicao UUID obrigatória."); }
+        String hash = hashPedido(request);
+        var existente = repository.findByChaveRequisicao(chave);
+        if (existente.isPresent()) {
+            if (!hash.equals(existente.get().getRequisicaoHash())) throw new ConflitoDeDadosException("Chave de pedido já utilizada com outros dados.");
+            return existente.get();
+        }
+        if ("CANCELADO".equalsIgnoreCase(request.getStatus())) throw new ConflitoDeDadosException("Novo pedido não pode iniciar cancelado.");
+        if (request.getItens() == null || request.getItens().isEmpty()) throw new IllegalArgumentException("Informe os itens.");
+        var ids = new java.util.HashSet<Integer>();
+        for (var item : request.getItens()) {
+            if (item.getQuantidade() == null || item.getQuantidade() <= 0) throw new IllegalArgumentException("Quantidade inválida.");
+            if (!ids.add(item.getProdutoId())) throw new ConflitoDeDadosException("Produto repetido no pedido.");
+        }
+        ids.stream().sorted().forEach(estoque::bloquearProduto);
         validarClienteAtivo(request.getClienteId());
         Pedido pedido = new Pedido();
         pedido.setDataPedido(request.getDataPedido());
@@ -97,7 +119,9 @@ public class PedidoService {
         pedido.setUsuarioId(request.getUsuarioId());
         pedido.setValorTotal(BigDecimal.ZERO);
 
-        Pedido pedidoSalvo = repository.save(pedido);
+        pedido.setChaveRequisicao(chave);
+        pedido.setRequisicaoHash(hash);
+        Pedido pedidoSalvo = repository.saveAndFlush(pedido);
 
         BigDecimal valorTotal = BigDecimal.ZERO;
 
@@ -125,10 +149,7 @@ public class PedidoService {
 
             valorTotal = valorTotal.add(item.getSubtotal());
 
-            if (produto.getSaldoEstoque() != null) {
-                produto.setSaldoEstoque(produto.getSaldoEstoque() - itemRequest.getQuantidade());
-                produtoRepository.save(produto);
-            }
+            estoque.movimentarPedido(produto.getId(), "SAIDA", itemRequest.getQuantidade(), pedidoSalvo.getId(), "Cadastro do pedido");
         }
 
         pedidoSalvo.setValorTotal(valorTotal);
@@ -145,13 +166,17 @@ public class PedidoService {
 
     @Transactional
     public Optional<Pedido> atualizar(Integer id, PedidoRequest pedidoRequest) {
-        Optional<Pedido> optPedido = repository.findById(id);
+        Optional<Pedido> optPedido = repository.bloquearParaFinanceiro(id);
 
         if (optPedido.isEmpty()) {
             return Optional.empty();
         }
 
         Pedido pedidoParaAtualizar = optPedido.get();
+        if ("CANCELADO".equalsIgnoreCase(pedidoParaAtualizar.getStatus()) && !"CANCELADO".equalsIgnoreCase(pedidoRequest.getStatus())) {
+            throw new ConflitoDeDadosException("Pedido cancelado não pode ser reaberto.");
+        }
+        if ("CANCELADO".equalsIgnoreCase(pedidoRequest.getStatus())) cancelarPedido(id);
 
         pedidoParaAtualizar.setDataPedido(pedidoRequest.getDataPedido());
         pedidoParaAtualizar.setStatus(pedidoRequest.getStatus());
@@ -166,61 +191,39 @@ public class PedidoService {
 
     @Transactional
     public boolean deletar(Integer id) {
-        Optional<Pedido> pedidoEncontrado = repository.findById(id);
-
-        if (pedidoEncontrado.isEmpty()) {
-            return false;
+        var pedido = repository.bloquearParaFinanceiro(id);
+        if (pedido.isEmpty()) return false;
+        if (!itemPedidoRepository.listarBloqueados(id).isEmpty() || movimentos.existsByPedidoId(id)) {
+            throw new ConflitoDeDadosException("Pedido com itens ou histórico de estoque não pode ser excluído. Utilize o cancelamento.");
         }
-
-        Pedido pedido = pedidoEncontrado.get();
-
-        if ("CANCELADO".equalsIgnoreCase(pedido.getStatus()) || "ENTREGUE".equalsIgnoreCase(pedido.getStatus())) {
-            throw new IllegalArgumentException("Não é possível excluir pedido com status: " + pedido.getStatus());
+        if ("CANCELADO".equalsIgnoreCase(pedido.get().getStatus()) || "ENTREGUE".equalsIgnoreCase(pedido.get().getStatus())) {
+            throw new ConflitoDeDadosException("Pedido finalizado não pode ser excluído.");
         }
-
-        List<ItemPedido> itens = itemPedidoRepository.findByPedidoId(id);
-        for (ItemPedido item : itens) {
-            Produto produto = produtoRepository.findById(item.getProdutoId()).orElse(null);
-            if (produto != null && produto.getSaldoEstoque() != null) {
-                produto.setSaldoEstoque(produto.getSaldoEstoque() + item.getQuantidade());
-                produtoRepository.save(produto);
-            }
-        }
-
-        itemPedidoRepository.deleteByPedidoId(id);
         repository.deleteById(id);
         return true;
     }
-
     @Transactional
     public boolean cancelarPedido(Integer id) {
-        Optional<Pedido> pedidoOpt = repository.findById(id);
-
-        if (pedidoOpt.isEmpty()) {
-            return false;
-        }
-
+        var pedidoOpt = repository.bloquearParaFinanceiro(id);
+        if (pedidoOpt.isEmpty()) return false;
         Pedido pedido = pedidoOpt.get();
-
-        if ("CANCELADO".equalsIgnoreCase(pedido.getStatus())) {
-            throw new IllegalArgumentException("Pedido já está cancelado");
+        if ("CANCELADO".equalsIgnoreCase(pedido.getStatus())) return true;
+        if ("ENTREGUE".equalsIgnoreCase(pedido.getStatus())) throw new ConflitoDeDadosException("Não é possível cancelar pedido já entregue.");
+        var itens = itemPedidoRepository.listarBloqueados(id);
+        itens.stream().map(ItemPedido::getProdutoId).distinct().sorted().forEach(estoque::bloquearProduto);
+        for (var item : itens) {
+            estoque.movimentarPedido(item.getProdutoId(), "ENTRADA", item.getQuantidade(), id, "Cancelamento do pedido");
         }
-
-        if ("ENTREGUE".equalsIgnoreCase(pedido.getStatus())) {
-            throw new IllegalArgumentException("Não é possível cancelar pedido já entregue");
-        }
-
-        List<ItemPedido> itens = itemPedidoRepository.findByPedidoId(id);
-        for (ItemPedido item : itens) {
-            Produto produto = produtoRepository.findById(item.getProdutoId()).orElse(null);
-            if (produto != null && produto.getSaldoEstoque() != null) {
-                produto.setSaldoEstoque(produto.getSaldoEstoque() + item.getQuantidade());
-                produtoRepository.save(produto);
-            }
-        }
-
         pedido.setStatus("CANCELADO");
         repository.save(pedido);
         return true;
+    }
+    private String hashPedido(PedidoComItensRequest request) {
+        try {
+            var mapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+            String ator = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            byte[] dados = (ator + ":" + mapper.writeValueAsString(request)).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(dados));
+        } catch (Exception ex) { throw new IllegalArgumentException("Não foi possível identificar a requisição de pedido."); }
     }
 }

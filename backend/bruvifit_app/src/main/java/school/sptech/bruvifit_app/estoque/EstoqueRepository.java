@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface EstoqueRepository extends JpaRepository<Estoque, Integer> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    java.util.Optional<Estoque> findByChaveRequisicao(String chaveRequisicao);
+    boolean existsByPedidoId(Integer pedidoId);
+
 
     Page<Estoque> findByProdutoId(Integer produtoId, Pageable pageable);
 

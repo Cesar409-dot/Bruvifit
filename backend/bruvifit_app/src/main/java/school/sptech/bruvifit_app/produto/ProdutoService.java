@@ -29,6 +29,7 @@ public class ProdutoService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<Produto> buscarPorId(Integer id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
@@ -74,8 +75,11 @@ public class ProdutoService {
 
     @Transactional
     public ResponseEntity<Produto> atualizar(Integer id, ProdutoRequest produtoRequest) {
-        return repository.findById(id)
+        return repository.bloquearPorId(id)
                 .map(produto -> {
+                    if (produtoRequest.getSaldoEstoque() != null && !java.util.Objects.equals(produtoRequest.getSaldoEstoque(), produto.getSaldoEstoque())) {
+                        throw new ConflitoDeDadosException("Altere o saldo pelo ajuste de estoque.");
+                    }
                     // valida ANTES de alterar a entidade gerenciada (evita flush de estado invalido)
                     String sku = produtoRequest.getSku();
                     if (sku != null && !sku.isBlank() && repository.existsBySkuAndIdNot(sku, id)) {
@@ -90,7 +94,7 @@ public class ProdutoService {
 
     @Transactional
     public ResponseEntity<Produto> alterarStatus(Integer id, ProdutoStatusRequest request) {
-        return repository.findById(id)
+        return repository.bloquearPorId(id)
                 .map(produto -> {
                     produto.setAtivo(request.getAtivo());
                     return ResponseEntity.ok(repository.save(produto));

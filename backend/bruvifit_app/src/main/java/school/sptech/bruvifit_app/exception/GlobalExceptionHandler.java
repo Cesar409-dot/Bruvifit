@@ -68,6 +68,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler({org.springframework.dao.PessimisticLockingFailureException.class,
+            org.springframework.orm.ObjectOptimisticLockingFailureException.class})
+    public ResponseEntity<Map<String, String>> handleConcurrentStockUpdate(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "Conflito de atualização",
+                "message", "Outra operação está atualizando estes dados. Repita a requisição com a mesma chave."));
+    }
+
     @ExceptionHandler(ConflitoDeDadosException.class)
     public ResponseEntity<Map<String, String>> handleConflitoDeDados(ConflitoDeDadosException ex) {
         Map<String, String> error = new HashMap<>();

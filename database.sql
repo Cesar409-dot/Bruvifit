@@ -206,6 +206,9 @@ CREATE TABLE pedido (
     prazo_pagamento DATE,
     cliente_id INT NOT NULL,
     usuario_id INT NOT NULL,
+    chave_requisicao VARCHAR(100),
+    requisicao_hash VARCHAR(64),
+    UNIQUE KEY uk_pedido_chave_requisicao (chave_requisicao),
     PRIMARY KEY (id),
     CONSTRAINT fk_pedido_cliente
         FOREIGN KEY (cliente_id) REFERENCES cliente (id),
@@ -290,6 +293,11 @@ CREATE TABLE estoque (
     data_movimentacao DATETIME,
     produto_id INT NOT NULL,
     pedido_id INT NULL,
+    motivo VARCHAR(200),
+    responsavel VARCHAR(254),
+    chave_requisicao VARCHAR(200),
+    UNIQUE KEY uk_estoque_chave_requisicao (chave_requisicao),
+    KEY ix_estoque_data_id (data_movimentacao, id),
     PRIMARY KEY (id),
     CONSTRAINT fk_movimentacao_estoque_produto
         FOREIGN KEY (produto_id) REFERENCES produto (id),

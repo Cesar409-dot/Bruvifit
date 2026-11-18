@@ -17,6 +17,11 @@ public class PedidoComItensRequest {
 
     @NotNull
     private LocalDateTime dataPedido;
+    @NotBlank @jakarta.validation.constraints.Pattern(regexp = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+    private String chaveRequisicao;
+    public String getChaveRequisicao() { return chaveRequisicao; }
+    public void setChaveRequisicao(String value) { chaveRequisicao = value; }
+
 
     @NotBlank
     @Size(max = 45)
@@ -98,6 +103,7 @@ public class PedidoComItensRequest {
 
         @NotNull
         @Positive
+        @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = school.sptech.bruvifit_app.estoque.QuantidadeInteiraDeserializer.class)
         private Integer quantidade;
 
         @NotNull

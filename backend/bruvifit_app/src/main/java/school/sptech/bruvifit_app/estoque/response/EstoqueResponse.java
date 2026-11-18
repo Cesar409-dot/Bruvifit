@@ -11,6 +11,26 @@ public class EstoqueResponse {
     private LocalDateTime dataMovimentacao;
     private Integer produtoId;
     private Integer pedidoId;
+    private String motivo;
+    private String responsavel;
+    public EstoqueResponse(Integer id, String tipo, Integer quantidade, Integer saldoPos, LocalDateTime dataMovimentacao, Integer produtoId, Integer pedidoId, String motivo, String responsavel) {
+        this(id, tipo, quantidade, saldoPos, dataMovimentacao, produtoId, pedidoId);
+        this.motivo = motivo;
+        this.responsavel = responsavel;
+    }
+    public String getMotivo() { return motivo; }
+    public String getResponsavel() { return responsavel; }
+    public String getOrigem() {
+        if (pedidoId != null) return "Pedido";
+        return motivo != null ? "Ajuste manual" : "Não registrada";
+    }
+    public Long getSaldoAnterior() {
+        if (saldoPos == null || quantidade == null || quantidade <= 0) return null;
+        if ("ENTRADA".equalsIgnoreCase(tipo)) return (long) saldoPos - quantidade;
+        if ("SAIDA".equalsIgnoreCase(tipo)) return (long) saldoPos + quantidade;
+        return null;
+    }
+
 
     public EstoqueResponse(Integer id, String tipo, Integer quantidade, Integer saldoPos, LocalDateTime dataMovimentacao, Integer produtoId, Integer pedidoId) {
         this.id = id;

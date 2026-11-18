@@ -8,8 +8,14 @@ import java.math.BigDecimal;
 
 public class ItemPedidoRequest {
 
+    @jakarta.validation.constraints.Pattern(regexp = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+    private String chaveRequisicao;
+    public String getChaveRequisicao() { return chaveRequisicao; }
+    public void setChaveRequisicao(String value) { chaveRequisicao = value; }
+
     @NotNull
     @Positive
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = school.sptech.bruvifit_app.estoque.QuantidadeInteiraDeserializer.class)
     private Integer quantidade;
 
     @NotNull
