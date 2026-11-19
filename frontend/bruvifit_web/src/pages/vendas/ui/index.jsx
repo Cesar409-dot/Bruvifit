@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Inbox, Plus } from 'lucide-react'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../components/ui/Button.jsx'
 import { StatusBadge } from '../../../components/ui/StatusBadge.jsx'
 import { formatMoney } from '../../produtos/model/product-model.js'
-import { useDemoOperations } from '../../../shared/demo-operations.js'
+import { useSales } from '../model/use-sales.js'
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import { filterSales, formatDate, salesStatus, salesSummary } from '../model/sales-model.js'
 import styles from './index.module.css'
 
@@ -21,17 +22,18 @@ function statusVariant(status) {
 
 export function SalesPage() {
   const navigate = useNavigate()
-  const { orders, clients } = useDemoOperations()
+  const location = useLocation()
+  const { orders, clients, loading, error, reload } = useSales()
   const [filters, setFilters] = useState(emptyFilters)
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters)
   const [page, setPage] = useState(1)
 
   const clientNames = useMemo(() => new Map(clients.map((client) => [Number(client.id), client.nome])), [clients])
-  const summary = useMemo(() => salesSummary(orders), [orders])
   const filteredOrders = useMemo(
     () => filterSales(orders, appliedFilters, clientNames),
     [orders, appliedFilters, clientNames],
   )
+  const summary = useMemo(() => salesSummary(filteredOrders), [filteredOrders])
   const pageCount = Math.max(1, Math.ceil(filteredOrders.length / pageSize))
   const visibleOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize)
   const paymentOptions = [...new Set(orders.map((order) => order.formaPagamento).filter(Boolean))].sort()
@@ -55,17 +57,19 @@ export function SalesPage() {
         subtitulo="Acompanhe os pedidos registrados no sistema"
         acoes={(
           <div className={styles.headerActions}>
-            <Button variant="outline" onClick={() => navigate('/vendas/estados')}>Estados de interface</Button>
             <Button onClick={() => navigate('/vendas/nova')}><Plus size={18} aria-hidden="true" /> Novo pedido</Button>
           </div>
         )}
       />
 
+      {loading ? <StatusPanel variante="info" titulo="Carregando pedidos" role="status">Consultando os registros do sistema.</StatusPanel> : null}
+      {error ? <StatusPanel variante="erro" titulo="Não foi possível carregar Vendas">{error} <Button variant="outline" onClick={reload}>Tentar novamente</Button></StatusPanel> : null}
+      {location.state?.success ? <StatusPanel variante="sucesso" titulo={location.state.success} role="status">Operação confirmada pelo servidor.</StatusPanel> : null}
       <section className={styles.metrics} aria-label="Resumo das vendas">
         {[
-          ['Pedidos', summary.total, true],
-          ['Total concluído', formatMoney(summary.completedValue)],
-          ['Em aberto', summary.open],
+          ['Pedidos', loading || error ? '—' : summary.total, true],
+          ['Total concluído', loading || error ? '—' : summary.completedValue == null ? 'Não informado' : formatMoney(summary.completedValue)],
+          ['Em aberto', loading || error ? '—' : summary.open],
         ].map(([label, value, featured]) => (
           <article className={`${styles.metric} ${featured ? styles.featured : ''}`} key={label}>
             <p>{label}</p><strong>{value}</strong>
@@ -136,8 +140,8 @@ export function SalesPage() {
         ) : (
           <div className={styles.emptyState}>
             <span><Inbox size={24} aria-hidden="true" /></span>
-            <h3>{orders.length ? 'Nenhuma venda no período' : 'Nenhuma venda registrada'}</h3>
-            <p>{orders.length ? 'Não há vendas para os filtros escolhidos. Altere o período ou limpe os filtros.' : 'Registre uma venda local de demonstração para preencher o histórico.'}</p>
+            <h3>{loading ? 'Carregando…' : error ? 'Dados indisponíveis' : orders.length ? 'Nenhuma venda no período' : 'Nenhuma venda registrada'}</h3>
+            <p>{orders.length ? 'Não há vendas para os filtros escolhidos. Altere o período ou limpe os filtros.' : 'Cadastre um pedido para iniciar o histórico de vendas.'}</p>
             <div><Button onClick={() => navigate('/vendas/nova')}>Iniciar nova venda</Button><Button variant="outline" onClick={clearFilters}>Limpar filtros</Button></div>
           </div>
         )}

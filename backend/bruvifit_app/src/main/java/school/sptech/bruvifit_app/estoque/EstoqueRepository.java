@@ -12,6 +12,8 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Integer> {
     java.util.Optional<Estoque> findByChaveRequisicao(String chaveRequisicao);
     boolean existsByPedidoId(Integer pedidoId);
 
+    List<Estoque> findByPedidoIdOrderByDataMovimentacaoDescIdDesc(Integer pedidoId);
+
 
     Page<Estoque> findByProdutoId(Integer produtoId, Pageable pageable);
 

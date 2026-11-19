@@ -40,13 +40,18 @@ class EstoqueIntegrationTest {
     @Autowired ItemPedidoService itemService;
     @Autowired org.springframework.core.env.Environment environment;
     @Autowired school.sptech.bruvifit_app.cliente.ClienteRepository clientes;
+    @Autowired school.sptech.bruvifit_app.usuario.UsuarioRepository usuarios;
     Produto produto;
 
     @BeforeEach
     void prepararBancoIsolado() {
         assertTrue(environment.getProperty("spring.datasource.url").startsWith("jdbc:h2:mem:"));
+        if (usuarios.findByEmail("operador@teste.local").isEmpty()) {
+            var u = new school.sptech.bruvifit_app.usuario.Usuario(); u.setNome("Operador teste"); u.setEmail("operador@teste.local");
+            u.setCpf("99999999990"); u.setSenhaHash("fixture"); u.setCriadoEm(java.time.LocalDateTime.now()); usuarios.save(u);
+        }
         movimentos.deleteAll(); itens.deleteAll(); pedidos.deleteAll(); produtos.deleteAll();
-        produto = new Produto(); produto.setNome("Produto de teste"); produto.setSaldoEstoque(10);
+        produto = new Produto(); produto.setNome("Produto de teste"); produto.setSaldoEstoque(10); produto.setPrecoVenda(BigDecimal.TEN);
         produto.setEstoqueMinimo(2); produto.setCustoMateriaPrima(new BigDecimal("12.50"));
         produto = produtos.save(produto);
     }
@@ -168,7 +173,7 @@ class EstoqueIntegrationTest {
         cliente = clientes.save(cliente);
         var r = new school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest();
         r.setChaveRequisicao(UUID.randomUUID().toString()); r.setDataPedido(java.time.LocalDateTime.now());
-        r.setStatus("PENDENTE"); r.setClienteId(cliente.getId()); r.setUsuarioId(1); r.setFormaPagamento("PIX");
+        r.setStatus("PENDENTE"); r.setClienteId(cliente.getId()); r.setUsuarioId(usuarios.findByEmail("operador@teste.local").orElseThrow().getId()); r.setFormaPagamento("PIX");
         var item = new school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest.ItemPedidoResumidoRequest();
         item.setProdutoId(produto.getId()); item.setQuantidade(3); item.setPrecoUnitario(BigDecimal.TEN); r.setItens(List.of(item));
         var salvo = pedidoService.cadastrarComItens(r);
@@ -185,10 +190,10 @@ class EstoqueIntegrationTest {
     void pedidoComFalhaNoSegundoItemRevertePrimeiroConsumo() {
         var cliente = new school.sptech.bruvifit_app.cliente.Cliente(); cliente.setNome("Cliente rollback"); cliente.setAtivo(true);
         cliente = clientes.save(cliente);
-        var segundo = new Produto(); segundo.setNome("Sem estoque"); segundo.setSaldoEstoque(0); segundo = produtos.save(segundo);
+        var segundo = new Produto(); segundo.setNome("Sem estoque"); segundo.setSaldoEstoque(0); segundo.setPrecoVenda(BigDecimal.TEN); segundo = produtos.save(segundo);
         var r = new school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest();
         r.setChaveRequisicao(UUID.randomUUID().toString()); r.setDataPedido(java.time.LocalDateTime.now());
-        r.setStatus("PENDENTE"); r.setClienteId(cliente.getId()); r.setUsuarioId(1); r.setFormaPagamento("PIX");
+        r.setStatus("PENDENTE"); r.setClienteId(cliente.getId()); r.setUsuarioId(usuarios.findByEmail("operador@teste.local").orElseThrow().getId()); r.setFormaPagamento("PIX");
         var a = new school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest.ItemPedidoResumidoRequest();
         a.setProdutoId(produto.getId()); a.setQuantidade(3); a.setPrecoUnitario(BigDecimal.TEN);
         var b = new school.sptech.bruvifit_app.pedido.request.PedidoComItensRequest.ItemPedidoResumidoRequest();

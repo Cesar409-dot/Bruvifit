@@ -63,7 +63,7 @@ class EstoqueMySqlWriteTest {
         usuario = new Usuario(); usuario.setNome("Teste MySQL Estoque"); usuario.setEmail("estoque.mysql@teste.invalid");
         usuario.setCpf("00000000000"); usuario.setSenhaHash("fixture-sem-login-por-senha"); usuario.setCriadoEm(LocalDateTime.now()); usuario = usuarios.save(usuario);
         cliente = new Cliente(); cliente.setNome("Cliente teste isolado"); cliente.setAtivo(true); cliente = clientes.save(cliente);
-        produto = new Produto(); produto.setNome("Produto teste MySQL"); produto.setSaldoEstoque(10); produto.setEstoqueMinimo(2);
+        produto = new Produto(); produto.setNome("Produto teste MySQL"); produto.setSaldoEstoque(10); produto.setPrecoVenda(BigDecimal.TEN); produto.setEstoqueMinimo(2);
         produto.setCustoMateriaPrima(new BigDecimal("12.50")); produto = produtos.save(produto);
     }
     @AfterEach void limpar() { limparSomenteBancoDeTestes(); }
@@ -112,7 +112,7 @@ class EstoqueMySqlWriteTest {
         assertEquals(10, saldo()); assertEquals(2, movimentos.count());
     }
     @Test void rollbackCompletoQuandoSegundoProdutoNaoTemSaldo() {
-        var semSaldo = new Produto(); semSaldo.setNome("Teste sem saldo"); semSaldo.setSaldoEstoque(0); semSaldo = produtos.save(semSaldo);
+        var semSaldo = new Produto(); semSaldo.setNome("Teste sem saldo"); semSaldo.setSaldoEstoque(0); semSaldo.setPrecoVenda(BigDecimal.TEN); semSaldo = produtos.save(semSaldo);
         var r = pedido(3); var segundo = new PedidoComItensRequest.ItemPedidoResumidoRequest(); segundo.setProdutoId(semSaldo.getId());
         segundo.setQuantidade(1); segundo.setPrecoUnitario(BigDecimal.TEN); r.setItens(List.of(r.getItens().getFirst(), segundo));
         assertThrows(EstoqueInsuficienteException.class, () -> pedidos.cadastrarComItens(r));

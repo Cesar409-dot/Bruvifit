@@ -19,15 +19,15 @@ export function filterSales(orders, filters, clientNames = new Map()) {
       && (filters.status === 'Todos' || salesStatus(order) === filters.status)
       && (!filters.payment || order.formaPagamento === filters.payment)
       && (!filters.from || date >= filters.from)
-      && (!filters.to || date <= filters.to)
-  }).sort((first, second) => String(second.dataPedido || '').localeCompare(String(first.dataPedido || '')))
+      && (!filters.to || Boolean(date) && date <= filters.to)
+  }).sort((first, second) => String(second.dataPedido || '').localeCompare(String(first.dataPedido || '')) || Number(second.id) - Number(first.id))
 }
 
 export function salesSummary(orders) {
   const completed = orders.filter((order) => salesStatus(order) === 'Concluído')
   return {
     total: orders.length,
-    completedValue: completed.reduce((total, order) => total + (Number(order.valorTotal) || 0), 0),
+    completedValue: completed.some((order) => order.valorTotal == null) ? null : completed.reduce((total, order) => total + Math.round(Number(order.valorTotal) * 100), 0) / 100,
     open: orders.filter((order) => !['Concluído', 'Cancelado'].includes(salesStatus(order))).length,
   }
 }

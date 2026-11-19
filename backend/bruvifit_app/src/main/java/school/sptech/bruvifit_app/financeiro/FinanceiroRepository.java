@@ -21,6 +21,12 @@ import java.util.Optional;
  */
 public interface FinanceiroRepository extends JpaRepository<Financeiro, Integer> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM Financeiro f WHERE f.pedidoId = :pedidoId ORDER BY f.id")
+    List<Financeiro> listarVinculosBloqueados(@Param("pedidoId") Integer pedidoId);
+
+    boolean existsByPedidoId(Integer pedidoId);
+
     String CONSULTA_COM_FORMA_PAGAMENTO = """
         SELECT new school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse(
             f.id, f.tipo, f.categoria, f.valor, f.dataCompetencia, f.dataRecebimento,

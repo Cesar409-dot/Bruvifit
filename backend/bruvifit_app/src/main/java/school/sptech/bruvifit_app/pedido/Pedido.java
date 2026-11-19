@@ -41,6 +41,11 @@ public class Pedido {
     @Column(name = "usuario_id", nullable = false)
     private Integer usuarioId;
 
+    @Column(name = "observacoes", length = 200)
+    private String observacoes;
+    public String getObservacoes() { return observacoes; }
+    public void setObservacoes(String value) { observacoes = value; }
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(name = "chave_requisicao", length = 100, unique = true)
     private String chaveRequisicao;
