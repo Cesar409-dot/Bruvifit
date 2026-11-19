@@ -1,172 +1,89 @@
-import { useMemo } from 'react';
-import { Download, FileBarChart2, FileText, RotateCcw } from 'lucide-react';
-import { Button } from '../../../components/ui/Button.jsx';
-import { Card } from '../../../components/ui/Card.jsx';
-import { PageHeader } from '../../../components/layout/PageHeader.jsx';
-import { formatReportDate, initialReportFilters, sampleSalesReport } from '../model/reports-model.js';
-import { useReports } from '../model/use-reports.js';
-import styles from './index.module.css';
+import { useState } from 'react'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Download, FileBarChart2, FileText, RotateCcw } from 'lucide-react'
+import { Button } from '../../../components/ui/Button.jsx'
+import { Card } from '../../../components/ui/Card.jsx'
+import { PageHeader } from '../../../components/layout/PageHeader.jsx'
+import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
+import { reportTypes, reportFilters, formatReportValue } from '../model/reports-model.js'
+import { useReportData, useReportDownload } from '../model/use-reports.js'
+import styles from './index.module.css'
 
-function ReportCard({ report, onConfigure, onExport }) {
+function DownloadFeedback({ error, notice, busy }) {
+  return <>{busy ? <StatusPanel variante="info" titulo="Gerando relatório" role="status">Preparando o arquivo para download.</StatusPanel> : null}
+    {error ? <StatusPanel variante="erro" titulo="Não foi possível gerar o relatório" role="alert">{error}</StatusPanel> : null}
+    {notice ? <StatusPanel variante="sucesso" titulo="Arquivo preparado" role="status">{notice}</StatusPanel> : null}</>
+}
+function ReportCard({ report, onConfigure, onExport, busy }) {
   return (
     <Card as="article" className={styles.reportCard}>
-      <div className={styles.reportTitle}>
-        <span className={styles.reportIcon} aria-hidden="true"><FileBarChart2 size={22} /></span>
-        <h2>{report.title}</h2>
-      </div>
+      <div className={styles.reportTitle}><span className={styles.reportIcon} aria-hidden="true"><FileBarChart2 size={22} /></span><h2>{report.title}</h2></div>
       <p className={styles.description}>{report.description}</p>
-      <div className={styles.pills} aria-label="Filtros disponíveis">
-        {report.filters.map((filter) => <span className={styles.pill} key={filter}>{filter}</span>)}
-      </div>
+      <div className={styles.pills} aria-label="Filtros disponíveis">{report.filters.map((filter) => <span className={styles.pill} key={filter}>{filter}</span>)}</div>
       <div className={styles.cardActions}>
         <Button onClick={onConfigure}>Gerar relatório</Button>
-        <Button variant="secondary" onClick={onExport}>
-          <Download size={17} aria-hidden="true" /> Exportar {report.export}
-        </Button>
+        <Button variant="secondary" onClick={onExport} disabled={busy} aria-busy={busy}><Download size={17} aria-hidden="true" /> Exportar {report.export}</Button>
       </div>
     </Card>
-  );
+  )
 }
-
-function ReportField({ label, children }) {
-  return <label className={styles.field}><span>{label}</span>{children}</label>;
-}
-
-function ReportsHome({ reports, onConfigure, onExport }) {
-  return (
-    <>
-      <PageHeader titulo="Relatórios" subtitulo="Analise os dados da sua loja" />
-      <section className={styles.reportGrid} aria-label="Tipos de relatório">
-        {reports.map((report) => (
-          <ReportCard
-            key={report.type}
-            report={report}
-            onConfigure={() => onConfigure(report.type)}
-            onExport={() => onExport(report.export)}
-          />
-        ))}
-      </section>
-      <div className={styles.notice}>
-        <FileText size={20} aria-hidden="true" />
-        <p><strong>Do recorte à decisão</strong><br />Escolha o tipo, confira os filtros e gere o resultado. Os arquivos exportados usam o mesmo período e recorte.</p>
-      </div>
-      <p className={styles.demoNote}>Prévia ilustrativa: os dados apresentados não representam os totais reais da loja.</p>
-    </>
-  );
-}
-
-function ConfigScreen({ reports, type, setType, filters, setFilters, onBack, onGenerate }) {
-  const selectedReport = reports.find((report) => report.type === type) || reports[0];
-  const update = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }));
-  const resetFilters = () => setFilters({ ...initialReportFilters });
-
-  return (
-    <>
-      <PageHeader
-        titulo="Configurar relatório"
-        subtitulo="Relatórios / Selecione o tipo, o período e os filtros"
-        acoes={<Button variant="secondary" onClick={onBack}>Voltar aos relatórios</Button>}
-      />
-      <Card titulo="Tipo de relatório" className={styles.formCard}>
-        <div className={styles.typeButtons} role="group" aria-label="Tipo de relatório">
-          {reports.map((report) => (
-            <Button key={report.type} variant={type === report.type ? 'primary' : 'secondary'} aria-pressed={type === report.type} onClick={() => setType(report.type)}>
-              {report.type}
-            </Button>
-          ))}
-        </div>
-        <p className={styles.muted}>Selecionado: {selectedReport.title}. Os filtros são aplicados a este recorte.</p>
-      </Card>
-      <form onSubmit={(event) => { event.preventDefault(); onGenerate(); }}>
-        <Card titulo="Período e filtros" className={styles.formCard}>
-          <div className={styles.fieldsGrid}>
-            <ReportField label="Data inicial *"><input type="date" value={filters.start} max={filters.end} onChange={update('start')} required /></ReportField>
-            <ReportField label="Data final *"><input type="date" value={filters.end} min={filters.start} onChange={update('end')} required /></ReportField>
-            <ReportField label={type === 'Vendas' ? 'Cliente' : 'Categoria'}>
-              <select value={type === 'Vendas' ? filters.customer : filters.category} onChange={update(type === 'Vendas' ? 'customer' : 'category')}>
-                {type === 'Vendas' ? <><option>Todos</option><option>João Silva</option><option>Marina Oliveira</option></> : <><option>Todas</option><option>Camisetas</option><option>Calças</option></>}
-              </select>
-            </ReportField>
-            <ReportField label={type === 'Financeiro' ? 'Tipo' : 'Forma de pagamento'}>
-              <select value={filters.payment} onChange={update('payment')}><option>Todos</option><option>Pix · à vista</option><option>Cartão de crédito</option></select>
-            </ReportField>
-            <ReportField label="Categoria">
-              <select value={filters.category} onChange={update('category')}><option>Todas</option><option>Camisetas</option><option>Calças</option></select>
-            </ReportField>
-            <ReportField label={type === 'Vendas' ? 'Status da venda' : 'Status'}>
-              <select value={filters.status} onChange={update('status')}><option>Todos</option><option>Concluída</option><option>Pendente</option></select>
-            </ReportField>
-          </div>
-          <p className={styles.muted}>A data inicial deve ser anterior ou igual à data final. Esta prévia usa dados demonstrativos.</p>
-          <div className={styles.actions}>
-            <Button variant="secondary" onClick={resetFilters}><RotateCcw size={16} aria-hidden="true" /> Limpar filtros</Button>
-            <Button type="submit">Gerar relatório</Button>
-          </div>
-        </Card>
-      </form>
-      <div className={styles.notice}>
-        <FileText size={20} aria-hidden="true" />
-        <p><strong>Escopo dos dados</strong><br />O resultado identifica claramente os dados de demonstração e mantém o período e os filtros selecionados.</p>
-      </div>
-    </>
-  );
-}
-
-function ResultScreen({ filters, report, onEdit, onExport }) {
-  const filterSummary = useMemo(() => [
-    `Cliente: ${filters.customer}`,
-    `Pagamento: ${filters.payment}`,
-    `Categoria: ${filters.category}`,
-    `Status: ${filters.status}`,
-  ].join(' · '), [filters]);
-
-  return (
-    <>
-      <PageHeader
-        titulo="Relatório de vendas"
-        subtitulo={`Período: ${formatReportDate(filters.start)} a ${formatReportDate(filters.end)} · Prévia demonstrativa`}
-        acoes={<Button variant="secondary" onClick={onEdit}>Alterar filtros</Button>}
-      />
-      <div className={styles.notice}>
-        <FileText size={20} aria-hidden="true" />
-        <p><strong>Amostra ilustrativa · não representa o total da loja</strong><br />{filterSummary}</p>
-      </div>
-      <section className={styles.metrics} aria-label="Resumo do relatório">
-        <article className={styles.metricFeatured}><span>Vendas na amostra</span><strong>{report.count}</strong></article>
-        <article className={styles.metric}><span>Unidades vendidas</span><strong>{report.units}</strong></article>
-        <article className={styles.metric}><span>Total da amostra</span><strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.total)}</strong></article>
-      </section>
-      <Card titulo="Resultado detalhado" className={styles.resultCard}>
-        <div className={styles.tableWrap}>
-          <table>
-            <thead><tr><th scope="col">Venda / data</th><th scope="col">Cliente</th><th scope="col">Produto</th><th scope="col">Qtd.</th><th scope="col">Pagamento</th><th scope="col">Total</th></tr></thead>
-            <tbody>{report.rows.map((row) => <tr key={row.id}><td><strong>{row.id} · {row.date}</strong></td><td>{row.customer}</td><td>{row.product}<br />{row.sku}</td><td>{row.quantity}</td><td>{row.payment}</td><td><strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(row.total)}</strong></td></tr>)}</tbody>
-          </table>
-        </div>
-        <p className={styles.muted}>{report.count} registro · Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.total)} · Preço unitário: R$ 49,90 · Sem desconto.</p>
-        <div className={styles.actions}>
-          <Button variant="secondary" onClick={onEdit}>Alterar período e filtros</Button>
-          <Button variant="secondary" onClick={() => onExport('CSV')}>Exportar CSV</Button>
-          <Button onClick={() => onExport('PDF')}>Exportar PDF</Button>
-        </div>
-      </Card>
-      <Card titulo="Critérios de exportação" className={styles.resultCard}>
-        <p className={styles.description}>O arquivo inclui o período, os filtros aplicados e as linhas do resultado demonstrativo.</p>
-        <p className={styles.muted}>Formato local: pt-BR · Datas DD/MM/AAAA · Moeda R$ · Separador CSV: ponto e vírgula.</p>
-      </Card>
-    </>
-  );
-}
-
 export function ReportsPage() {
-  const reports = useReports();
-
-  return (
-    <div className={styles.page}>
-      {reports.view === 'home' && <ReportsHome reports={reports.reportTypes} onConfigure={reports.configure} onExport={reports.exportFile} />}
-      {reports.view === 'config' && <ConfigScreen reports={reports.reportTypes} type={reports.type} setType={reports.setType} filters={reports.filters} setFilters={reports.setFilters} onBack={() => reports.setView('home')} onGenerate={reports.generate} />}
-      {reports.view === 'result' && <ResultScreen filters={reports.filters} report={sampleSalesReport} onEdit={() => reports.setView('config')} onExport={reports.exportFile} />}
-      {reports.notice && <div className={styles.toast} role="status" aria-live="polite"><strong>Exportação demonstrativa</strong><span>{reports.notice}</span><button type="button" onClick={reports.dismissNotice} aria-label="Fechar aviso">×</button></div>}
-    </div>
-  );
+  const navigate = useNavigate()
+  const download = useReportDownload()
+  return <div className={styles.page}>
+    <PageHeader titulo="Relatórios" subtitulo="Analise os dados da sua loja" />
+    <section className={styles.reportGrid} aria-label="Tipos de relatório">{reportTypes.map((report) => {
+      const type = report.type.toLowerCase()
+      return <ReportCard key={type} report={report} onConfigure={() => navigate('/relatorios/' + type)} onExport={() => download.download(type)} busy={download.busy === type} />
+    })}</section>
+    <div className={styles.notice}><FileText size={20} aria-hidden="true" /><p><strong>Do recorte à decisão</strong><br />Escolha o tipo, confira os filtros e gere o resultado. Os arquivos exportados usam o mesmo período e recorte.</p></div>
+    <DownloadFeedback {...download} />
+  </div>
+}
+export function ReportDetailPage() {
+  const { tipo } = useParams()
+  return reportFilters[tipo] ? <ReportDetail key={tipo} type={tipo} /> : <Navigate to="/relatorios" replace />
+}
+export function ReportDetail({ type }) {
+  const report = reportTypes.find((r) => r.type.toLowerCase() === type)
+  const data = useReportData(type)
+  const download = useReportDownload()
+  const [draft, setDraft] = useState({})
+  const [page, setPage] = useState(1)
+  const [validation, setValidation] = useState('')
+  function apply(event) {
+    event.preventDefault()
+    if (draft.inicio && draft.fim && draft.inicio > draft.fim) { setValidation('Data inicial deve ser anterior ou igual à final.'); return }
+    setValidation(''); setPage(1); data.apply(draft)
+  }
+  const reset = () => { setDraft({}); setPage(1); setValidation(''); data.apply({}) }
+  const result = data.data
+  const pageCount = Math.max(1, Math.ceil((result?.rows.length || 0) / 10))
+  const currentPage = Math.min(page, pageCount)
+  return <div className={styles.page}>
+    <PageHeader titulo={report.title} subtitulo="Relatórios / Dados do sistema"
+      acoes={<><Link to="/relatorios"><Button variant="secondary">Voltar aos relatórios</Button></Link><Button onClick={() => download.download(type, data.filters)} disabled={data.loading || Boolean(data.error) || Boolean(download.busy)} aria-busy={Boolean(download.busy)}><Download size={17} aria-hidden="true" /> Baixar {report.export}</Button></>} />
+    <Card titulo="Filtros" className={styles.formCard}><form onSubmit={apply}>
+      <div className={styles.fieldsGrid}>{reportFilters[type].map((field) => <label className={styles.field} htmlFor={'report-' + field.key} key={field.key}>
+        <span>{field.label}</span>
+        {field.type ? <input id={'report-' + field.key} type={field.type} step={field.type === 'number' ? '0.01' : undefined} value={draft[field.key] || ''} onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))} />
+          : <select id={'report-' + field.key} value={draft[field.key] || ''} onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))}><option value="">Todos</option>{result?.options[field.key]?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>}
+      </label>)}</div>
+      <div className={styles.actions}><Button variant="secondary" onClick={reset}><RotateCcw size={16} aria-hidden="true" /> Limpar filtros</Button><Button type="submit" disabled={data.loading}>Aplicar filtros</Button></div>
+    </form></Card>
+    {validation ? <StatusPanel variante="erro" titulo="Confira os filtros" role="alert">{validation}</StatusPanel> : null}
+    {data.loading ? <StatusPanel variante="info" titulo="Carregando relatório" role="status">Consultando os dados do sistema.</StatusPanel> : null}
+    {data.error ? <StatusPanel variante="erro" titulo="Não foi possível carregar o relatório" role="alert">{data.error}<Button variant="secondary" onClick={() => data.apply(data.filters)}>Tentar novamente</Button></StatusPanel> : null}
+    <DownloadFeedback {...download} />
+    {!data.loading && !data.error && result ? <>
+      <div className={styles.notice}><FileText size={20} aria-hidden="true" /><p><strong>Critérios e filtros aplicados</strong><br />{result.criteria}<br />{Object.entries(result.filters).map(([k, v]) => k + ': ' + v).join(' · ') || 'Todos os registros elegíveis'} · Emissão: {formatReportValue(result.emittedAt, 'datetime')}</p></div>
+      <section className={styles.metrics} aria-label="Resumo do relatório">{result.metrics.map((metric, i) => <article className={i === 0 ? styles.metricFeatured : styles.metric} key={metric.key}><span>{metric.label}</span><strong>{formatReportValue(metric.value, metric.format)}</strong></article>)}</section>
+      <Card titulo="Resultado detalhado" className={styles.resultCard}>
+        {result.rows.length ? <><div className={styles.tableWrap}><table><thead><tr>{result.columns.map((c) => <th key={c.key} scope="col">{c.label}</th>)}</tr></thead><tbody>{result.rows.slice((currentPage - 1) * 10, currentPage * 10).map((row, index) => <tr key={row.item_id || row.id || index}>{result.columns.map((c) => <td key={c.key}>{formatReportValue(row[c.key], c.format)}</td>)}</tr>)}</tbody></table></div>
+          <nav className={styles.actions} aria-label="Paginação do relatório"><Button variant="secondary" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button><span>{result.rows.length} registros · Página {currentPage} de {pageCount}</span><Button variant="secondary" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Próxima</Button></nav></>
+          : <p className={styles.muted}>Nenhum registro encontrado para os filtros utilizados. O arquivo poderá ser baixado com seus cabeçalhos.</p>}
+      </Card>
+      {Object.keys(result.groups || {}).length ? <Card titulo="Totais por categoria" className={styles.resultCard}><div className={styles.tableWrap}><table><thead><tr><th scope="col">Categoria / tipo</th><th scope="col">Valor</th></tr></thead><tbody>{Object.entries(result.groups).map(([label, value]) => <tr key={label}><td>{label}</td><td>{formatReportValue(value, 'money')}</td></tr>)}</tbody></table></div></Card> : null}
+    </> : null}
+  </div>
 }

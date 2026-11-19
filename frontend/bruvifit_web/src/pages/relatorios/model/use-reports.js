@@ -1,47 +1,31 @@
-import { useCallback, useState } from 'react';
-import { createReportExport, initialReportFilters, reportTypes } from './reports-model.js';
+import { useCallback, useEffect, useState } from 'react'
+import { reportsApi, reportError, saveReportFile } from '../api/reports-api.js'
 
-export function useReports() {
-  const [view, setView] = useState('home');
-  const [type, setType] = useState('Vendas');
-  const [filters, setFilters] = useState({ ...initialReportFilters });
-  const [notice, setNotice] = useState('');
-
-  const configure = useCallback((nextType) => {
-    setType(nextType);
-    setView('config');
-  }, []);
-
-  const generate = useCallback(() => setView('result'), []);
-
-  const exportFile = useCallback((format) => {
-    const file = createReportExport({ format, filters });
-    const blob = new Blob([file.contents], { type: file.mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `relatorio-vendas-${filters.start || 'periodo'}.${file.extension}`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setNotice(format === 'PDF'
-      ? 'Prévia textual exportada. A geração de PDF real ainda não está integrada.'
-      : 'Arquivo CSV demonstrativo exportado.');
-  }, [filters]);
-
-  const dismissNotice = useCallback(() => setNotice(''), []);
-
-  return {
-    view,
-    setView,
-    type,
-    setType,
-    filters,
-    setFilters,
-    notice,
-    reportTypes,
-    configure,
-    generate,
-    exportFile,
-    dismissNotice,
-  };
+const pendingDownloads = new Set()
+export function useReportDownload() {
+  const [busy, setBusy] = useState('')
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  async function download(type, filters = {}) {
+    if (pendingDownloads.has(type)) return
+    pendingDownloads.add(type); setBusy(type); setError(''); setNotice('')
+    try { saveReportFile(await reportsApi.file(type, { ...filters })); setNotice('Download iniciado. O arquivo será salvo conforme as configurações do navegador.') }
+    catch (failure) { setError(await reportError(failure)) }
+    finally { pendingDownloads.delete(type); setBusy('') }
+  }
+  return { busy, error, notice, download }
+}
+export function useReportData(type) {
+  const [filters, setFilters] = useState({})
+  const [revision, setRevision] = useState(0)
+  const [state, setState] = useState({ data: null, loading: true, error: '' })
+  const apply = useCallback((next) => { setFilters({ ...next }); setRevision((r) => r + 1); setState((s) => ({ ...s, loading: true, error: '' })) }, [])
+  useEffect(() => {
+    const controller = new AbortController()
+    reportsApi.preview(type, filters, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setState({ data, loading: false, error: '' })
+    }).catch(async (failure) => { const error = await reportError(failure); if (!controller.signal.aborted) setState({ data: null, loading: false, error }) })
+    return () => controller.abort()
+  }, [type, filters, revision])
+  return { ...state, filters, apply }
 }

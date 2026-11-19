@@ -17,7 +17,7 @@ import { SupplierDetailPage } from './pages/fornecedores/detalhe/ui/index.jsx';
 import { AccessPage } from './pages/acesso/ui/index.jsx';
 import { EmployeesPage } from './pages/funcionarios/ui/index.jsx';
 import { FinancePage } from './pages/financeiro/ui/index.jsx';
-import { ReportsPage } from './pages/relatorios/ui/index.jsx';
+import { ReportsPage, ReportDetailPage } from './pages/relatorios/ui/index.jsx';
 import { LancamentoPage } from './pages/financeiro/ui/LancamentoPage.jsx';
 import { InventoryPage } from './pages/estoque/ui/index.jsx';
 import { InventoryAdjustmentPage } from './pages/estoque/ajuste/ui/index.jsx';
@@ -115,6 +115,7 @@ function ProtectedRoutes() {
         <Route path="/financeiro/:id" element={<LancamentoPage modo="detalhe" />} />
         <Route path="/financeiro/:id/editar" element={<LancamentoPage modo="editar" />} />
         <Route path="/relatorios" element={<ReportsPage />} />
+        <Route path="/relatorios/:tipo" element={<ReportDetailPage />} />
         <Route path="/:modulo" element={<EmBrevePage />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
