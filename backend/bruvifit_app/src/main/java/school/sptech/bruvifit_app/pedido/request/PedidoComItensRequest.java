@@ -15,6 +15,15 @@ import java.util.List;
 
 public class PedidoComItensRequest {
 
+    @Size(max = 200)
+    private String observacoes;
+    @Size(max = 64)
+    private String versaoEsperada;
+    public String getObservacoes() { return observacoes; }
+    public void setObservacoes(String value) { observacoes = value; }
+    public String getVersaoEsperada() { return versaoEsperada; }
+    public void setVersaoEsperada(String value) { versaoEsperada = value; }
+
     @NotNull
     private LocalDateTime dataPedido;
     @NotBlank @jakarta.validation.constraints.Pattern(regexp = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
@@ -108,6 +117,7 @@ public class PedidoComItensRequest {
 
         @NotNull
         @DecimalMin("0.0")
+        @jakarta.validation.constraints.Digits(integer = 8, fraction = 2)
         private BigDecimal precoUnitario;
 
         @NotNull

@@ -1,34 +1,66 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../../components/ui/Button.jsx'
 import { SelectField } from '../../../../components/ui/SelectField.jsx'
+import { TextField } from '../../../../components/ui/TextField.jsx'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
-import { useDemoOperations, saveDemoSaleDraft } from '../../../../shared/demo-operations.js'
-import { formatMoney } from '../../../produtos/model/product-model.js'
+import { useSales } from '../../model/use-sales.js'
+import { getSaleDraft, saveSaleDraft, validateSale, localDateTime } from '../../model/sale-draft.js'
+import { session } from '../../../../shared/auth/session.js'
+import { formatMoney as priceMoney } from '../../../produtos/model/product-model.js'
 import styles from './index.module.css'
 
-const payments = ['Pix à vista', 'Dinheiro à vista', 'Crédito à vista', 'Débito à vista']
+const formatMoney = (value) => value == null ? 'Não informado' : priceMoney(value)
 const createLine = () => ({ lineId: `${Date.now()}-${Math.random()}`, produtoId: '', quantidade: '1' })
 
 export function NewSalePage() {
+  const { id } = useParams()
   const navigate = useNavigate()
-  const { products, clients, saleDraft } = useDemoOperations()
-  const [clienteId, setClienteId] = useState(saleDraft?.clienteId ? String(saleDraft.clienteId) : '')
-  const [formaPagamento, setFormaPagamento] = useState(saleDraft?.formaPagamento || payments[0])
-  const [observacoes, setObservacoes] = useState(saleDraft?.observacoes || '')
-  const [items, setItems] = useState(saleDraft?.itens?.map((item) => ({ ...item, lineId: createLine().lineId, quantidade: String(item.quantidade) })) || [])
+  const data = useSales('form', id || null)
+  if (data.loading || data.error || id && !data.detail?.editavel) return (
+    <main className={styles.page}>
+      <PageHeader titulo={id ? 'Editar pedido' : 'Novo pedido'} subtitulo="Vendas" acoes={<Button variant="outline" onClick={() => navigate('/vendas')}>Voltar aos pedidos</Button>} />
+      <StatusPanel variante={data.loading ? 'info' : 'erro'} titulo={data.loading ? 'Carregando dados' : 'Não foi possível abrir o formulário'}>
+        {data.loading ? 'Consultando clientes, produtos e pedido.' : data.error || data.detail?.restricao}
+        {data.error ? <Button variant="outline" onClick={data.reload}>Tentar novamente</Button> : null}
+      </StatusPanel>
+    </main>
+  )
+  return <SaleForm key={id || 'novo'} data={data} pedidoId={id ? Number(id) : null} />
+}
+
+function SaleForm({ data, pedidoId }) {
+  const navigate = useNavigate()
+  const saved = getSaleDraft()
+  const saleDraft = saved?.pedidoId === pedidoId ? saved : null
+  const original = data.detail?.pedido
+  const originalItems = useMemo(() => data.detail?.itens || [], [data.detail])
+  const clients = data.clients
+  const payments = data.options.formaPagamento
+  const products = useMemo(() => data.products.map((p) => {
+    const old = originalItems.find((i) => Number(i.produtoId) === Number(p.id))
+    return old ? { ...p, price: Number(old.precoUnitario) } : p
+  }), [data.products, originalItems])
+  const [status, setStatus] = useState(saleDraft?.status || original?.status?.toUpperCase().replaceAll(' ', '_') || 'PENDENTE')
+  const [prazoPagamento, setPrazoPagamento] = useState(saleDraft?.prazoPagamento || original?.prazoPagamento || '')
+  const [clienteId, setClienteId] = useState(String(saleDraft?.clienteId || original?.clienteId || ''))
+  const [formaPagamento, setFormaPagamento] = useState(saleDraft?.formaPagamento || original?.formaPagamento || payments[0])
+  const [observacoes, setObservacoes] = useState(saleDraft?.observacoes || original?.observacoes || '')
+  const [items, setItems] = useState((saleDraft?.itens || originalItems).map((item) => ({ ...item, lineId: createLine().lineId, quantidade: String(item.quantidade) })))
   const [error, setError] = useState('')
   const [errorTitle, setErrorTitle] = useState('Confira os dados da venda')
-  const activeProducts = products.filter((product) => product.status === 'Ativo')
+  const activeProducts = products.filter((product) => product.status === 'Ativo' || originalItems.some((i) => Number(i.produtoId) === Number(product.id)))
   const activeClients = clients.filter((client) => client.ativo !== false && client.status !== 'inativo')
 
   const cart = useMemo(() => items.map((item) => {
     const product = products.find((entry) => String(entry.id) === String(item.produtoId))
     const quantity = Number(item.quantidade) || 0
-    return { ...item, product, quantity, subtotal: product ? Math.round(product.price * quantity * 100) / 100 : 0 }
-  }), [items, products])
+    const old = originalItems.find((i) => Number(i.produtoId) === Number(item.produtoId))
+    const available = product?.stock == null ? null : product.stock + (old?.quantidade || 0)
+    return { ...item, product, quantity, available, subtotal: product?.price == null ? null : Math.round(product.price * quantity * 100) / 100 }
+  }), [items, products, originalItems])
   const total = Math.round(cart.reduce((sum, item) => sum + item.subtotal, 0) * 100) / 100
   const unitCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -39,51 +71,28 @@ export function NewSalePage() {
   function reviewSale(event) {
     event.preventDefault()
     setError('')
-    if (!clienteId) {
-      setErrorTitle('Cliente obrigatório')
-      setError('Selecione o cliente desta venda.')
-      return
-    }
-    if (!items.length) {
-      setErrorTitle('Adicione um produto')
-      setError('Inclua pelo menos um produto antes de revisar a venda.')
-      return
-    }
-    const invalidItem = cart.find((item) => !item.product || !Number.isInteger(item.quantity) || item.quantity <= 0)
-    if (invalidItem) {
-      setErrorTitle('Confira os itens')
-      setError('Selecione um produto e informe uma quantidade inteira maior que zero em cada linha.')
-      return
-    }
-    const aggregate = new Map()
-    cart.forEach((item) => aggregate.set(Number(item.product.id), (aggregate.get(Number(item.product.id)) || 0) + item.quantity))
-    const insufficient = [...aggregate.entries()].find(([productId, quantity]) => {
-      const product = products.find((entry) => Number(entry.id) === productId)
-      return quantity > Number(product?.stock || 0)
-    })
-    if (insufficient) {
-      const product = products.find((entry) => Number(entry.id) === insufficient[0])
-      setErrorTitle('Estoque insuficiente')
-      setError(`${product.name}: há ${product.stock} unidades disponíveis. Reduza a quantidade antes de confirmar.`)
-      return
-    }
-
+    const message = validateSale({ clienteId, items, clients, products: data.products, originalItems, status, payment: formaPagamento, options: data.options })
+    if (message) { setErrorTitle('Confira os dados do pedido'); setError(message); return }
+    const user = session.getUser()
+    if (!user?.usuarioId) { setError('Entre novamente para identificar o responsável.'); return }
     const draft = {
-      id: saleDraft?.id || (globalThis.crypto?.randomUUID?.() ?? `draft-${Date.now()}`),
-      clienteId: Number(clienteId),
-      formaPagamento,
-      observacoes,
-      itens: cart.map((item) => ({ produtoId: Number(item.product.id), quantidade: item.quantity })),
+      pedidoId, versaoEsperada: saleDraft?.versaoEsperada || data.detail?.versao || null,
+      chaveRequisicao: saleDraft?.chaveRequisicao || crypto.randomUUID(),
+      clienteId: Number(clienteId), usuarioId: original?.usuarioId || user.usuarioId,
+      responsavel: data.detail?.responsavel || user.nome,
+      dataPedido: saleDraft?.dataPedido || original?.dataPedido || localDateTime(),
+      formaPagamento, observacoes, status, prazoPagamento,
+      itens: cart.map((i) => ({ produtoId: Number(i.product.id), quantidade: i.quantity, precoUnitario: i.product.price })),
     }
-    saveDemoSaleDraft(draft)
-    navigate('/vendas/revisar')
+    saveSaleDraft(draft)
+    navigate('/vendas/revisar', { state: { draft } })
   }
 
   return (
     <main className={styles.page}>
-      <PageHeader titulo="Nova venda" subtitulo="Registre uma venda no modo demonstração local" acoes={<Button variant="outline" onClick={() => navigate('/vendas')}>← Voltar à lista</Button>} />
-      <StatusPanel variante="info" tom="verde" titulo="Sem backend">
-        A revisão e a confirmação atualizam somente os dados de demonstração deste navegador.
+      <PageHeader titulo={pedidoId ? `Editar pedido #${pedidoId}` : 'Novo pedido'} subtitulo="Selecione cliente e produtos cadastrados" acoes={<Button variant="outline" onClick={() => navigate('/vendas')}>← Voltar à lista</Button>} />
+      <StatusPanel variante="info" tom="verde" titulo="Pedido e faturamento">
+        O pedido e o estoque serão atualizados após a confirmação do servidor. O faturamento será registrado posteriormente no Financeiro.
       </StatusPanel>
       {error ? <StatusPanel variante="erro" titulo={errorTitle}>{error}</StatusPanel> : null}
 
@@ -97,6 +106,10 @@ export function NewSalePage() {
             <SelectField id="sale-payment" label="Forma de pagamento" obrigatorio value={formaPagamento} onChange={(event) => setFormaPagamento(event.target.value)}>
               {payments.map((payment) => <option key={payment}>{payment}</option>)}
             </SelectField>
+            <SelectField id="sale-status" label="Situação" obrigatorio value={status} onChange={(event) => setStatus(event.target.value)}>
+              {data.options.status.map((value) => <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>)}
+            </SelectField>
+            <TextField id="sale-deadline" label="Prazo de pagamento (opcional)" type="date" value={prazoPagamento} onChange={(event) => setPrazoPagamento(event.target.value)} />
             <label className={styles.textareaField} htmlFor="sale-notes">Observações
               <textarea id="sale-notes" maxLength={200} value={observacoes} onChange={(event) => setObservacoes(event.target.value)} placeholder="Observações sobre a venda" />
             </label>
@@ -113,11 +126,11 @@ export function NewSalePage() {
                       <tr key={item.lineId}>
                         <td><select aria-label="Produto da venda" value={item.produtoId} onChange={(event) => updateItem(item.lineId, 'produtoId', event.target.value)}><option value="">Selecione produto</option>{activeProducts.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.sku} · {product.size} {product.color}</option>)}</select></td>
                         <td>
-                          <input aria-label={`Quantidade de ${item.product?.name || 'produto'}`} aria-invalid={Boolean(item.product && item.quantity > item.product.stock)} type="number" min="1" step="1" value={item.quantidade} onChange={(event) => updateItem(item.lineId, 'quantidade', event.target.value)} />
-                          {item.product && item.quantity > item.product.stock ? <small className={styles.quantityError}>Há {item.product.stock} unidades disponíveis.</small> : null}
+                          <input aria-label={`Quantidade de ${item.product?.name || 'produto'}`} aria-invalid={Boolean(item.product && item.quantity > item.available)} type="number" min="1" step="1" value={item.quantidade} onChange={(event) => updateItem(item.lineId, 'quantidade', event.target.value)} />
+                          {item.product && item.quantity > item.available ? <small className={styles.quantityError}>Há {item.available} unidades disponíveis.</small> : null}
                         </td>
                         <td>{item.product ? formatMoney(item.product.price) : '—'}</td>
-                        <td>{item.product ? `${item.product.stock} un.` : '—'}</td>
+                        <td>{item.product ? `${item.available} un.` : '—'}</td>
                         <td><strong>{item.product ? formatMoney(item.subtotal) : '—'}</strong></td>
                         <td><button className={styles.removeButton} type="button" aria-label={`Remover ${item.product?.name || 'linha'}`} onClick={() => setItems((current) => current.filter((entry) => entry.lineId !== item.lineId))}><Trash2 size={17} aria-hidden="true" /></button></td>
                       </tr>
@@ -140,9 +153,9 @@ export function NewSalePage() {
           </section>
           <section className={styles.panel} aria-labelledby="sale-after-title">
             <h2 id="sale-after-title">Após confirmar</h2>
-            <p>O saldo será atualizado nesta demonstração local.</p>
-            <p>Um registro ilustrativo de entrada financeira aparecerá no resumo da venda.</p>
-            <p>Nenhuma informação será enviada ao backend.</p>
+            <p>O estoque será movimentado na mesma transação do pedido.</p>
+            <p>O pedido ficará disponível para seleção no Financeiro.</p>
+            <p>Cadastrar o pedido não confirma o recebimento de pagamento.</p>
           </section>
           <Button type="submit" disabled={!items.length || !clienteId}>Revisar e finalizar</Button>
         </aside>

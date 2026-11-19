@@ -20,6 +20,21 @@ public class PedidoController {
         this.service = service;
     }
 
+    @GetMapping("/opcoes")
+    public java.util.Map<String, List<String>> opcoes() {
+        return java.util.Map.of("status", PedidoService.STATUS, "formaPagamento", PedidoService.PAGAMENTOS);
+    }
+
+    @GetMapping("/{id}/detalhes")
+    public ResponseEntity<school.sptech.bruvifit_app.pedido.response.PedidoDetalheResponse> detalhar(@PathVariable Integer id) {
+        return service.detalhar(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/com-itens")
+    public ResponseEntity<Pedido> atualizarComItens(@PathVariable Integer id, @Valid @RequestBody PedidoComItensRequest request) {
+        return service.atualizarComItens(id, request).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping
     public ResponseEntity<List<PedidoResponse>> listar() {
         return ResponseEntity.status(200).body(service.listar());

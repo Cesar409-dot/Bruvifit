@@ -27,7 +27,6 @@ import { SalesPage } from './pages/vendas/ui/index.jsx';
 import { NewSalePage } from './pages/vendas/nova/ui/index.jsx';
 import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
 import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
-import { SalesStatesPage } from './pages/vendas/estados/ui/index.jsx';
 import { session } from './shared/auth/session.js';
 import { devAuthBypass } from './shared/config/dev-auth.js';
 
@@ -78,7 +77,7 @@ function ProtectedRoutes() {
   }
 
   if (pathname === '/estoque/estados') return <InventoryStatesPage />;
-  if (pathname === '/vendas/estados') return <SalesStatesPage />;
+  if (pathname === '/vendas/estados') return <Navigate to="/vendas" replace />;
 
   return (
     <ClientesProvider><Shell>
@@ -98,6 +97,7 @@ function ProtectedRoutes() {
         <Route path="/estoque" element={<InventoryPage />} />
         <Route path="/vendas/nova" element={<NewSalePage />} />
         <Route path="/vendas/revisar" element={<SaleReviewPage />} />
+        <Route path="/vendas/:id/editar" element={<NewSalePage />} />
         <Route path="/vendas/:id" element={<SaleDetailPage />} />
         <Route path="/vendas" element={<SalesPage />} />
         <Route path="/fornecedores" element={<SuppliersPage />} />

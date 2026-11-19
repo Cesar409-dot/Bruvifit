@@ -12,6 +12,15 @@ public class ItemPedidoResponse {
     private Integer produtoId;
     private String produtoNome;
     private String produtoSku;
+    private String produtoTamanho;
+    private String produtoCor;
+    public String getProdutoTamanho() { return produtoTamanho; }
+    public String getProdutoCor() { return produtoCor; }
+    public ItemPedidoResponse(Integer id, Integer quantidade, BigDecimal precoUnitario, BigDecimal subtotal,
+            Integer pedidoId, Integer produtoId, String produtoNome, String produtoSku, String produtoTamanho, String produtoCor) {
+        this(id, quantidade, precoUnitario, subtotal, pedidoId, produtoId, produtoNome, produtoSku);
+        this.produtoTamanho = produtoTamanho; this.produtoCor = produtoCor;
+    }
 
     public ItemPedidoResponse(Integer id, Integer quantidade, BigDecimal precoUnitario, BigDecimal subtotal,
                               Integer pedidoId, Integer produtoId, String produtoNome, String produtoSku) {

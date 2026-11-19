@@ -15,12 +15,15 @@ public class ItemPedidoService {
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
     private final EstoqueService estoque;
+    private final school.sptech.bruvifit_app.financeiro.FinanceiroRepository financeiros;
     public ItemPedidoService(ItemPedidoRepository repository, PedidoRepository pedidoRepository,
-                             ProdutoRepository produtoRepository, EstoqueService estoque) {
+                             ProdutoRepository produtoRepository, EstoqueService estoque,
+                             school.sptech.bruvifit_app.financeiro.FinanceiroRepository financeiros) {
         this.repository = repository;
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
         this.estoque = estoque;
+        this.financeiros = financeiros;
     }
     @Transactional(readOnly = true)
     public List<ItemPedidoResponse> listarPorPedido(Integer pedidoId) { return converterParaResponse(repository.findByPedidoId(pedidoId)); }
@@ -28,7 +31,7 @@ public class ItemPedidoService {
     public Optional<ItemPedido> buscarPorId(Integer id) { return repository.findById(id); }
     private Pedido bloquearPedido(Integer id) {
         Pedido pedido = pedidoRepository.bloquearParaFinanceiro(id).orElseThrow(() -> new RecursoNaoEncontradoException("Pedido", id));
-        if ("CANCELADO".equalsIgnoreCase(pedido.getStatus()) || "ENTREGUE".equalsIgnoreCase(pedido.getStatus())) {
+        if (PedidoService.statusFinal(pedido.getStatus()) || !financeiros.listarVinculosBloqueados(id).isEmpty()) {
             throw new ConflitoDeDadosException("Não é possível alterar itens de pedido cancelado ou entregue.");
         }
         return pedido;
@@ -41,6 +44,10 @@ public class ItemPedidoService {
     public ItemPedido adicionarItem(ItemPedidoRequest request) {
         validar(request);
         Pedido pedido = bloquearPedido(request.getPedidoId());
+        Produto produto = estoque.bloquearProduto(request.getProdutoId());
+        if (produto.getPrecoVenda() == null || produto.getPrecoVenda().compareTo(request.getPrecoUnitario()) != 0) {
+            throw new ConflitoDeDadosException("Preço do catálogo alterado. Atualize os produtos.");
+        }
         String motivo = "Adição de item: quantidade " + request.getQuantidade() + ", preço " + request.getPrecoUnitario().stripTrailingZeros().toPlainString();
         boolean processado = estoque.buscarEventoItem(request.getChaveRequisicao(), pedido.getId(), request.getProdutoId(), motivo).isPresent();
         var existente = repository.findByPedidoIdAndProdutoId(pedido.getId(), request.getProdutoId());
@@ -72,6 +79,7 @@ public class ItemPedidoService {
         if (opt.isEmpty()) return Optional.empty();
         ItemPedido item = opt.get();
         if (!Objects.equals(item.getProdutoId(), request.getProdutoId())) throw new ConflitoDeDadosException("Para trocar o produto, remova o item e adicione o novo produto.");
+        if (item.getPrecoUnitario().compareTo(request.getPrecoUnitario()) != 0) throw new ConflitoDeDadosException("O preço original do item deve ser preservado.");
         if (item.getQuantidade() == null || item.getQuantidade() <= 0) throw new ConflitoDeDadosException("Quantidade anterior do item inválida. Regularize o registro antes de alterar.");
         int diferenca = request.getQuantidade() - item.getQuantidade();
         if (diferenca != 0) estoque.movimentarPedido(item.getProdutoId(), diferenca > 0 ? "SAIDA" : "ENTRADA", Math.abs(diferenca), pedido.getId(), "Alteração de quantidade do item " + id);
@@ -114,7 +122,9 @@ public class ItemPedidoService {
                     item.getPedidoId(),
                     item.getProdutoId(),
                     produto != null ? produto.getNome() : null,
-                    produto != null ? produto.getSku() : null
+                    produto != null ? produto.getSku() : null,
+                    produto != null ? produto.getTamanho() : null,
+                    produto != null ? produto.getCor() : null
             ));
         }
         return responses;

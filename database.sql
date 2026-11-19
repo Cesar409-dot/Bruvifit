@@ -206,6 +206,7 @@ CREATE TABLE pedido (
     prazo_pagamento DATE,
     cliente_id INT NOT NULL,
     usuario_id INT NOT NULL,
+    observacoes VARCHAR(200),
     chave_requisicao VARCHAR(100),
     requisicao_hash VARCHAR(64),
     UNIQUE KEY uk_pedido_chave_requisicao (chave_requisicao),
