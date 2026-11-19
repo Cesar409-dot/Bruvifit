@@ -46,8 +46,8 @@ public class ProdutoFornecedorService {
                 .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado"));
 
         if (request.getFornecedorId() != null) {
-            Fornecedor fornecedor = fornecedorRepository.findById(request.getFornecedorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado"));
+            Fornecedor fornecedor = fornecedorRepository.buscarBloqueado(request.getFornecedorId())
+                    .orElseThrow(() -> new school.sptech.bruvifit_app.exception.RecursoNaoEncontradoException("Fornecedor não encontrado"));
 
             if (!fornecedor.getAtivo()) {
                 throw new IllegalArgumentException("Fornecedor inativo");
@@ -77,15 +77,15 @@ public class ProdutoFornecedorService {
 
         ProdutoFornecedor vinculo = vinculoOpt.get();
 
-        if (request.getFornecedorId() != null && !request.getFornecedorId().equals(vinculo.getFornecedorId())) {
-            Fornecedor fornecedor = fornecedorRepository.findById(request.getFornecedorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado"));
+        if (request.getFornecedorId() != null) {
+            Fornecedor fornecedor = fornecedorRepository.buscarBloqueado(request.getFornecedorId())
+                    .orElseThrow(() -> new school.sptech.bruvifit_app.exception.RecursoNaoEncontradoException("Fornecedor não encontrado"));
 
             if (!fornecedor.getAtivo()) {
                 throw new IllegalArgumentException("Fornecedor inativo");
             }
 
-            if (repository.existsByProdutoIdAndFornecedorId(vinculo.getProdutoId(), request.getFornecedorId())) {
+            if (!request.getFornecedorId().equals(vinculo.getFornecedorId()) && repository.existsByProdutoIdAndFornecedorId(vinculo.getProdutoId(), request.getFornecedorId())) {
                 throw new IllegalArgumentException("Já existe vínculo com este fornecedor");
             }
         }

@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public interface ProdutoFornecedorRepository extends JpaRepository<ProdutoFornecedor, Integer> {
 
+    boolean existsByFornecedorId(Integer fornecedorId);
+
     Page<ProdutoFornecedor> findByProdutoId(Integer produtoId, Pageable pageable);
 
     List<ProdutoFornecedor> findByProdutoId(Integer produtoId);

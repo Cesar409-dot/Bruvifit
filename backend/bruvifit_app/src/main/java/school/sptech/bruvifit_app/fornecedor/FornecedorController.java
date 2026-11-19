@@ -13,9 +13,17 @@ import java.util.List;
 public class FornecedorController {
 
     private final FornecedorService service;
+    private final school.sptech.bruvifit_app.produtofornecedor.ProdutoFornecedorService vinculos;
 
-    public FornecedorController(FornecedorService service) {
+    public FornecedorController(FornecedorService service, school.sptech.bruvifit_app.produtofornecedor.ProdutoFornecedorService vinculos) {
         this.service = service;
+        this.vinculos = vinculos;
+    }
+
+    @GetMapping("/{id}/produtos")
+    public ResponseEntity<List<school.sptech.bruvifit_app.produtofornecedor.response.ProdutoFornecedorResponse>> produtos(@PathVariable Integer id) {
+        service.exigir(id);
+        return ResponseEntity.ok(vinculos.listarPorFornecedor(id));
     }
 
     @GetMapping

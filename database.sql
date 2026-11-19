@@ -99,7 +99,16 @@ CREATE TABLE fornecedor (
     contato VARCHAR(45),
     email VARCHAR(45),
     ativo TINYINT NOT NULL DEFAULT 1,
-    PRIMARY KEY (id)
+    razao_social VARCHAR(120) NULL,
+    nome_contato VARCHAR(80) NULL,
+    cep VARCHAR(8) NULL,
+    logradouro VARCHAR(160) NULL,
+    complemento VARCHAR(120) NULL,
+    cidade VARCHAR(80) NULL,
+    uf VARCHAR(2) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_fornecedor_cnpj (cnpj),
+    UNIQUE KEY uk_fornecedor_email (email)
 );
 
 CREATE TABLE produto (
