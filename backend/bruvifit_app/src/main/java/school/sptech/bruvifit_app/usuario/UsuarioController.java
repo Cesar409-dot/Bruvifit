@@ -4,6 +4,7 @@ package school.sptech.bruvifit_app.usuario;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import school.sptech.bruvifit_app.usuario.request.UsuarioRequest;
 import school.sptech.bruvifit_app.usuario.response.UsuarioResponse;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios")
+@PreAuthorize("hasRole('ADMINISTRADOR')")
 public class UsuarioController {
 
     private final UsuarioService service;

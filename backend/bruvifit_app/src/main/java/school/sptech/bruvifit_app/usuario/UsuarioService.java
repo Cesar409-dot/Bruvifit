@@ -2,6 +2,7 @@
 package school.sptech.bruvifit_app.usuario;
 
 import school.sptech.bruvifit_app.exception.ConflitoDeDadosException;
+import school.sptech.bruvifit_app.exception.OperacaoNaoPermitidaException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import school.sptech.bruvifit_app.usuario.request.UsuarioRequest;
 import school.sptech.bruvifit_app.usuario.response.UsuarioResponse;
 import school.sptech.bruvifit_app.pedido.PedidoRepository;
+import school.sptech.bruvifit_app.security.RefreshTokenService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,11 +23,14 @@ public class UsuarioService {
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final PedidoRepository pedidoRepository;
+    private final RefreshTokenService refreshTokenService;
 
-    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder, PedidoRepository pedidoRepository) {
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder, PedidoRepository pedidoRepository,
+                          RefreshTokenService refreshTokenService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.pedidoRepository = pedidoRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public List<UsuarioResponse> listar() {
@@ -118,6 +123,13 @@ public class UsuarioService {
 
         Usuario usuarioParaAtualizar = usuarioEncontrado.get();
 
+        boolean leavingActiveAdmin = usuarioParaAtualizar.getCargo() == Usuario.Cargo.ADMINISTRADOR
+                && Boolean.TRUE.equals(usuarioParaAtualizar.getAtivo())
+                && (!"ADMINISTRADOR".equals(usuarioRequest.getCargo()) || Boolean.FALSE.equals(usuarioRequest.getAtivo()));
+        if (leavingActiveAdmin && repository.countByCargoAndAtivoTrue(Usuario.Cargo.ADMINISTRADOR) <= 1) {
+            throw new OperacaoNaoPermitidaException("Deve existir pelo menos um administrador ativo.");
+        }
+
         if (repository.existsByEmailAndIdNot(usuarioRequest.getEmail(), id)) {
             throw new ConflitoDeDadosException("E-mail já cadastrado");
         }
@@ -130,6 +142,12 @@ public class UsuarioService {
         usuarioParaAtualizar.setCpf(usuarioRequest.getCpf());
         usuarioParaAtualizar.setSenhaHash(passwordEncoder.encode(usuarioRequest.getSenhaHash()));
         usuarioParaAtualizar.setCargo(Usuario.Cargo.valueOf(usuarioRequest.getCargo()));
+        if (usuarioRequest.getAtivo() != null) {
+            usuarioParaAtualizar.setAtivo(usuarioRequest.getAtivo());
+            if (Boolean.TRUE.equals(usuarioEncontrado.get().getAtivo()) && Boolean.FALSE.equals(usuarioRequest.getAtivo())) {
+                refreshTokenService.revokeForUser(id);
+            }
+        }
         usuarioParaAtualizar.setAtualizadoEm(LocalDateTime.now());
 
         Usuario usuarioAtualizado = repository.save(usuarioParaAtualizar);

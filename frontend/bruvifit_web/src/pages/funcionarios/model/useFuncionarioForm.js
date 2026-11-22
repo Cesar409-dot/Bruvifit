@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROLE, toEmployeePayload, validateEmployee } from './funcionariosModel.js';
 import { friendlyError, isDuplicateEmail } from '../api/funcionariosRepository.js';
+import { isPasswordValid } from '../../../shared/auth/password-policy.js';
 
 export const INITIAL_FORM = { name: '', email: '', cpf: '', password: '', role: ROLE.MANAGER };
 export default function useFuncionarioForm(repository, isEdit = false, id = undefined) {
@@ -21,7 +22,7 @@ export default function useFuncionarioForm(repository, isEdit = false, id = unde
     setInitialLoading(true); setInitialError('');
     try {
       const employee = await repository.get(id);
-      setForm({ name: employee.name, email: employee.email, cpf: employee.cpf || '', password: '', role: employee.role });
+      setForm({ name: employee.name, email: employee.email, cpf: employee.cpf || '', password: '', role: employee.role, active: employee.active });
     } catch (err) { setInitialError(friendlyError(err)); }
     finally { setInitialLoading(false); }
   }, [repository, id]);
@@ -44,5 +45,5 @@ export default function useFuncionarioForm(repository, isEdit = false, id = unde
       setServerError(friendlyError(err));
     } finally { setSaving(false); }
   }
-  return { form, errors, serverError, saving, initialLoading, initialError, setField, load, submit };
+  return { form, errors, serverError, saving, initialLoading, initialError, setField, load, submit, passwordValid: isPasswordValid(form.password) && form.password.length <= 100 };
 }

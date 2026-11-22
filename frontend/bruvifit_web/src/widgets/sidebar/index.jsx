@@ -53,7 +53,7 @@ export function Sidebar({ currentPath }) {
       <div className="account-card">
         <strong>Ana Costa</strong>
         <span>Administradora</span>
-        <button type="button" className="logout-button" onClick={() => window.alert('Sessão encerrada com segurança.')}>
+        <button type="button" className="logout-button">
           Sair do sistema ↗
         </button>
       </div>

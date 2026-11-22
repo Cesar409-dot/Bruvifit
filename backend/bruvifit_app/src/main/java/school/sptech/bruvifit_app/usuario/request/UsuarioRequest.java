@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import school.sptech.bruvifit_app.usuario.validation.SenhaSegura;
 
 public class UsuarioRequest {
 
@@ -22,12 +23,15 @@ public class UsuarioRequest {
     private String cpf;
 
     @NotBlank
-    @Size(min = 6, max = 100)
+    @Size(max = 100, message = "A senha deve ter no máximo 100 caracteres.")
+    @SenhaSegura
     private String senhaHash;
 
     @NotBlank
     @Pattern(regexp = "ADMINISTRADOR|GERENTE|VENDEDOR", message = "Cargo deve ser ADMINISTRADOR, GERENTE ou VENDEDOR")
     private String cargo;
+
+    private Boolean ativo;
 
     public String getNome() {
         return nome;
@@ -67,5 +71,13 @@ public class UsuarioRequest {
 
     public void setCargo(String cargo) {
         this.cargo = cargo;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

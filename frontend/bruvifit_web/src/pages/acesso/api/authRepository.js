@@ -12,3 +12,12 @@ export async function login(email, senha) {
   }
   return response.data;
 }
+
+export async function restoreSession() {
+  const response = await apiClient.post('/api/auth/refresh', {});
+  if (typeof response.data?.token !== 'string' || !response.data.token.trim()
+    || response.data.tipo !== 'Bearer' || !Array.isArray(response.data.roles)) {
+    throw Object.assign(new Error('Resposta de renovação de sessão inválida.'), { code: 'ERR_INVALID_REFRESH_RESPONSE' });
+  }
+  return response.data;
+}

@@ -33,11 +33,16 @@ function toApiPayload(form) {
     cpf: form.cpf.replace(/\D/g, ''),
     senhaHash: form.password,
     cargo: ({ ADMIN: 'ADMINISTRADOR', MANAGER: 'GERENTE', SELLER: 'VENDEDOR' })[form.role],
+    ...(Object.hasOwn(form, 'active') ? { ativo: form.active } : {}),
   };
 }
 
 export function friendlyError(error) {
   const status = error?.status ?? error?.response?.status;
+  if (status === 400) {
+    const validationMessages = Object.values(error?.response?.data || {}).filter((message) => typeof message === 'string' && message.trim());
+    if (validationMessages.length) return validationMessages.join(' ');
+  }
   if (status === 409) {
     const message = error?.response?.data?.message;
     if (/integridade referencial|registros vinculados|pedido/i.test(message || '')) return 'Não foi possível excluir o funcionário. Existem registros vinculados a este cadastro.';

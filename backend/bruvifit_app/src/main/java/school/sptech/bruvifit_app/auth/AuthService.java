@@ -50,22 +50,17 @@ public class AuthService {
                 throw new UsuarioInativoException("Usuário inativo");
             }
 
-            String token = jwtTokenProvider.createToken(
-                    usuario.getEmail(),
-                    Collections.singletonList("ROLE_" + usuario.getCargo().name())
-            );
-
-            return new LoginResponse(
-                    token,
-                    jwtTokenProvider.getValidityInMilliseconds(),
-                    usuario.getId(),
-                    usuario.getNome(),
-                    usuario.getEmail(),
-                    Collections.singletonList("ROLE_" + usuario.getCargo().name())
-            );
+            return createSessionResponse(usuario);
 
         } catch (BadCredentialsException e) {
             throw new CredenciaisInvalidasException("Credenciais inválidas");
         }
+    }
+
+    public LoginResponse createSessionResponse(Usuario usuario) {
+        var roles = Collections.singletonList("ROLE_" + usuario.getCargo().name());
+        String token = jwtTokenProvider.createToken(usuario.getEmail(), roles);
+        return new LoginResponse(token, jwtTokenProvider.getValidityInMilliseconds(),
+                usuario.getId(), usuario.getNome(), usuario.getEmail(), roles);
     }
 }
