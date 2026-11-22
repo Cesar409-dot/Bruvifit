@@ -30,6 +30,7 @@ import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
 import { SalesStatesPage } from './pages/vendas/estados/ui/index.jsx';
 import { session } from './shared/auth/session.js';
 import { devAuthBypass } from './shared/config/dev-auth.js';
+import { canAccessModule } from './shared/auth/permissions.js';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -70,6 +71,11 @@ function ProtectedRoutes() {
 
   if (!devAuthBypass && !session.isAuthenticated()) {
     return <Navigate to="/acesso" replace />;
+  }
+
+  const role = currentUser?.role;
+  if (!canAccessModule(role, pathname)) {
+    return <AccessDenied />;
   }
 
   if (pathname === '/estoque/estados') return <InventoryStatesPage />;
@@ -117,14 +123,18 @@ function ProtectedRoutes() {
   );
 }
 
+function AccessDenied() {
+  return <main role="alert"><h1>Acesso negado</h1><p>Seu perfil não tem permissão para acessar esta página.</p></main>;
+}
+
 export default function App() {
   return (
     <>
       <ScrollToTop />
 
       <Routes>
-        <Route path="/" element={<Navigate to={devAuthBypass ? '/clientes' : '/acesso'} replace />} />
-        <Route path="/acesso" element={<AccessPage />} />
+        <Route path="/" element={<Navigate to={session.isAuthenticated() || devAuthBypass ? '/dashboard' : '/acesso'} replace />} />
+        <Route path="/acesso" element={session.isAuthenticated() ? <Navigate to="/dashboard" replace /> : <AccessPage />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>
     </>

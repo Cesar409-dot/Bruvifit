@@ -4,6 +4,7 @@ package school.sptech.bruvifit_app.dashboard;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import school.sptech.bruvifit_app.dashboard.response.EvolucaoFinanceiroResponse;
 import school.sptech.bruvifit_app.dashboard.response.FormasPagamentoResponse;
@@ -30,6 +31,7 @@ public class DashboardController {
     }
 
     @GetMapping("/financeiro")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     public ResponseEntity<ResumoFinanceiroResponse> getResumoFinanceiro(
             @RequestParam(name = "inicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -53,6 +55,7 @@ public class DashboardController {
     }
 
     @GetMapping("/financeiro/evolucao")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     public ResponseEntity<EvolucaoFinanceiroResponse> getEvolucaoFinanceiro(
             @RequestParam(name = "inicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -76,6 +79,7 @@ public class DashboardController {
     }
 
     @GetMapping("/financeiro/formas-pagamento")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     public ResponseEntity<FormasPagamentoResponse> getFormasPagamento(
             @RequestParam(name = "inicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -99,6 +103,7 @@ public class DashboardController {
     }
 
     @GetMapping("/financeiro/movimentacoes")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     public ResponseEntity<List<MovimentacaoResponse>> getMovimentacoes(
             @RequestParam(name = "inicio", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

@@ -30,7 +30,7 @@ class SchemaCompatibilityTest {
         while (tableMatcher.find()) {
             Map<String, String> columns = new HashMap<>();
             var columnMatcher = Pattern.compile(
-                    "(?m)^\\s*(\\w+)\\s+((?:INT|VARCHAR|DECIMAL|TINYINT|DATETIME|DATE)\\b[^\\r\\n]*)",
+                    "(?m)^\\s*(\\w+)\\s+((?:BIGINT|INT|VARCHAR|DECIMAL|TINYINT|DATETIME|DATE)\\b[^\\r\\n]*)",
                     Pattern.CASE_INSENSITIVE).matcher(tableMatcher.group(2));
             while (columnMatcher.find()) {
                 columns.put(columnMatcher.group(1), columnMatcher.group(2).toLowerCase(Locale.ROOT));
@@ -52,7 +52,7 @@ class SchemaCompatibilityTest {
             }
             var metadata = sources.getMetadataBuilder()
                     .applyPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy()).build();
-            assertEquals(11, metadata.getEntityBindings().size());
+            assertEquals(12, metadata.getEntityBindings().size());
             Set<String> mappedTables = new HashSet<>();
             for (var entity : metadata.getEntityBindings()) {
                 var table = entity.getTable();
@@ -88,7 +88,7 @@ class SchemaCompatibilityTest {
                 assertTrue(tables.get(foreignKeys.group(2)).containsKey(foreignKeys.group(3)));
                 count++;
             }
-            assertEquals(11, count);
+            assertEquals(12, count);
             // Creating each Spring Data repository validates derived methods and JPQL without executing SQL.
             try (var sessionFactory = metadata.buildSessionFactory();
                  var entityManager = sessionFactory.createEntityManager()) {

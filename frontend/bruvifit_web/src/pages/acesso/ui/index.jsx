@@ -51,7 +51,7 @@ export function AccessPage() {
     if (!validate()) return;
     const entrou = await attemptLogin();
     if (entrou) {
-      navigate('/clientes', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }
 

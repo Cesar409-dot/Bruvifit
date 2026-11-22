@@ -1,3 +1,5 @@
+import { canAccessReport } from '../../../shared/auth/permissions.js';
+
 export const reportTypes = [
   {
     type: 'Vendas',
@@ -37,6 +39,10 @@ export const initialReportFilters = {
   category: 'Todas',
   status: 'Todos',
 };
+
+export function reportsForRole(role) {
+  return reportTypes.filter((report) => canAccessReport(role, report.type));
+}
 
 export const sampleSalesReport = {
   count: 1,

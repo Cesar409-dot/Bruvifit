@@ -3,6 +3,7 @@ package school.sptech.bruvifit_app.financeiro;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import school.sptech.bruvifit_app.financeiro.request.FinanceiroRequest;
 import school.sptech.bruvifit_app.financeiro.response.FinanceiroResponse;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/financeiros")
+@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
 public class FinanceiroController {
 
     private final FinanceiroService service;

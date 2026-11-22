@@ -1,34 +1,32 @@
 
-const STORAGE_KEY = 'bruvifit_session_v1';
+import { normalizeRole } from './permissions.js';
 
-function read() {
+const STORAGE_KEY = 'bruvifit_session_v1';
+let currentSession = null;
+
+function removeLegacySession() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw === null ? null : JSON.parse(raw);
+    localStorage.removeItem(STORAGE_KEY);
   } catch {
-    return null;
+    // A sessão em memória e o cookie HttpOnly continuam independentes do armazenamento local.
   }
 }
 
 export const session = {
   getToken() {
-    const data = read();
-    return data && data.token ? data.token : null;
+    return currentSession?.token ?? null;
   },
 
   getUser() {
-    const data = read();
-
-    if (!data) return null;
-
-    const roles = Array.isArray(data.roles) ? data.roles : [];
+    if (!currentSession) return null;
+    const roles = Array.isArray(currentSession.roles) ? currentSession.roles : [];
 
     return {
-      usuarioId: data.usuarioId,
-      nome: data.nome,
-      email: data.email,
+      usuarioId: currentSession.usuarioId,
+      nome: currentSession.nome,
+      email: currentSession.email,
       roles,
-      role: roles[0]?.replace(/^ROLE_/, '') ?? null,
+      role: normalizeRole(roles[0]),
     };
   },
 
@@ -37,7 +35,8 @@ export const session = {
   },
 
   setSession({ token, usuarioId, nome, email, roles, expiraEm }) {
-    const payload = {
+    removeLegacySession();
+    currentSession = {
       token,
       usuarioId,
       nome,
@@ -46,11 +45,11 @@ export const session = {
       expiraEm,
       criadoEm: Date.now(),
     };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   },
 
   clearSession() {
-    localStorage.removeItem(STORAGE_KEY);
+    currentSession = null;
+    removeLegacySession();
   },
+
 };

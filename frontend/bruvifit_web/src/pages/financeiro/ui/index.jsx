@@ -266,6 +266,10 @@ function MovementsTable({ linhas, vazio, onDetalhe, pagina, totalPaginas, onPage
 }
 
 export function FinancePage() {
+  return <FinanceDashboard />;
+}
+
+function FinanceDashboard() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { registros, carregando, erro, recarregar } = useFinanceiro();

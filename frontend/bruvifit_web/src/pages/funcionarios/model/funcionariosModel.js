@@ -1,3 +1,5 @@
+import { getPasswordErrors } from '../../../shared/auth/password-policy.js';
+
 export const ROLE = Object.freeze({ ADMIN: 'ADMIN', MANAGER: 'MANAGER', SELLER: 'SELLER' });
 export const STATUS = Object.freeze({ ACTIVE: 'ACTIVE', PENDING: 'PENDING', INACTIVE: 'INACTIVE' });
 export const roleOptions = [
@@ -39,13 +41,17 @@ const aliases = {
 export function normalizeEmployee(raw = {}) {
   const role = String(raw.role ?? raw.perfil ?? raw.cargo ?? ROLE.SELLER).trim().toUpperCase().replaceAll(' ', '_');
   const status = String(raw.status ?? STATUS.ACTIVE).trim().toUpperCase().replaceAll(' ', '_');
+  const active = typeof raw.ativo === 'boolean'
+    ? raw.ativo
+    : (aliases[status] ?? STATUS.ACTIVE) === STATUS.ACTIVE;
   return {
     id: String(raw.id ?? raw.funcionarioId ?? ''),
     name: raw.name ?? raw.nomeCompleto ?? raw.nome ?? '',
     email: raw.email ?? '', cpf: raw.cpf ?? '', phone: raw.phone ?? raw.telefone ?? '',
     address: raw.address ?? raw.endereco ?? '',
     role: aliases[role] ?? ROLE.SELLER,
-    status: raw.ativo === false ? STATUS.INACTIVE : (aliases[status] ?? STATUS.ACTIVE),
+    active,
+    status: active ? STATUS.ACTIVE : STATUS.INACTIVE,
   };
 }
 export function validateEmployee(form) {
@@ -56,13 +62,17 @@ export function validateEmployee(form) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Informe um e-mail válido.';
   const cpf = form.cpf?.replace(/\D/g, '') ?? '';
   if (cpf.length !== 11) errors.cpf = 'Informe um CPF com 11 dígitos.';
-  if (!form.password || form.password.length < 6 || form.password.length > 100) errors.password = 'A senha deve ter entre 6 e 100 caracteres.';
+  const passwordErrors = getPasswordErrors(form.password ?? '');
+  if (passwordErrors.length) errors.password = passwordErrors.join(' ');
+  if (form.password?.length > 100) errors.password = 'A senha deve ter no máximo 100 caracteres.';
   if (!roleOptions.some((r) => r.value === form.role)) errors.role = 'Selecione um perfil.';
   return errors;
 }
 export function toEmployeePayload(form) {
-  return {
+  const payload = {
     name: form.name.trim(), email: form.email.trim().toLowerCase(),
     cpf: form.cpf.replace(/\D/g, ''), password: form.password, role: form.role,
   };
+  if (Object.hasOwn(form, 'active')) payload.active = form.active;
+  return payload;
 }
