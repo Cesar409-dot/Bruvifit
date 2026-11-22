@@ -28,7 +28,6 @@ import { NewSalePage } from './pages/vendas/nova/ui/index.jsx';
 import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
 import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
 import { session } from './shared/auth/session.js';
-import { devAuthBypass } from './shared/config/dev-auth.js';
 import { canAccessModule } from './shared/auth/permissions.js';
 
 function ScrollToTop() {
@@ -73,7 +72,7 @@ function ProtectedRoutes() {
     return <Navigate to="/acesso?motivo=sessao-expirada" replace />;
   }
 
-  if (!devAuthBypass && !session.isAuthenticated()) {
+  if (!session.isAuthenticated()) {
     return <Navigate to="/acesso" replace />;
   }
 
@@ -139,8 +138,8 @@ export default function App() {
       <ScrollToTop />
 
       <Routes>
-        <Route path="/" element={<Navigate to={session.isAuthenticated() || devAuthBypass ? '/dashboard' : '/acesso'} replace />} />
-        <Route path="/acesso" element={session.isAuthenticated() ? <Navigate to="/dashboard" replace /> : <AccessPage />} />
+        <Route path="/" element={<Navigate to="/acesso" replace />} />
+        <Route path="/acesso" element={session.isAuthenticated() ? <Navigate to="/clientes" replace /> : <AccessPage />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>
     </>

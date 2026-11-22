@@ -3,6 +3,34 @@ import { normalizeRole } from './permissions.js';
 
 const STORAGE_KEY = 'bruvifit_session_v1';
 let currentSession = null;
+let snapshot = 'anonymous';
+const listeners = new Set();
+let expiryTimer = null;
+
+function notify() {
+  listeners.forEach((listener) => listener());
+}
+
+function tokenExpiry(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return Number.isFinite(payload.exp) ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+function expireIfNeeded() {
+  if (!currentSession) return;
+  const jwtExpiresAt = tokenExpiry(currentSession.token);
+  const durationExpiresAt = Number.isFinite(currentSession.expiraEm)
+    ? currentSession.criadoEm + currentSession.expiraEm : null;
+  const expiresAt = jwtExpiresAt ?? durationExpiresAt;
+  if (expiresAt !== null && expiresAt <= Date.now() && snapshot !== 'expired') {
+    snapshot = 'expired';
+    notify();
+  }
+}
 
 function removeLegacySession() {
   try {
@@ -13,8 +41,18 @@ function removeLegacySession() {
 }
 
 export const session = {
+  subscribe(callback) {
+    listeners.add(callback);
+    return () => listeners.delete(callback);
+  },
+
+  getSnapshot() {
+    return snapshot;
+  },
+
   getToken() {
-    return currentSession?.token ?? null;
+    expireIfNeeded();
+    return snapshot === 'authenticated' ? currentSession?.token ?? null : null;
   },
 
   getUser() {
@@ -36,6 +74,7 @@ export const session = {
 
   setSession({ token, usuarioId, nome, email, roles, expiraEm }) {
     removeLegacySession();
+    if (expiryTimer) clearTimeout(expiryTimer);
     currentSession = {
       token,
       usuarioId,
@@ -45,11 +84,27 @@ export const session = {
       expiraEm,
       criadoEm: Date.now(),
     };
+    const expiresAt = tokenExpiry(token) ?? (Number.isFinite(expiraEm) ? currentSession.criadoEm + expiraEm : null);
+    snapshot = expiresAt !== null && expiresAt <= Date.now() ? 'expired' : 'authenticated';
+    if (expiresAt !== null && expiresAt > Date.now()) {
+      expiryTimer = setTimeout(() => {
+        if (currentSession?.token === token) {
+          snapshot = 'expired';
+          notify();
+        }
+      }, expiresAt - Date.now());
+      expiryTimer.unref?.();
+    }
+    notify();
   },
 
-  clearSession() {
+  clearSession({ expired = false } = {}) {
+    if (expiryTimer) clearTimeout(expiryTimer);
+    expiryTimer = null;
     currentSession = null;
     removeLegacySession();
+    snapshot = expired ? 'expired' : 'anonymous';
+    notify();
   },
 
 };

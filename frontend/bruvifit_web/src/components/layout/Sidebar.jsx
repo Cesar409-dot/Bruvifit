@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import brandLogo from "../../assets/BRUVI_logo_sem_fundo.png";
 import clientsIcon from "../../shared/assets/figma-products/8f122.svg";
-import dashboardIcon from "../../shared/assets/figma-products/3cbb5.svg";
 import employeesIcon from "../../shared/assets/figma-products/7702e.svg";
 import financeIcon from "../../shared/assets/figma-products/ae6b1.svg";
 import inventoryIcon from "../../shared/assets/figma-products/53f57.svg";
@@ -15,7 +14,6 @@ import { session } from "../../shared/auth/session.js";
 import { filterModulesByRole, normalizeRole } from "../../shared/auth/permissions.js";
 
 const items = [
-  { to: "/dashboard", label: "Dashboard", icon: dashboardIcon },
   { to: "/produtos", label: "Produtos", icon: productsIcon },
   { to: "/estoque", label: "Estoque", icon: inventoryIcon },
   { to: "/vendas", label: "Vendas", icon: salesIcon },
@@ -34,7 +32,7 @@ export function Sidebar() {
     <aside className={styles.sidebar} aria-label="Navegação principal">
       <NavLink
         className={styles.brand}
-        to="/dashboard"
+        to="/clientes"
         aria-label="BruVi Fit, início"
       >
         <img src={brandLogo} alt="BruVi Fit" />

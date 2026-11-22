@@ -1,5 +1,4 @@
 export const modules = [
-  { path: '/dashboard', label: 'Dashboard' },
   { path: '/produtos', label: 'Produtos' },
   { path: '/estoque', label: 'Estoque' },
   { path: '/vendas', label: 'Vendas' },

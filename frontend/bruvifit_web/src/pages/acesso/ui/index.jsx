@@ -53,7 +53,7 @@ export function AccessPage() {
     if (!validate()) return;
     const entrou = await attemptLogin();
     if (entrou) {
-      navigate('/dashboard', { replace: true });
+      navigate('/clientes', { replace: true });
     }
   }
 

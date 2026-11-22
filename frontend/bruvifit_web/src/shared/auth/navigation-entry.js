@@ -1,5 +1,5 @@
-const allowedInitialPaths = new Set(['/', '/acesso', '/dashboard']);
+const allowedInitialPaths = new Set(['/', '/acesso']);
 
 export function getSafeInitialPath(pathname) {
-  return allowedInitialPaths.has(pathname) ? null : '/dashboard';
+  return allowedInitialPaths.has(pathname) ? null : '/acesso';
 }

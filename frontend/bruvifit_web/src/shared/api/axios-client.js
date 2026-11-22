@@ -41,7 +41,7 @@ apiClient.interceptors.response.use((response) => response, async (error) => {
     originalRequest.headers.Authorization = `Bearer ${token}`;
     return apiClient(originalRequest);
   } catch (refreshError) {
-    session.clearSession();
+    session.clearSession({ expired: true });
     if (window.location.pathname !== '/acesso') window.location.assign('/acesso');
     return Promise.reject(refreshError);
   }

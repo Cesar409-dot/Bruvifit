@@ -7,6 +7,8 @@ import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import { reportTypes, reportFilters, formatReportValue } from '../model/reports-model.js'
 import { useReportData, useReportDownload } from '../model/use-reports.js'
+import { session } from '../../../shared/auth/session.js'
+import { canAccessReport } from '../../../shared/auth/permissions.js'
 import styles from './index.module.css'
 
 function DownloadFeedback({ error, notice, busy }) {
@@ -30,9 +32,10 @@ function ReportCard({ report, onConfigure, onExport, busy }) {
 export function ReportsPage() {
   const navigate = useNavigate()
   const download = useReportDownload()
+  const allowedReports = reportTypes.filter((report) => canAccessReport(session.getUser()?.role, report.type))
   return <div className={styles.page}>
     <PageHeader titulo="Relatórios" subtitulo="Analise os dados da sua loja" />
-    <section className={styles.reportGrid} aria-label="Tipos de relatório">{reportTypes.map((report) => {
+    <section className={styles.reportGrid} aria-label="Tipos de relatório">{allowedReports.map((report) => {
       const type = report.type.toLowerCase()
       return <ReportCard key={type} report={report} onConfigure={() => navigate('/relatorios/' + type)} onExport={() => download.download(type)} busy={download.busy === type} />
     })}</section>
@@ -42,7 +45,9 @@ export function ReportsPage() {
 }
 export function ReportDetailPage() {
   const { tipo } = useParams()
-  return reportFilters[tipo] ? <ReportDetail key={tipo} type={tipo} /> : <Navigate to="/relatorios" replace />
+  const report = reportTypes.find((item) => item.type.toLowerCase() === tipo)
+  const allowed = report && canAccessReport(session.getUser()?.role, report.type)
+  return reportFilters[tipo] && allowed ? <ReportDetail key={tipo} type={tipo} /> : <Navigate to="/relatorios" replace />
 }
 export function ReportDetail({ type }) {
   const report = reportTypes.find((r) => r.type.toLowerCase() === type)

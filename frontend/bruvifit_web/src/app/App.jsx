@@ -33,7 +33,7 @@ function matchRoute(path) {
 }
 
 function getCurrentRoute() {
-  const path = window.location.hash.replace(/^#/, '') || '/dashboard'
+  const path = window.location.hash.replace(/^#/, '') || '/clientes'
   return matchRoute(path)
 }
 

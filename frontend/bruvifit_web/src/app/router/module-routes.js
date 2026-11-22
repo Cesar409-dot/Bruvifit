@@ -1,4 +1,3 @@
-import { DashboardPage } from '../../pages/dashboard/ui/index.jsx'
 import { ProductsPage } from '../../pages/produtos/ui/index.jsx'
 import { ProductCreatePage } from '../../pages/produtos/cadastro/ui/index.jsx'
 import { ProductDetailPage } from '../../pages/produtos/detalhe/ui/index.jsx'
@@ -15,7 +14,6 @@ import { SettingsPage } from '../../pages/configuracao/ui/index.jsx'
 import { modules } from '../../shared/config/modules.js'
 
 const pageByPath = {
-  '/dashboard': DashboardPage,
   '/produtos': ProductsPage,
   '/estoque': InventoryPage,
   '/vendas': SalesPage,
