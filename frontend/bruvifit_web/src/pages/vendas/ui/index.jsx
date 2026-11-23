@@ -53,8 +53,8 @@ export function SalesPage() {
   return (
     <main className={styles.page}>
       <PageHeader
-        titulo="Pedidos"
-        subtitulo="Acompanhe os pedidos registrados no sistema"
+        titulo="Vendas"
+        subtitulo="Acompanhe os pedidos de vendas registrados no sistema"
         acoes={(
           <div className={styles.headerActions}>
             <Button onClick={() => navigate('/vendas/nova')}><Plus size={18} aria-hidden="true" /> Novo pedido</Button>
@@ -62,7 +62,7 @@ export function SalesPage() {
         )}
       />
 
-      {loading ? <StatusPanel variante="info" titulo="Carregando pedidos" role="status">Consultando os registros do sistema.</StatusPanel> : null}
+      {loading ? <StatusPanel variante="info" titulo="Carregando pedidos de vendas" role="status">Consultando os registros do sistema.</StatusPanel> : null}
       {error ? <StatusPanel variante="erro" titulo="Não foi possível carregar Vendas">{error} <Button variant="outline" onClick={reload}>Tentar novamente</Button></StatusPanel> : null}
       {location.state?.success ? <StatusPanel variante="sucesso" titulo={location.state.success} role="status">Operação confirmada pelo servidor.</StatusPanel> : null}
       <section className={styles.metrics} aria-label="Resumo das vendas">

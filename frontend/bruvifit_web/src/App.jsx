@@ -29,6 +29,9 @@ import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
 import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
 import { session } from './shared/auth/session.js';
 import { canAccessModule } from './shared/auth/permissions.js';
+import { DadosDaLojaPage } from './pages/configuracao/ui/DadosDaLojaPage.jsx';
+import { PerfilSegurancaPage } from './pages/configuracao/ui/PerfilSegurancaPage.jsx';
+import { PreferenciasSistemaPage } from './pages/configuracao/ui/PreferenciasSistemaPage.jsx';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -49,6 +52,7 @@ function getSectionLabel(pathname) {
   if (pathname.startsWith('/relatorios')) return 'Relatórios';
   if (pathname.startsWith('/estoque')) return 'Estoque';
   if (pathname.startsWith('/vendas')) return 'Vendas';
+  if (pathname.startsWith('/configuracao')) return 'Configurações';
 
   return 'BruVi Fit';
 }
@@ -105,6 +109,9 @@ function ProtectedRoutes() {
         <Route path="/vendas/:id/editar" element={<NewSalePage />} />
         <Route path="/vendas/:id" element={<SaleDetailPage />} />
         <Route path="/vendas" element={<SalesPage />} />
+        <Route path="/configuracao/perfil-seguranca" element={<PerfilSegurancaPage />} />
+        <Route path="/configuracao/preferencias" element={<PreferenciasSistemaPage />} />
+        <Route path="/configuracao" element={<DadosDaLojaPage />} />
         <Route path="/fornecedores" element={<SuppliersPage />} />
         <Route path="/fornecedores/novo" element={<SupplierFormPage />} />
         <Route path="/fornecedores/:id/editar" element={<SupplierFormPage />} />
