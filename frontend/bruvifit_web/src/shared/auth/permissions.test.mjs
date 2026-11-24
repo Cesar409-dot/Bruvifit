@@ -2,6 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { canAccessModule, canAccessReport } from './permissions.js';
 
+test('dashboard fica disponível para todos os perfis autenticados', () => {
+  for (const role of ['ADMINISTRADOR', 'GERENTE', 'VENDEDOR']) {
+    assert.equal(canAccessModule(role, '/dashboard'), true);
+  }
+});
+
 test('admin conserva acceso a todos os módulos e relatórios', () => {
   for (const path of ['/funcionarios', '/financeiro', '/relatorios']) {
     assert.equal(canAccessModule('ADMINISTRADOR', path), true);

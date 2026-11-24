@@ -32,6 +32,7 @@ import { canAccessModule } from './shared/auth/permissions.js';
 import { DadosDaLojaPage } from './pages/configuracao/ui/DadosDaLojaPage.jsx';
 import { PerfilSegurancaPage } from './pages/configuracao/ui/PerfilSegurancaPage.jsx';
 import { PreferenciasSistemaPage } from './pages/configuracao/ui/PreferenciasSistemaPage.jsx';
+import { DashboardPage } from './pages/dashboard/ui/index.jsx';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -44,6 +45,7 @@ function ScrollToTop() {
 }
 
 function getSectionLabel(pathname) {
+  if (pathname.startsWith('/dashboard')) return 'Dashboard';
   if (pathname.startsWith('/produtos')) return 'Produtos';
   if (pathname.startsWith('/fornecedores')) return 'Fornecedores';
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
@@ -92,6 +94,7 @@ function ProtectedRoutes() {
     <ClientesProvider><Shell>
       <Routes>
         <Route path="/clientes" element={<ClientesListPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />
         <Route path="/clientes/:id" element={<ClientePerfilPage />} />
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
@@ -146,7 +149,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<Navigate to="/acesso" replace />} />
-        <Route path="/acesso" element={session.isAuthenticated() ? <Navigate to="/clientes" replace /> : <AccessPage />} />
+        <Route path="/acesso" element={session.isAuthenticated() ? <Navigate to="/dashboard" replace /> : <AccessPage />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>
     </>
