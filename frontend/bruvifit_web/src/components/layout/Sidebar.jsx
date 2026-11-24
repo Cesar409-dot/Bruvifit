@@ -10,10 +10,12 @@ import salesIcon from "../../shared/assets/figma-products/7acdd.svg";
 import settingsIcon from "../../shared/assets/figma-products/874fb.svg";
 import styles from "./Sidebar.module.css";
 import suppliersIcon from "../../shared/assets/figma-products/f8595.svg";
+import dashboardIcon from "../../shared/assets/figma-products/a0377.svg";
 import { session } from "../../shared/auth/session.js";
 import { filterModulesByRole, normalizeRole } from "../../shared/auth/permissions.js";
 
 const items = [
+  { to: "/dashboard", label: "Dashboard", icon: dashboardIcon },
   { to: "/produtos", label: "Produtos", icon: productsIcon },
   { to: "/estoque", label: "Estoque", icon: inventoryIcon },
   { to: "/vendas", label: "Vendas", icon: salesIcon },
