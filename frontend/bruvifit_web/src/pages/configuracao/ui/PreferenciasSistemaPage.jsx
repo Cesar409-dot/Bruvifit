@@ -72,22 +72,6 @@ export function PreferenciasSistemaPage() {
           <p className={styles.helper}>Desativar notificações não remove os indicadores de estoque crítico e ruptura do dashboard.</p>
         </section>
 
-        <section className={styles.panel} aria-labelledby="report-defaults-title">
-          <h2 id="report-defaults-title">Padrões dos relatórios</h2>
-          <div className={styles.grid3}>
-            <SelectField id="pref-report-period" label="Período padrão" value={form.periodoRelatorios} onChange={(event) => update('periodoRelatorios', event.target.value)}>
-              {['Mês atual', 'Últimos 30 dias', 'Últimos 90 dias'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-            <SelectField id="pref-report-type" label="Tipo padrão" value={form.tipoRelatorio} onChange={(event) => update('tipoRelatorio', event.target.value)}>
-              {['Vendas', 'Estoque', 'Financeiro'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-            <SelectField id="pref-export-format" label="Formato de exportação" value={form.formatoExportacao} onChange={(event) => update('formatoExportacao', event.target.value)}>
-              {['PDF', 'CSV'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-          </div>
-          <p className={styles.helper}>Valores iniciais da loja. Os filtros podem ser alterados ao configurar cada relatório.</p>
-        </section>
-
         <section className={styles.panel} aria-labelledby="local-formats-title">
           <h2 id="local-formats-title">Formatos locais</h2>
           <div className={styles.grid2}>

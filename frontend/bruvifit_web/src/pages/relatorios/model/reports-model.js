@@ -46,3 +46,41 @@ export function formatReportValue(value, format = 'text') {
   }
   return String(value)
 }
+
+function escapeCsvCell(value) {
+  let text = String(value ?? '')
+  if (/^\s*[=+@-]/u.test(text)) text = `'${text}`
+  return `"${text.replaceAll('"', '""')}"`
+}
+
+function reportCsvValue(value, format) {
+  if (value == null) return ''
+  if (typeof value === 'number') return String(value).replace('.', ',')
+  return formatReportValue(value, format)
+}
+
+function saoPauloDate(date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+export function buildReportCsvFile(report, type, date = new Date()) {
+  if (!report || !Array.isArray(report.columns) || !Array.isArray(report.rows)) {
+    throw new Error('Não há resultado válido para exportar.')
+  }
+  const header = report.columns.map((column) => escapeCsvCell(column.label)).join(';')
+  const rows = report.rows.map((row) => report.columns
+    .map((column) => escapeCsvCell(reportCsvValue(row[column.key], column.format)))
+    .join(';'))
+  const content = `\uFEFF${[header, ...rows].join('\r\n')}\r\n`
+  return {
+    blob: new Blob([content], { type: 'text/csv;charset=UTF-8' }),
+    name: `relatorio-${type}-${saoPauloDate(date)}.csv`,
+  }
+}
