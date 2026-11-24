@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CategoryScale,
   Chart as ChartJS,
+  DoughnutController,
   Filler,
   Legend,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   ArcElement,
@@ -26,7 +28,7 @@ import {
   weekdaySales,
 } from '../model/dashboard-model.js'
 
-ChartJS.register(ArcElement, BarElement, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Tooltip)
+ChartJS.register(ArcElement, BarElement, CategoryScale, DoughnutController, Filler, Legend, LineController, LineElement, LinearScale, PointElement, Tooltip)
 
 const chartColors = ['#173F35', '#285C4F', '#A8C5B8', '#D9A8A0']
 
@@ -82,7 +84,16 @@ function ChartCanvas({ type, data, options, label, className }) {
     if (!canvas) return undefined
 
     chartRef.current?.destroy()
-    chartRef.current = new ChartJS(canvas, { type, data, options })
+    ChartJS.getChart(canvas)?.destroy()
+    chartRef.current = null
+
+    try {
+      chartRef.current = new ChartJS(canvas, { type, data, options })
+    } catch (error) {
+      ChartJS.getChart(canvas)?.destroy()
+      chartRef.current = null
+      console.error(`Não foi possível renderizar o gráfico do dashboard (${type}).`, error)
+    }
 
     return () => {
       chartRef.current?.destroy()
