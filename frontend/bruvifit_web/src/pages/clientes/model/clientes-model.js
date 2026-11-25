@@ -1,4 +1,5 @@
 import { validarNome, validarTelefone, validarEmail, validarCep } from '../../../utils/validators.js';
+import { dataParaISO, formatoDataAtual } from '../../../utils/format.js';
 
 export const filtrosIniciais = { pesquisar: '', estado: '', dataInicial: '', dataFinal: '', incluirInativos: false };
 export const clienteVazio = { nome: '', email: '', telefone: '', cpf: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', enderecoId: null };
@@ -36,19 +37,14 @@ export function validarCliente(values) {
   return errors;
 }
 
-export function dataFiltro(value) {
+export function dataFiltro(value, formato) {
   if (!value) return '';
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  const iso = `${year}-${month}-${day}`;
-  const date = new Date(`${iso}T12:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
+  return dataParaISO(value, formato);
 }
 
 export function validarFiltros(filtros) {
   const inicio = dataFiltro(filtros.dataInicial), fim = dataFiltro(filtros.dataFinal);
-  if (inicio === null || fim === null) return 'Informe datas válidas em DD/MM/AAAA.';
+  if (inicio === null || fim === null) return `Informe datas válidas em ${formatoDataAtual()}.`;
   if (inicio && fim && inicio > fim) return 'A data final deve ser igual ou posterior à inicial.';
   return '';
 }

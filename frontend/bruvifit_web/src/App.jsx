@@ -33,6 +33,8 @@ import { DadosDaLojaPage } from './pages/configuracao/ui/DadosDaLojaPage.jsx';
 import { PerfilSegurancaPage } from './pages/configuracao/ui/PerfilSegurancaPage.jsx';
 import { PreferenciasSistemaPage } from './pages/configuracao/ui/PreferenciasSistemaPage.jsx';
 import { DashboardPage } from './pages/dashboard/ui/index.jsx';
+import { settingsApi } from './pages/configuracao/api/settings-api.js';
+import { preferencesStore } from './pages/configuracao/model/preferences-store.js';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -143,6 +145,12 @@ function AccessDenied() {
 }
 
 export default function App() {
+  const authState = useSyncExternalStore(session.subscribe, session.getSnapshot);
+  useSyncExternalStore(preferencesStore.subscribe, preferencesStore.get, preferencesStore.get);
+  useEffect(() => {
+    if (!session.isAuthenticated()) { preferencesStore.clear(); return; }
+    preferencesStore.load(settingsApi.preferences).catch(() => {});
+  }, [authState]);
   return (
     <>
       <ScrollToTop />

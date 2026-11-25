@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import brandLogo from "../../assets/BRUVI_logo_sem_fundo.png";
 import clientsIcon from "../../shared/assets/figma-products/8f122.svg";
 import employeesIcon from "../../shared/assets/figma-products/7702e.svg";
@@ -13,6 +13,8 @@ import suppliersIcon from "../../shared/assets/figma-products/f8595.svg";
 import dashboardIcon from "../../shared/assets/figma-products/a0377.svg";
 import { session } from "../../shared/auth/session.js";
 import { filterModulesByRole, normalizeRole } from "../../shared/auth/permissions.js";
+import { logout as apiLogout } from "../../pages/acesso/api/authRepository.js";
+import { preferencesStore } from "../../pages/configuracao/model/preferences-store.js";
 
 const items = [
   { to: "/dashboard", label: "Dashboard", icon: dashboardIcon },
@@ -28,8 +30,17 @@ const items = [
 ];
 
 export function Sidebar() {
+  const navigate = useNavigate();
   const user = session.getUser();
   const visibleItems = filterModulesByRole(items.map((item) => ({ ...item, path: item.to })), user?.role);
+
+  function logout() {
+    void apiLogout().catch(() => {});
+    preferencesStore.clear();
+    session.clearSession();
+    navigate('/acesso', { replace: true });
+  }
+
   return (
     <aside className={styles.sidebar} aria-label="Navegação principal">
       <NavLink
@@ -69,7 +80,7 @@ export function Sidebar() {
           <p className={styles.userName}>{user?.nome || 'Usuário'}</p>
           <p className={styles.userRole}>{user?.role ? `${normalizeRole(user.role).charAt(0)}${normalizeRole(user.role).slice(1).toLowerCase()}` : 'Sem cargo'}</p>
         </div>
-        <button type="button" className={styles.logout}>
+        <button type="button" className={styles.logout} onClick={logout}>
           Sair do sistema ↗
         </button>
       </div>

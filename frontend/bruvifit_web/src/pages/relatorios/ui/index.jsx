@@ -5,11 +5,12 @@ import { Button } from '../../../components/ui/Button.jsx'
 import { Card } from '../../../components/ui/Card.jsx'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
-import { reportTypes, reportFilters, formatReportValue } from '../model/reports-model.js'
+import { reportTypes, reportFilters, formatReportValue, getReportDefaultFilters } from '../model/reports-model.js'
 import { useReportData, useReportDownload } from '../model/use-reports.js'
 import { session } from '../../../shared/auth/session.js'
 import { canAccessReport } from '../../../shared/auth/permissions.js'
 import styles from './index.module.css'
+import { preferencesStore } from '../../configuracao/model/preferences-store.js'
 
 function DownloadFeedback({ error, notice, busy }) {
   return <>{busy ? <StatusPanel variante="info" titulo="Gerando relatório" role="status">Preparando o arquivo para download.</StatusPanel> : null}
@@ -32,12 +33,14 @@ function ReportCard({ report, onConfigure, onExport, busy }) {
 export function ReportsPage() {
   const navigate = useNavigate()
   const download = useReportDownload()
-  const allowedReports = reportTypes.filter((report) => canAccessReport(session.getUser()?.role, report.type))
+  const preferredType = preferencesStore.get().tipoRelatorio
+  const allowedReports = reportTypes.filter((report) => canAccessReport(session.getUser()?.role, report.type)).sort((a,b) => Number(b.type === preferredType)-Number(a.type === preferredType))
   return <div className={styles.page}>
     <PageHeader titulo="Relatórios" subtitulo="Analise os dados da sua loja" />
     <section className={styles.reportGrid} aria-label="Tipos de relatório">{allowedReports.map((report) => {
       const type = report.type.toLowerCase()
-      return <ReportCard key={type} report={report} onConfigure={() => navigate('/relatorios/' + type)} onExport={() => download.download(type)} busy={download.busy === type} />
+      const exportLabel = preferencesStore.get().formatoExportacao
+      return <ReportCard key={type} report={{...report, export:exportLabel}} onConfigure={() => navigate('/relatorios/' + type)} onExport={() => download.download(type)} busy={download.busy === type} />
     })}</section>
     <div className={styles.notice}><FileText size={20} aria-hidden="true" /><p><strong>Do recorte à decisão</strong><br />Escolha o tipo, confira os filtros e gere o resultado. Os arquivos exportados usam o mesmo período e recorte.</p></div>
     <DownloadFeedback {...download} />
@@ -53,7 +56,7 @@ export function ReportDetail({ type }) {
   const report = reportTypes.find((r) => r.type.toLowerCase() === type)
   const data = useReportData(type)
   const download = useReportDownload()
-  const [draft, setDraft] = useState({})
+  const [draft, setDraft] = useState(() => type === 'vendas' ? getReportDefaultFilters(preferencesStore.get().periodoRelatorios) : {})
   const [page, setPage] = useState(1)
   const [validation, setValidation] = useState('')
   function apply(event) {
@@ -67,7 +70,7 @@ export function ReportDetail({ type }) {
   const currentPage = Math.min(page, pageCount)
   return <div className={styles.page}>
     <PageHeader titulo={report.title} subtitulo="Relatórios / Dados do sistema"
-      acoes={<><Link to="/relatorios"><Button variant="secondary">Voltar aos relatórios</Button></Link><Button onClick={() => download.download(type, data.filters)} disabled={data.loading || Boolean(data.error) || Boolean(download.busy)} aria-busy={Boolean(download.busy)}><Download size={17} aria-hidden="true" /> Baixar {report.export}</Button></>} />
+      acoes={<><Link to="/relatorios"><Button variant="secondary">Voltar aos relatórios</Button></Link><Button onClick={() => download.download(type, data.filters)} disabled={data.loading || Boolean(data.error) || Boolean(download.busy)} aria-busy={Boolean(download.busy)}><Download size={17} aria-hidden="true" /> Baixar {preferencesStore.get().formatoExportacao}</Button></>} />
     <Card titulo="Filtros" className={styles.formCard}><form onSubmit={apply}>
       <div className={styles.fieldsGrid}>{reportFilters[type].map((field) => <label className={styles.field} htmlFor={'report-' + field.key} key={field.key}>
         <span>{field.label}</span>

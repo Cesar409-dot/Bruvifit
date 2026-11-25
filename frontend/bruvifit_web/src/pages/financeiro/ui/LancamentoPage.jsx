@@ -6,7 +6,7 @@ import { Card } from '../../../components/ui/Card.jsx';
 import { SelectField } from '../../../components/ui/SelectField.jsx';
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx';
 import { TextField } from '../../../components/ui/TextField.jsx';
-import { formatarMoeda } from '../../../utils/format.js';
+import { formatarData, formatarMoeda } from '../../../utils/format.js';
 import { financeiroApi, mensagemFinanceiro } from '../api/financeiros.js';
 import { labelTipo, montarLancamento } from '../model/financeiro.js';
 import styles from './index.module.css';
@@ -27,7 +27,7 @@ function Detalhes({ lancamento }) {
     ...fields.map(({ name, label }) => {
       let valor = lancamento[name];
       if (name === 'valor') valor = formatarMoeda(valor);
-      if (name.startsWith('data') && valor) valor = valor.split('-').reverse().join('/');
+      if (name.startsWith('data') && valor) valor = formatarData(valor);
       return [label, valor];
     }),
 

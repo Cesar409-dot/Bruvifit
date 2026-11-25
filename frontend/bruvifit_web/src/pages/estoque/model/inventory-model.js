@@ -52,7 +52,7 @@ export function movementSeries(movements, now = new Date()) {
 
     return {
       date: dateKey,
-      label: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(day),
+      label: formatarData(`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`),
       total,
       count: movements.filter((m) => m.dataMovimentacao && localDay(new Date(m.dataMovimentacao)) === dateKey).length,
     }
@@ -104,3 +104,4 @@ export function filterHistory(movements, products, filters) {
       && (!filters.responsible || movement.responsavel === filters.responsible)
   }).sort((a, b) => String(b.dataMovimentacao || '').localeCompare(String(a.dataMovimentacao || '')) || b.id - a.id)
 }
+import { formatarData } from '../../../utils/format.js'

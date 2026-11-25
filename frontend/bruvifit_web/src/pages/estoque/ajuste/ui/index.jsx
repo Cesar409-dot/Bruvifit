@@ -5,6 +5,7 @@ import { Button } from '../../../../components/ui/Button.jsx'
 import { SelectField } from '../../../../components/ui/SelectField.jsx'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { TextField } from '../../../../components/ui/TextField.jsx'
+import { formatarDataHora } from '../../../../utils/format.js'
 import { useInventory } from '../../model/use-inventory.js'
 import { inventoryApi, inventoryError } from '../../api/inventory-api.js'
 import styles from './index.module.css'
@@ -87,7 +88,7 @@ export function InventoryAdjustmentPage() {
             <div><dt>Produto / variação</dt><dd>{product?.name} · {product?.sku} · {product?.size} {product?.color}</dd></div>
             <div><dt>Origem</dt><dd>Ajuste manual</dd></div>
             <div><dt>Responsável</dt><dd>{movement.responsavel || 'Não registrado'}</dd></div>
-            <div><dt>Data e hora</dt><dd>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(movement.dataMovimentacao))}</dd></div>
+            <div><dt>Data e hora</dt><dd>{formatarDataHora(movement.dataMovimentacao)}</dd></div>
             <div><dt>Saldo anterior</dt><dd>{movement.saldoAnterior} unidades</dd></div>
             <div><dt>Saldo atual</dt><dd>{movement.saldoPos} unidades</dd></div>
             <div><dt>Motivo</dt><dd>{movement.motivo}</dd></div>

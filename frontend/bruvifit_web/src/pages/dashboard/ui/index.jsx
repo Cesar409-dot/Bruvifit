@@ -17,6 +17,7 @@ import { AlertTriangle, ArrowUpRight, BellRing, Info, PackageX } from 'lucide-re
 import { Card } from '../../../components/ui/Card.jsx'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import styles from './index.module.css'
+import { formatarMoeda, formatarNumero } from '../../../utils/format.js'
 import {
   categories,
   formatCurrency,
@@ -132,7 +133,7 @@ export function DashboardPage() {
     maintainAspectRatio: false,
     plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.parsed.y) } } },
     scales: {
-      y: { beginAtZero: true, ticks: { callback: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}` }, grid: { color: '#DDE3DC' } },
+      y: { beginAtZero: true, ticks: { callback: (value) => formatarMoeda(Number(value)) }, grid: { color: '#DDE3DC' } },
       x: { grid: { display: false } },
     },
   }
@@ -197,7 +198,7 @@ export function DashboardPage() {
 
       <section className={styles.metrics} aria-label="Indicadores">
         <Metric featured label="Faturamento no período" value={formatCurrency(metrics.revenue)} description="Receita demonstrativa de vendas confirmadas" />
-        <Metric label="Vendas no período" value={metrics.sales.toLocaleString('pt-BR')} description="Vendas confirmadas · demonstração" />
+        <Metric label="Vendas no período" value={formatarNumero(metrics.sales)} description="Vendas confirmadas · demonstração" />
         <Metric label="Ticket médio" value={formatCurrency(metrics.average)} description={`Faturamento ÷ ${metrics.sales} vendas`} />
         <Metric label="Estoque baixo · agora" value="8 produtos" description="Saldo positivo abaixo do mínimo" />
       </section>

@@ -4,6 +4,7 @@ import { PageHeader } from '../../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../../components/ui/Button.jsx'
 import { StatusBadge } from '../../../../components/ui/StatusBadge.jsx'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
+import { formatarDataHora } from '../../../../utils/format.js'
 import { formatMoney } from '../../../produtos/model/product-model.js'
 import { salesStatus } from '../../model/sales-model.js'
 import { useSales } from '../../model/use-sales.js'
@@ -11,8 +12,7 @@ import { salesApi, salesError } from '../../api/sales-api.js'
 import styles from './index.module.css'
 
 function dateTime(value) {
-  const date = value ? new Date(value) : null
-  return !date || Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date)
+  return formatarDataHora(value)
 }
 export function SaleDetailPage() {
   const navigate = useNavigate()

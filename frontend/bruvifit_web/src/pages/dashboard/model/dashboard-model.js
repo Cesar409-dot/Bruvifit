@@ -50,7 +50,7 @@ export function getDashboardMetrics(filters) {
 }
 
 export function formatCurrency(value) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  return formatarMoeda(value)
 }
 
 export function getPeriodLabel(period) {
@@ -58,3 +58,4 @@ export function getPeriodLabel(period) {
   if (period === '90') return 'Últimos 90 dias'
   return '19 out – 15 nov 2026'
 }
+import { formatarMoeda } from '../../../utils/format.js'

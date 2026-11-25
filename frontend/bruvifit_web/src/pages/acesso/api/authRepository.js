@@ -21,3 +21,7 @@ export async function restoreSession() {
   }
   return response.data;
 }
+
+export async function logout() {
+  return apiClient.post('/api/auth/logout', {});
+}

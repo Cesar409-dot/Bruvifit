@@ -6,6 +6,7 @@ import { Button } from '../../../../components/ui/Button.jsx'
 import { SelectField } from '../../../../components/ui/SelectField.jsx'
 import { StatusPanel } from '../../../../components/ui/StatusPanel.jsx'
 import { TextField } from '../../../../components/ui/TextField.jsx'
+import { formatarDataHora } from '../../../../utils/format.js'
 import { useInventory } from '../../model/use-inventory.js'
 import { filterHistory } from '../../model/inventory-model.js'
 import styles from './index.module.css'
@@ -13,9 +14,7 @@ import styles from './index.module.css'
 const initialFilters = { query: '', from: '', to: '', origin: '', variant: '', responsible: '' }
 
 function dateTime(value) {
-  if (!value) return '—'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date)
+  return formatarDataHora(value)
 }
 
 export function InventoryHistoryPage() {

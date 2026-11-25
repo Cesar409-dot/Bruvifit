@@ -14,8 +14,9 @@ import {
   topOutgoingProducts,
 } from '../model/inventory-model.js'
 import styles from './index.module.css'
+import { formatarMoeda, formatarNumero } from '../../../utils/format.js'
 
-const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const money = { format: formatarMoeda }
 const pageSize = 6
 
 function InventoryChart({ movements }) {
@@ -122,7 +123,7 @@ export function InventoryPage() {
 
       <section className={styles.metrics} aria-label="Resumo do estoque">
         {[
-          ['Total em estoque', loading || error ? '—' : summary.units == null ? 'Não informado' : summary.units.toLocaleString('pt-BR'), true],
+          ['Total em estoque', loading || error ? '—' : summary.units == null ? 'Não informado' : formatarNumero(summary.units), true],
           ['Produtos em estoque', loading || error ? '—' : summary.productsInStock ?? 'Não informado'],
           ['Estoque baixo', loading || error ? '—' : summary.low ?? 'Não informado'],
           ['Sem estoque', loading || error ? '—' : summary.empty ?? 'Não informado'],

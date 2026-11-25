@@ -1,3 +1,5 @@
+import { formatarData } from '../../../utils/format.js'
+
 const fold = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 export function salesStatus(order) {
@@ -34,7 +36,5 @@ export function salesSummary(orders) {
 
 export function formatDate(value) {
   if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('pt-BR').format(date)
+  return formatarData(String(value).slice(0, 10))
 }

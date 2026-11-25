@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { transformWithOxc } from 'vite'
 import { apiClient } from '../src/shared/api/axios-client.js'
-import { reportTypes, reportFilters, formatReportValue } from '../src/pages/relatorios/model/reports-model.js'
+import { reportTypes, reportFilters, formatReportValue, getReportDefaultFilters } from '../src/pages/relatorios/model/reports-model.js'
 import { reportsApi, reportFilename, reportError, reportFormats } from '../src/pages/relatorios/api/reports-api.js'
 
 const adapter = apiClient.defaults.adapter
@@ -58,7 +58,9 @@ function mount(code, name, overrides = {}, props = {}) {
     useState(initial) { const i = cursor++; if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial; return [states[i], (v) => { states[i] = typeof v === 'function' ? v(states[i]) : v }] },
     useNavigate: () => (path) => navigations.push(path), useParams: () => ({ tipo: 'vendas' }), useReportData: () => base, useReportDownload: () => ({ busy: '', error: '', notice: '', download() {} }),
     jsx: (type, props, ...children) => ({ type, props: { ...props, children } }), React: { Fragment: 'Fragment' }, Link: 'Link', Navigate: 'Navigate', Button: 'Button', Card: 'Card', PageHeader: 'PageHeader', StatusPanel: 'StatusPanel',
-    Download: 'Download', FileBarChart2: 'FileBarChart2', FileText: 'FileText', RotateCcw: 'RotateCcw', styles: {}, reportTypes, reportFilters, formatReportValue, ...overrides,
+    Download: 'Download', FileBarChart2: 'FileBarChart2', FileText: 'FileText', RotateCcw: 'RotateCcw', styles: {}, reportTypes, reportFilters, formatReportValue, getReportDefaultFilters,
+    preferencesStore: { get: () => ({ tipoRelatorio: 'Vendas', periodoRelatorios: 'Mês atual', formatoExportacao: 'PDF' }) },
+    session: { getUser: () => ({ role: 'ADMINISTRADOR' }) }, canAccessReport: () => true, ...overrides,
   }
   const components = new Function(...Object.keys(deps), code)(...Object.values(deps))
   return { render: () => { cursor = 0; return components[name](props) }, navigations }
@@ -88,7 +90,7 @@ test('tela usa indicadores globais do servidor, pagina sem recalcular e exporta 
   assert.deepEqual(downloads, [['vendas', filters]])
   find(view.render(), (n) => n.props?.id === 'report-inicio').props.onChange({ target: { value: '2026-11-01' } })
   find(view.render(), (n) => n.type === 'form').props.onSubmit({ preventDefault() {} })
-  assert.deepEqual(applications[0], { inicio: '2026-11-01' })
+  assert.deepEqual(applications[0], { inicio: '2026-11-01', fim: getReportDefaultFilters('Mês atual').fim })
 })
 test('trava síncrona impede dois downloads do mesmo relatório', async () => {
   let calls = 0, finish, saved = 0

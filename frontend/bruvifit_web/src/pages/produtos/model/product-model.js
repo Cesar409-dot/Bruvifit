@@ -3,8 +3,9 @@ export const PRODUCT_CATEGORIES = Object.freeze(['Camisetas', 'Calças', 'Acess�
 export const PRODUCT_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'Único', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44']
 export const PRODUCT_COLORS = ['Preto', 'Branco', 'Verde', 'Rosa', 'Azul', 'Cinza', 'Bege']
 
-export const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-export const formatMoney = (value) => BRL.format(Number(value) || 0)
+import { formatarMoeda } from '../../../utils/format.js'
+export const BRL = { format: (value) => formatarMoeda(value) }
+export const formatMoney = (value) => formatarMoeda(Number(value) || 0)
 
 export function emptyProductForm() {
   return {

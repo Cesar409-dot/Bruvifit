@@ -1,3 +1,5 @@
+import { formatarData, formatarMoeda, formatarNumero } from '../../../utils/format.js'
+
 export const reportTypes = [
   {
     type: 'Vendas',
@@ -35,14 +37,21 @@ export const reportFilters = {
   financeiro: [{ key: 'status', label: 'Status' }],
   produtos: [{ key: 'categoria', label: 'Categoria' }, { key: 'margemMin', label: 'Margem bruta estimada mínima (%)', type: 'number' }, { key: 'margemMax', label: 'Margem bruta estimada máxima (%)', type: 'number' }],
 }
+export function getReportDefaultFilters(period) {
+  const today = new Date()
+  const end = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  let start
+  if (period === 'Mês atual') start = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-01`
+  else { const days = period === 'Últimos 90 dias' ? 89 : 29; const date = new Date(today); date.setDate(date.getDate()-days); start = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` }
+  return { inicio:start, fim:end }
+}
 export function formatReportValue(value, format = 'text') {
   if (value == null) return 'Não informado'
-  if (format === 'money') return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  if (format === 'number') return Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+  if (format === 'money') return formatarMoeda(Number(value))
+  if (format === 'number') return formatarNumero(Number(value), { maximumFractionDigits: 2 })
   if (format === 'date' || format === 'datetime') {
     const [date, time] = String(value).split('T')
-    const [year, month, day] = date.split('-')
-    return [day + '/' + month + '/' + year, format === 'datetime' && time ? time.slice(0, 8) : ''].filter(Boolean).join(' ')
+    return [formatarData(date), format === 'datetime' && time ? time.slice(0, 8) : ''].filter(Boolean).join(' ')
   }
   return String(value)
 }

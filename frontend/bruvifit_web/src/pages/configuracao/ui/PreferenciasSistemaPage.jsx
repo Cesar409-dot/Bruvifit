@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../components/ui/Button.jsx'
 import { SelectField } from '../../../components/ui/SelectField.jsx'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
-import { loadSettings, PREFERENCE_DEFAULTS, saveSettings } from '../model/settings-model.js'
+import { PREFERENCE_DEFAULTS } from '../model/settings-model.js'
+import { settingsApi } from '../api/settings-api.js'
+import { preferencesStore } from '../model/preferences-store.js'
 import { SettingsTabs } from './SettingsTabs.jsx'
 import styles from './settings.module.css'
 
@@ -19,10 +21,13 @@ function PreferenceToggle({ id, title, description, checked, onChange, enabledLa
 }
 
 export function PreferenciasSistemaPage() {
-  const [form, setForm] = useState(() => loadSettings('preferencias'))
-  const [savedForm, setSavedForm] = useState(() => loadSettings('preferencias'))
+  const [form, setForm] = useState(PREFERENCE_DEFAULTS)
+  const [savedForm, setSavedForm] = useState(PREFERENCE_DEFAULTS)
+  const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState(null)
   const hasUnsavedChanges = Object.keys(savedForm).some((field) => form[field] !== savedForm[field])
+
+  useEffect(() => { let active=true; preferencesStore.load(settingsApi.preferences).then((data)=>{ if(active){setForm(data);setSavedForm(data)} }).catch((error)=>{ if(active)setFeedback({tone:'error',title:'Não foi possível carregar as preferências',message:error.response?.data?.message||'Verifique sua conexão e tente novamente.'}) }).finally(()=>active&&setLoading(false)); return ()=>{active=false} }, [])
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -34,15 +39,16 @@ export function PreferenciasSistemaPage() {
     setFeedback({ tone: 'info', title: 'Padrões preenchidos', message: 'Confirme em Salvar preferências para guardar estes valores locais.' })
   }
 
-  function save(event) {
+  async function save(event) {
     event.preventDefault()
     try {
-      const saved = saveSettings('preferencias', form)
+      const saved = await settingsApi.savePreferences(form)
       setSavedForm(saved)
       setForm(saved)
-      setFeedback({ tone: 'success', title: 'Preferências salvas', message: 'As preferências foram guardadas neste navegador, sem integração com backend.' })
-    } catch {
-      setFeedback({ tone: 'error', title: 'Não foi possível salvar', message: 'As escolhas continuam preenchidas. Tente novamente.' })
+      preferencesStore.set(saved)
+      setFeedback({ tone: 'success', title: 'Preferências salvas', message: 'As preferências da loja foram atualizadas.' })
+    } catch (error) {
+      setFeedback({ tone: 'error', title: 'Não foi possível salvar', message: error.response?.data?.message || 'As escolhas continuam preenchidas. Tente novamente.' })
     }
   }
 
@@ -61,6 +67,7 @@ export function PreferenciasSistemaPage() {
       />
       <SettingsTabs hasUnsavedChanges={hasUnsavedChanges} onDiscard={() => { setForm({ ...savedForm }); setFeedback(null) }} />
       {feedback ? <StatusPanel variante={feedback.tone === 'error' ? 'erro' : feedback.tone === 'success' ? 'sucesso' : 'info'} tom="verde" titulo={feedback.title}>{feedback.message}</StatusPanel> : null}
+      {loading ? <p role="status">Carregando preferências…</p> : null}
 
       <form id="settings-preferences-form" className={styles.formStack} onSubmit={save}>
         <section className={styles.panel} aria-labelledby="stock-notifications-title">
@@ -70,22 +77,6 @@ export function PreferenciasSistemaPage() {
             <PreferenceToggle id="email-alerts" title="Notificações por e-mail" description="o envio depende de um e-mail configurado." enabledLabel="Ativadas" disabledLabel="Desativadas" checked={form.notificacoesEmail} onChange={() => update('notificacoesEmail', !form.notificacoesEmail)} />
           </div>
           <p className={styles.helper}>Desativar notificações não remove os indicadores de estoque crítico e ruptura do dashboard.</p>
-        </section>
-
-        <section className={styles.panel} aria-labelledby="report-defaults-title">
-          <h2 id="report-defaults-title">Padrões dos relatórios</h2>
-          <div className={styles.grid3}>
-            <SelectField id="pref-report-period" label="Período padrão" value={form.periodoRelatorios} onChange={(event) => update('periodoRelatorios', event.target.value)}>
-              {['Mês atual', 'Últimos 30 dias', 'Últimos 90 dias'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-            <SelectField id="pref-report-type" label="Tipo padrão" value={form.tipoRelatorio} onChange={(event) => update('tipoRelatorio', event.target.value)}>
-              {['Vendas', 'Estoque', 'Financeiro'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-            <SelectField id="pref-export-format" label="Formato de exportação" value={form.formatoExportacao} onChange={(event) => update('formatoExportacao', event.target.value)}>
-              {['PDF', 'CSV'].map((option) => <option key={option}>{option}</option>)}
-            </SelectField>
-          </div>
-          <p className={styles.helper}>Valores iniciais da loja. Os filtros podem ser alterados ao configurar cada relatório.</p>
         </section>
 
         <section className={styles.panel} aria-labelledby="local-formats-title">

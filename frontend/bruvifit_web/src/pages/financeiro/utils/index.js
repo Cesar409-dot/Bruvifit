@@ -1,4 +1,4 @@
-import { formatarMoeda } from '../../../utils/format.js';
+import { formatarData, formatarMoeda, formatoDataAtual } from '../../../utils/format.js';
 import { formaPagamento, labelTipo } from '../model/financeiro.js';
 
 const VARIANT_POR_SITUACAO = {
@@ -69,10 +69,9 @@ export const formatarEixo = (data, ehMes) => {
   if (!data) return '—';
   if (ehMes) {
     const [ano, mes] = data.split('-');
-    return `${mes}/${ano}`;
+    return formatoDataAtual() === 'AAAA-MM-DD' ? `${ano}-${mes}` : `${mes}/${ano}`;
   }
-  const [, mes, dia] = data.split('-');
-  return `${dia}/${mes}`;
+  return formatarData(data);
 };
 
 export const formasParaDonut = (formasResponse) => {
@@ -97,7 +96,7 @@ export const formasParaDonut = (formasResponse) => {
 
 export const movimentacaoParaLinha = (m) => ({
   id: m.id,
-  data: m.dataCompetencia ? m.dataCompetencia.split('-').reverse().join('/') : '—',
+  data: formatarData(m.dataCompetencia),
   categoria: m.categoria || '—',
   tipo: labelTipo(m.tipo) || '—',
   forma: formaPagamento(m.formaPagamento),

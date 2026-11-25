@@ -12,12 +12,12 @@ export async function reportError(error) {
   if (error?.isAxiosError) return 'Não foi possível conectar ao servidor. Tente novamente.'
   return error?.message || 'Não foi possível gerar o relatório.'
 }
-export function reportFilename(header, type) {
+export function reportFilename(header, type, selectedFormat = reportFormats[type]) {
   const extended = /filename\*=UTF-8''([^;]+)/i.exec(header || '')
   const normal = /filename="?([^";]+)"?/i.exec(header || '')
   let name = extended?.[1] || normal?.[1]
   try { name = name && decodeURIComponent(name) } catch { name = null }
-  return name && !/[\\/]/.test(name) && !Array.from(name).some((char) => char.charCodeAt(0) < 32) && name.toLowerCase().endsWith('.' + reportFormats[type]) ? name : `relatorio-${type}.${reportFormats[type]}`
+  return name && !/[\\/]/.test(name) && !Array.from(name).some((char) => char.charCodeAt(0) < 32) && name.toLowerCase().endsWith('.' + selectedFormat) ? name : `relatorio-${type}.${selectedFormat}`
 }
 export const reportsApi = {
   async preview(type, filters, signal) {
@@ -26,16 +26,16 @@ export const reportsApi = {
     if (data?.type !== type || !Array.isArray(data.rows) || !Array.isArray(data.metrics) || !Array.isArray(data.columns) || !data.options) throw new Error('Resposta de relatório inválida.')
     return data
   },
-  async file(type, filters = {}) {
-    const format = reportFormats[type]
-    if (!format) throw new Error('Relatório inválido.')
+  async file(type, filters = {}, preferredFormat = reportFormats[type]) {
+    const format = String(preferredFormat || '').toLowerCase()
+    if (!reportFormats[type] || !['pdf','csv'].includes(format)) throw new Error('Relatório ou formato inválido.')
     const response = await apiClient.get(`/relatorios/${type}/${format}`, { params: filters, responseType: 'blob' })
     const mime = String(response.headers['content-type'] || '').toLowerCase()
     if (!(response.data instanceof Blob) || response.data.size === 0 || !mime.includes(format === 'pdf' ? 'application/pdf' : 'text/csv')) throw new Error('O servidor não retornou um arquivo válido.')
     const prefix = new Uint8Array(await response.data.slice(0, 5).arrayBuffer())
     if (format === 'pdf' && String.fromCharCode(...prefix) !== '%PDF-') throw new Error('O PDF retornado é inválido.')
     if (format === 'csv' && !(prefix[0] === 0xef && prefix[1] === 0xbb && prefix[2] === 0xbf)) throw new Error('O CSV retornado possui codificação inválida.')
-    return { blob: response.data, name: reportFilename(response.headers['content-disposition'], type) }
+    return { blob: response.data, name: reportFilename(response.headers['content-disposition'], type, format) }
   },
 }
 

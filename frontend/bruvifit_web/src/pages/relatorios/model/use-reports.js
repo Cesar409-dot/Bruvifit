@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { reportsApi, reportError, saveReportFile } from '../api/reports-api.js'
+import { preferencesStore } from '../../configuracao/model/preferences-store.js'
+import { getReportDefaultFilters } from './reports-model.js'
 
 const pendingDownloads = new Set()
 export function useReportDownload() {
@@ -9,14 +11,14 @@ export function useReportDownload() {
   async function download(type, filters = {}) {
     if (pendingDownloads.has(type)) return
     pendingDownloads.add(type); setBusy(type); setError(''); setNotice('')
-    try { saveReportFile(await reportsApi.file(type, { ...filters })); setNotice('Download iniciado. O arquivo será salvo conforme as configurações do navegador.') }
+    try { saveReportFile(await reportsApi.file(type, { ...filters }, preferencesStore.get().formatoExportacao)); setNotice('Download iniciado. O arquivo será salvo conforme as configurações do navegador.') }
     catch (failure) { setError(await reportError(failure)) }
     finally { pendingDownloads.delete(type); setBusy('') }
   }
   return { busy, error, notice, download }
 }
 export function useReportData(type) {
-  const [filters, setFilters] = useState({})
+  const [filters, setFilters] = useState(() => type === 'vendas' ? getReportDefaultFilters(preferencesStore.get().periodoRelatorios) : {})
   const [revision, setRevision] = useState(0)
   const [state, setState] = useState({ data: null, loading: true, error: '' })
   const apply = useCallback((next) => { setFilters({ ...next }); setRevision((r) => r + 1); setState((s) => ({ ...s, loading: true, error: '' })) }, [])
