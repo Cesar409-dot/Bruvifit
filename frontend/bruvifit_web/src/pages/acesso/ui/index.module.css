@@ -1,7 +1,7 @@
 .page {
   display: grid;
-  min-height: 100vh;
-  grid-template-columns: minmax(420px, 44%) 1fr;
+  min-height: 100dvh;
+  grid-template-columns: minmax(360px, 42%) minmax(0, 1fr);
   background: var(--cor-fundo);
   color: var(--cor-texto);
 }
@@ -9,10 +9,11 @@
 .brandPanel {
   position: relative;
   display: flex;
+  min-width: 0;
   overflow: hidden;
   flex-direction: column;
-  gap: var(--espaco-24);
-  padding: clamp(32px, 5vw, 72px);
+  gap: var(--espaco-16);
+  padding: clamp(24px, 4vw, 56px);
   background: linear-gradient(180deg, var(--cor-primaria) 0%, var(--cor-primaria-hover) 100%);
   color: var(--cor-texto-sobre-escuro);
 }
@@ -26,7 +27,7 @@
 
 .brandLogo {
   display: block;
-  width: min(100%, 260px);
+  width: min(100%, 180px);
   height: auto;
   filter: brightness(0) invert(1);
   margin-top: 6px;
@@ -37,8 +38,8 @@
   flex: 1;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 16px;
-  max-width: 520px;
+  gap: 12px;
+  max-width: 480px;
 }
 
 .brandCopy h1,
@@ -49,7 +50,7 @@
 }
 
 .brandCopy h1 {
-  font-size: clamp(36px, 4vw, 54px);
+  font-size: clamp(32px, 3.3vw, 46px);
   line-height: 1.08;
 }
 
@@ -72,11 +73,13 @@
 
 .formPanel {
   display: grid;
+  min-width: 0;
   place-items: center;
-  padding: clamp(28px, 7vw, 112px);
+  padding: clamp(24px, 5vw, 72px);
 }
 
 .formCard {
+  min-width: 0;
   width: min(100%, 470px);
 }
 
@@ -286,7 +289,12 @@
   }
 
   .brandPanel {
-    min-height: 460px;
+    min-height: 380px;
+    padding: 28px 24px 36px;
+  }
+
+  .brandLogo {
+    width: min(100%, 150px);
   }
 
   .brandCopy {
@@ -294,7 +302,7 @@
   }
 
   .formPanel {
-    padding: 48px 24px 56px;
+    padding: 40px 24px 48px;
   }
 
   .subtitle {
