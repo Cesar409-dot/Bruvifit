@@ -15,7 +15,7 @@ export function inventoryStatus(product) {
   if (product.stock == null) return 'Não informado'
   const quantity = Number(product.stock)
   if (quantity === 0) return 'Sem estoque'
-  return product.minimum == null ? 'Mínimo não informado' : quantity <= Number(product.minimum) ? 'Baixo' : 'Normal'
+  return product.minimum == null ? 'Mínimo não informado' : quantity < Number(product.minimum) ? 'Baixo' : 'Normal'
 }
 
 export function inventorySummary(products) {

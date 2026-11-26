@@ -51,7 +51,7 @@ class RelatorioIntegrationTest {
     }
     @Test void estoqueFonteOficialCustoAusenteEFornecedoresSemMultiplicar() {
         var data=service.gerar("estoque",Map.of());assertEquals(3,data.rows().size());assertNull(metric(data,"unidades"));assertNull(metric(data,"valor"));
-        var filtered=service.gerar("estoque",Map.of("fornecedor","94001"));assertEquals(1,filtered.rows().size());amount("5",metric(filtered,"unidades"));amount("50",metric(filtered,"valor"));amount("1",metric(filtered,"baixo"));
+        var filtered=service.gerar("estoque",Map.of("fornecedor","94001"));assertEquals(1,filtered.rows().size());amount("5",metric(filtered,"unidades"));amount("50",metric(filtered,"valor"));amount("0",metric(filtered,"baixo"));
         assertEquals("Fornecedor A, Fornecedor B",filtered.rows().getFirst().get("fornecedores"));
         var empty=service.gerar("estoque",Map.of("nivel","Sem estoque"));amount("1",metric(empty,"sem"));amount("0",metric(empty,"valor"));
     }

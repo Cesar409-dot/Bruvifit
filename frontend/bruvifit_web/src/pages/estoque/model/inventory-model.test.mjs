@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { inventorySummary, inventoryStatus, filterInventory, filterHistory, movementSeries } from './inventory-model.js'
 import { inventoryApi, inventoryError, readProducts } from '../api/inventory-api.js'
+import { session } from '../../../shared/auth/session.js'
 import { apiClient } from '../../../shared/api/axios-client.js'
 
 const filters = { query: '', category: '', size: '', color: '', status: 'Todos' }
@@ -41,8 +42,8 @@ test('DTO real preserva ausência de custo, mínimo e saldo', () => {
 })
 test('API consulta as listas reais e envia apenas os campos de ajuste; JWT compartilhado', async () => {
   const previous = apiClient.defaults.adapter
-  const storage = globalThis.localStorage
-  globalThis.localStorage = { getItem: () => JSON.stringify({ token: 'jwt-de-teste' }) }
+  const getToken = session.getToken
+  session.getToken = () => 'jwt-de-teste'
   const calls = []
   apiClient.defaults.adapter = async (config) => {
     calls.push(config)
@@ -57,9 +58,15 @@ test('API consulta as listas reais e envia apenas os campos de ajuste; JWT compa
     assert.equal((await inventoryApi.adjust(payload)).saldoPos, 6)
     assert.deepEqual(JSON.parse(calls[2].data), payload)
     assert.equal(calls[2].headers.Authorization, 'Bearer jwt-de-teste')
-  } finally { apiClient.defaults.adapter = previous; globalThis.localStorage = storage }
+  } finally { apiClient.defaults.adapter = previous; session.getToken = getToken }
 })
 test('erros HTTP apresentam mensagens específicas', () => {
   for (const status of [400, 401, 403, 404, 409, 500]) assert.ok(inventoryError({ response: { status, data: {} } }).length > 10)
   assert.equal(inventoryError({ response: { status: 409, data: { message: 'Estoque insuficiente' } } }), 'Estoque insuficiente')
+})
+
+test('saldo igual ao mínimo não é baixo; zero permanece sem estoque', () => {
+  assert.equal(inventoryStatus({ stock: 3, minimum: 3 }), 'Normal')
+  assert.equal(inventoryStatus({ stock: 2, minimum: 3 }), 'Baixo')
+  assert.equal(inventoryStatus({ stock: 0, minimum: 3 }), 'Sem estoque')
 })

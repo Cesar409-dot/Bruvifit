@@ -100,7 +100,7 @@ public class RelatorioService {
         Map<String,List<Option>> options=new LinkedHashMap<>();
         options.put("fornecedor",supplierOptions.entrySet().stream().map(e -> new Option(e.getKey(),e.getValue())).toList());
         options.put("nivel",List.of(new Option("Baixo","Estoque baixo"),new Option("Sem estoque","Sem estoque"),new Option("Normal","Normal")));
-        return response("estoque","Relatório de Estoque",f,"Fonte oficial: Produto.saldoEstoque. Mesmo critério da dashboard: saldo zero = Sem estoque; positivo até o mínimo = Baixo. Valorização pelo custo de matéria-prima cadastrado, mesma base da dashboard; não é custo histórico de aquisição. Fornecedores não multiplicam produtos/saldos. Não há depósitos cadastrados no modelo.",metrics,
+        return response("estoque","Relatório de Estoque",f,"Fonte oficial: Produto.saldoEstoque. Mesmo critério da dashboard: saldo zero = Sem estoque; positivo abaixo do mínimo = Baixo. Valorização pelo custo de matéria-prima cadastrado, mesma base da dashboard; não é custo histórico de aquisição. Fornecedores não multiplicam produtos/saldos. Não há depósitos cadastrados no modelo.",metrics,
                 cols("id|ID do produto|number","nome|Produto|text","sku|SKU|text","categoria|Categoria|text","tamanho|Tamanho|text","cor|Cor|text","saldo|Quantidade disponível|number","minimo|Estoque mínimo|number","nivel|Situação do estoque|text","custo|Custo cadastrado|money","valor_estoque|Valor em estoque|money","fornecedores|Fornecedores|text"),rows,Map.of(),options);
     }
     private RelatorioResponse financeiro(Map<String,String> f) {
@@ -153,6 +153,6 @@ public class RelatorioService {
     static String stockStatus(Map<String,Object> r) {
         if(r.get("saldo")==null) return "Não informado";
         if(decimal(r.get("saldo")).signum()==0) return "Sem estoque";
-        return r.get("minimo")==null?"Mínimo não informado":decimal(r.get("saldo")).compareTo(decimal(r.get("minimo")))<=0?"Baixo":"Normal";
+        return r.get("minimo")==null?"Mínimo não informado":decimal(r.get("saldo")).compareTo(decimal(r.get("minimo")))<0?"Baixo":"Normal";
     }
 }

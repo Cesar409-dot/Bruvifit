@@ -25,6 +25,17 @@ public class DashboardController {
         this.service = service;
     }
 
+    @GetMapping("/gerencial")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
+    public ResponseEntity<Map<String,Object>> gerencial(
+            @RequestParam(required=false) Integer dias,
+            @RequestParam(required=false) String categoria,
+            @RequestParam(required=false) String formaPagamento) {
+        if (dias != null && dias != 7 && dias != 28 && dias != 90) throw new IllegalArgumentException("Período deve ser 7, 28 ou 90 dias.");
+        LocalDate hoje=LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"));
+        return ResponseEntity.ok(service.getGerencial(dias == null ? null : hoje.minusDays(dias),dias == null ? null : hoje.minusDays(1),categoria,formaPagamento));
+    }
+
     @GetMapping("/indicadores")
     public ResponseEntity<Map<String, Object>> getIndicadores() {
         return ResponseEntity.ok(service.getIndicadores());

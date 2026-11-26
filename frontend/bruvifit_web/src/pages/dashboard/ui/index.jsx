@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -18,17 +19,15 @@ import { Card } from '../../../components/ui/Card.jsx'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import styles from './index.module.css'
 import {
-  categories,
   formatCurrency,
-  getDashboardMetrics,
   getPeriodLabel,
   initialDashboardFilters,
-  margins,
-  topProducts,
-  weekdaySales,
+  categoryColor,
 } from '../model/dashboard-model.js'
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, DoughnutController, Filler, Legend, LineController, LineElement, LinearScale, PointElement, Tooltip)
+
+import { loadDashboard } from '../api/dashboard-api.js'
 
 const chartColors = ['#173F35', '#285C4F', '#A8C5B8', '#D9A8A0']
 
@@ -88,7 +87,7 @@ function ChartCanvas({ type, data, options, label, className }) {
     chartRef.current = null
 
     try {
-      chartRef.current = new ChartJS(canvas, { type, data, options })
+      chartRef.current = new ChartJS(canvas, { type })
     } catch (error) {
       ChartJS.getChart(canvas)?.destroy()
       chartRef.current = null
@@ -99,7 +98,15 @@ function ChartCanvas({ type, data, options, label, className }) {
       chartRef.current?.destroy()
       chartRef.current = null
     }
-  }, [data, options, type])
+  }, [type])
+
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.data = data
+      chartRef.current.options = options
+      chartRef.current.update()
+    }
+  }, [data, options])
 
   return <canvas ref={canvasRef} role="img" aria-label={label} className={className} />
 }
@@ -108,14 +115,30 @@ export function DashboardPage() {
   const [filters, setFilters] = useState(initialDashboardFilters)
   const [applied, setApplied] = useState(initialDashboardFilters)
   const [notice, setNotice] = useState('')
-  const metrics = useMemo(() => getDashboardMetrics(applied), [applied])
-  const periodLabel = getPeriodLabel(applied.period)
-  const barScale = Math.max(1, metrics.sales / 320)
-  const salesByWeek = [6100, 7400, 8500, 10500].map((value) => value * (metrics.revenue / 32500))
-  const salesByDay = weekdaySales.map(({ day, count }) => ({ day, count: Math.max(1, Math.round(count * barScale)) }))
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const request = useRef(0)
+  const mounted = useRef(false)
+  const busy = useRef(false)
+  useEffect(() => {
+    let active = true
+    mounted.current = true
+    loadDashboard(initialDashboardFilters).then((result) => { if (active) setData(result) })
+      .catch(() => { if (active) setError('Não foi possível carregar a Dashboard. Verifique sua conexão e permissão e tente novamente.') })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false; mounted.current = false }
+  }, [])
+  const metrics = data?.metrics ?? { revenue: null, sales: null, average: null }
+  const categories = (data?.categories ?? []).map(c => ({ ...c, color: categoryColor(c.name, data?.categoryOptions) }))
+  const topProducts = data?.topProducts ?? []
+  const margins = data?.margins ?? []
+  const periodLabel = data?.allHistory ? 'Histórico completo de vendas' : data ? `${data.inicio} – ${data.fim}` : getPeriodLabel(applied.period)
+  const salesByWeek = data?.evolution.map(p => p.revenue) ?? []
+  const salesByDay = data?.weekdaySales ?? []
 
   const lineData = {
-    labels: ['19–25 out', '26 out–1 nov', '2–8 nov', '9–15 nov'],
+    labels: data?.evolution.map(p => p.label) ?? [],
     datasets: [{
       label: 'Faturamento (R$)',
       data: salesByWeek,
@@ -138,7 +161,7 @@ export function DashboardPage() {
   }
   const categoryData = {
     labels: categories.map((category) => category.name),
-    datasets: [{ data: categories.map((category) => category.count), backgroundColor: chartColors, borderWidth: 0 }],
+    datasets: [{ data: categories.map((category) => category.count), backgroundColor: categories.map(c => c.color), borderWidth: 0 }],
   }
   const doughnutOptions = {
     responsive: true,
@@ -147,11 +170,22 @@ export function DashboardPage() {
     plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw} itens` } } },
   }
 
-  function applyFilters(event) {
+  async function applyFilters(event) {
     event.preventDefault()
-    setApplied(filters)
-    setNotice('Indicadores demonstrativos atualizados')
-    window.setTimeout(() => setNotice(''), 2400)
+    if (busy.current || loading) return
+    busy.current = true
+    const id = ++request.current
+    setLoading(true)
+    setError('')
+    try {
+      const result = await loadDashboard(filters)
+      if (mounted.current && id === request.current) { setData(result); setApplied({ ...filters }); setNotice('Indicadores atualizados') }
+    } catch {
+      if (mounted.current && id === request.current) setError('Não foi possível atualizar a Dashboard. Tente novamente. Os dados anteriores não foram atualizados.')
+    } finally {
+      busy.current = false
+      if (mounted.current && id === request.current) setLoading(false)
+    }
   }
 
   function updateFilter(key, value) {
@@ -160,70 +194,69 @@ export function DashboardPage() {
 
   function scrollToAlerts() {
     document.getElementById('dashboard-alerts')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    setNotice('3 alertas operacionais demonstrativos')
+    setNotice(`${data?.activeAlerts ?? '—'} alertas ativos registrados. Não há página de Alertas disponível no sistema.`)
     window.setTimeout(() => setNotice(''), 2400)
   }
 
   return (
     <div className={styles.dashboard}>
       <PageHeader titulo="Dashboard Gerencial" subtitulo="Visão geral da sua operação" acoes={(
-        <span className={styles.demoBadge}><Info size={16} aria-hidden="true" /> Dados demonstrativos</span>
+        <span className={styles.demoBadge}><Info size={16} aria-hidden="true" /> Dados do sistema</span>
       )} />
 
       <form className={styles.filters} aria-label="Filtros dos resultados" onSubmit={applyFilters}>
         <div className={styles.filterGrid}>
-          <FilterSelect label="Período" helper={filters.period === '28' ? '28 dias completos' : 'Período selecionado'} value={filters.period} onChange={(value) => updateFilter('period', value)}>
+          <FilterSelect label="Período" helper={getPeriodLabel(filters.period)} value={filters.period} onChange={(value) => updateFilter('period', value)}>
+            <option value="all">Todo o período</option>
             <option value="7">Últimos 7 dias</option>
-            <option value="28">19 out – 15 nov 2026</option>
+            <option value="28">Últimos 28 dias</option>
             <option value="90">Últimos 90 dias</option>
           </FilterSelect>
           <FilterSelect label="Categoria" helper="Aplicada às análises de vendas" value={filters.category} onChange={(value) => updateFilter('category', value)}>
             <option value="all">Todas as categorias</option>
-            <option value="shirts">Camisetas</option>
-            <option value="pants">Calças</option>
-            <option value="shoes">Tênis</option>
-            <option value="accessories">Acessórios</option>
+            {(data?.categoryOptions ?? []).map(name => <option key={name} value={name}>{name}</option>)}
           </FilterSelect>
           <FilterSelect label="Método de pagamento" helper="Aplicado às análises de vendas" value={filters.payment} onChange={(value) => updateFilter('payment', value)}>
             <option value="all">Todos os métodos</option>
-            <option value="pix">Pix</option>
-            <option value="card">Cartão</option>
-            <option value="cash">Dinheiro</option>
+            {(data?.paymentOptions ?? []).map(name => <option key={name} value={name}>{name}</option>)}
           </FilterSelect>
-          <button className={styles.primaryButton} type="submit">Atualizar indicadores</button>
+          <button className={styles.primaryButton} type="submit" disabled={loading}>{loading ? 'Carregando…' : 'Atualizar indicadores'}</button>
         </div>
         <p>Os filtros afetam vendas e faturamento. Estoque e catálogo mostram a situação atual.</p>
       </form>
 
+      {loading && <p role="status">Carregando indicadores…</p>}
+      {error && <p role="alert">{error}</p>}
+      {data && <>
       <section className={styles.metrics} aria-label="Indicadores">
-        <Metric featured label="Faturamento no período" value={formatCurrency(metrics.revenue)} description="Receita demonstrativa de vendas confirmadas" />
-        <Metric label="Vendas no período" value={metrics.sales.toLocaleString('pt-BR')} description="Vendas confirmadas · demonstração" />
+        <Metric featured label="Faturamento no período" value={formatCurrency(metrics.revenue)} description="Receita de vendas confirmadas" />
+        <Metric label="Vendas no período" value={metrics.sales.toLocaleString('pt-BR')} description="Pedidos confirmados" />
         <Metric label="Ticket médio" value={formatCurrency(metrics.average)} description={`Faturamento ÷ ${metrics.sales} vendas`} />
-        <Metric label="Estoque baixo · agora" value="8 produtos" description="Saldo positivo abaixo do mínimo" />
+        <Metric label="Estoque baixo · agora" value={`${data?.stock.low ?? '—'} produtos`} description="Saldo positivo abaixo do mínimo" />
       </section>
 
       <div className={styles.analysisGrid}>
-        <Panel title="Faturamento ao longo do tempo" subtitle={`Total por semana · ${periodLabel}`} className={styles.chartPanel}>
-          <div className={styles.lineChart}><ChartCanvas type="line" data={lineData} options={lineOptions} label="Gráfico demonstrativo de faturamento por semana em reais" /></div>
-          <p className={styles.chartSummary}>4 semanas · soma demonstrativa do período: {formatCurrency(metrics.revenue)}</p>
+        <Panel title="Faturamento ao longo do tempo" subtitle={`Total por ${data?.granularity === 'MES' ? 'mês' : 'semana'} · ${periodLabel}`} className={styles.chartPanel}>
+          <div className={styles.lineChart}><ChartCanvas type="line" data={lineData} options={lineOptions} label="Gráfico de faturamento em reais" /></div>
+          <p className={styles.chartSummary}>{data?.evolution.length} intervalos · total do período: {formatCurrency(metrics.revenue)}</p>
         </Panel>
         <Panel title="Vendas por categoria" subtitle="Participação em itens vendidos no período">
           <div className={styles.categoryChart}>
             <div className={styles.doughnutWrap}>
-              <ChartCanvas type="doughnut" data={categoryData} options={doughnutOptions} label="Gráfico demonstrativo da distribuição de itens vendidos por categoria" />
-              <div className={styles.doughnutCenter}><strong>640</strong><span>itens vendidos</span></div>
+              <ChartCanvas type="doughnut" data={categoryData} options={doughnutOptions} label="Gráfico da distribuição de itens vendidos por categoria" />
+              <div className={styles.doughnutCenter}><strong>{data?.totalUnits}</strong><span>itens vendidos</span></div>
             </div>
             <ul className={styles.legend}>
-              {categories.map((category, index) => (
+              {categories.map((category) => (
                 <li key={category.name}>
-                  <span className={styles.legendSwatch} style={{ '--swatch': chartColors[index] }} aria-hidden="true" />
+                  <span className={styles.legendSwatch} style={{ '--swatch': category.color }} aria-hidden="true" />
                   <span><strong>{category.name}</strong><small>{category.count} itens</small></span>
                   <b>{category.percentage}%</b>
                 </li>
               ))}
             </ul>
           </div>
-          <p className={styles.chartSummary}>Distribuição demonstrativa por quantidade, não por receita.</p>
+          <p className={styles.chartSummary}>{categories.length ? 'Distribuição por quantidade, não por receita.' : 'Sem itens vendidos no período.'}</p>
         </Panel>
       </div>
 
@@ -231,45 +264,47 @@ export function DashboardPage() {
         <Panel title="Produtos mais vendidos" subtitle="Ordenado por quantidade · vendas no período">
           <div className={styles.tableWrap}>
             <table>
-              <caption className={styles.srOnly}>Produtos mais vendidos no período demonstrativo selecionado</caption>
+              <caption className={styles.srOnly}>Produtos mais vendidos no período selecionado</caption>
               <thead><tr><th scope="col">Produto</th><th scope="col">Qtd.</th><th scope="col">Faturamento</th></tr></thead>
-              <tbody>{topProducts.map((product) => <tr key={product.name}><td>{product.name}</td><td>{product.quantity}</td><td>{formatCurrency(product.revenue)}</td></tr>)}</tbody>
+              <tbody>{!topProducts.length && <tr><td colSpan="3">Sem vendas no período.</td></tr>}{topProducts.map((product) => <tr key={product.name}><td>{product.name}</td><td>{product.quantity}</td><td>{formatCurrency(product.revenue)}</td></tr>)}</tbody>
             </table>
           </div>
-          <p className={styles.chartSummary}>Top 5: 416 itens · R$ 25.460,00 no período demonstrativo.<br />Faturamento de vendas confirmadas, com descontos.</p>
+          <p className={styles.chartSummary}>Top 5: {topProducts.reduce((sum, p) => sum + p.quantity, 0)} itens · {formatCurrency(topProducts.reduce((sum, p) => sum + Number(p.revenue), 0))} no período.<br />Faturamento de vendas confirmadas, com descontos.</p>
         </Panel>
-        <Panel title="Produtos com maior margem" subtitle="Período selecionado · ordenado por margem bruta">
+        <Panel title="Produtos com maior margem" subtitle="Produtos vendidos no período · ordenados por margem cadastrada">
           <div className={styles.tableWrap}>
             <table>
-              <caption className={styles.srOnly}>Produtos com maior margem bruta, dados demonstrativos</caption>
-              <thead><tr><th scope="col">Produto</th><th scope="col">Margem (%)</th><th scope="col">Lucro bruto</th></tr></thead>
-              <tbody>{margins.map((product) => <tr key={product.name}>
-                <td>{product.name}</td><td><strong>{product.margin}%</strong><span className={styles.progress} aria-label={`Margem de ${product.margin}%`}><i style={{ width: `${product.margin}%` }} /></span></td><td>{formatCurrency(product.profit)}</td>
+              <caption className={styles.srOnly}>Produtos vendidos com maior margem cadastrada</caption>
+              <thead><tr><th scope="col">Produto</th><th scope="col">Margem cadastrada (%)</th><th scope="col">Faturamento</th></tr></thead>
+              <tbody>{!margins.length && <tr><td colSpan="3">Sem produtos vendidos com margem cadastrada no período.</td></tr>}{margins.map((product) => <tr key={product.id}>
+                <td>{product.name}</td><td><strong>{product.margin}%</strong><span className={styles.progress} aria-label={`Margem de ${product.margin}%`}><i style={{ width: `${Math.min(100, Math.max(0, Number(product.margin)))}%` }} /></span></td><td>{formatCurrency(product.revenue)}</td>
               </tr>)}</tbody>
             </table>
           </div>
-          <p className={styles.chartSummary}>Lucro bruto = receita líquida − custo histórico vendido.<br />Margem = lucro bruto ÷ receita líquida. Não é lucro líquido.</p>
+          <p className={styles.chartSummary}>A margem apresentada corresponde à margem cadastrada atualmente no produto, considerando os produtos vendidos no período selecionado.</p>
         </Panel>
       </div>
 
       <div className={`${styles.twoColumn} ${styles.operations}`}>
         <Panel id="dashboard-alerts" title="Alertas e oportunidades" subtitle="Situação atual · não afetada pelos filtros de vendas" className={styles.alertsPanel}>
-          <AlertItem type="warning" title="5 produtos sem estoque">Priorize a reposição para evitar perda de vendas.</AlertItem>
-          <AlertItem type="warning" title="8 produtos com estoque baixo">Saldo positivo abaixo do mínimo cadastrado.</AlertItem>
-          <AlertItem type="info" title="3 produtos com baixo giro">Revise a saída antes de planejar a reposição.</AlertItem>
-          <a className={styles.secondaryButton} href="/estoque"><PackageX size={17} aria-hidden="true" /> Consultar estoque <ArrowUpRight size={16} aria-hidden="true" /></a>
+          <AlertItem type="warning" title={`${data?.stock.empty} produtos sem estoque`}>{Number(data?.stock.empty) ? 'Priorize a reposição para evitar perda de vendas.' : 'Nenhum produto sem estoque.'}</AlertItem>
+          <AlertItem type="warning" title={`${data?.stock.low} produtos com estoque baixo`}>{Number(data?.stock.low) ? 'Saldo positivo abaixo do mínimo cadastrado.' : 'Nenhum produto abaixo do mínimo.'}</AlertItem>
+          <AlertItem type="info" title="Baixo giro indisponível">{data?.limitations.turnover}</AlertItem>
+          <p>{data?.activeAlerts} alertas ativos registrados.</p>
+          <Link className={styles.secondaryButton} to="/estoque"><PackageX size={17} aria-hidden="true" /> Consultar estoque <ArrowUpRight size={16} aria-hidden="true" /></Link>
         </Panel>
-        <Panel title="Vendas por dia da semana" subtitle={`Vendas confirmadas · total de ${metrics.sales} (demonstrativo)`}>
+        <Panel title="Vendas por dia da semana" subtitle={`Vendas confirmadas · total de ${metrics.sales}`}>
           <div className={styles.weekdayChart}>
             {salesByDay.map(({ day, count }) => (
-              <div key={day}><span>{day}</span><i aria-hidden="true"><b style={{ width: `${(count / Math.max(...salesByDay.map((item) => item.count))) * 100}%` }} /></i><strong>{count} vendas</strong></div>
+              <div key={day}><span>{day}</span><i aria-hidden="true"><b style={{ width: `${(count / Math.max(1, ...salesByDay.map((item) => item.count))) * 100}%` }} /></i><strong>{count} vendas</strong></div>
             ))}
           </div>
-          <div className={styles.stockSummary}><div><strong>120</strong><span>produtos cadastrados · agora</span></div><div><strong>2.580</strong><span>unidades em estoque · agora</span></div></div>
+          <div className={styles.stockSummary}><div><strong>{data?.stock.products}</strong><span>produtos cadastrados · agora</span></div><div><strong>{data?.stock.units?.toLocaleString('pt-BR')}</strong><span>unidades em estoque · agora</span></div></div>
           <p className={styles.chartSummary}>Catálogo e saldos não variam com o período acima.</p>
         </Panel>
       </div>
 
+      </>}
       <div className={styles.notificationAnchor}><button type="button" className={styles.alertShortcut} onClick={scrollToAlerts}><BellRing size={16} aria-hidden="true" /> Ver alertas</button></div>
       {notice ? <div className={styles.toast} role="status" aria-live="polite">{notice}</div> : null}
     </div>
