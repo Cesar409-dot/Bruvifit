@@ -39,12 +39,17 @@ public class JwtTokenProvider {
     }
 
     public String createToken(String email, List<String> roles) {
+        return createToken(email, roles, null);
+    }
+
+    public String createToken(String email, List<String> roles, String sessionId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
                 .subject(email)
                 .claim("roles", roles)
+                .claim("sid", sessionId)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key)
@@ -53,6 +58,11 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token, UserDetails userDetails) {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
+    public String getSessionId(String token) {
+        return Jwts.parser().verifyWith((javax.crypto.SecretKey)key).build()
+                .parseSignedClaims(token).getPayload().get("sid",String.class);
     }
 
     public String getEmail(String token) {

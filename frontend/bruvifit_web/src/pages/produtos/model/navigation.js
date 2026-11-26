@@ -1,3 +1,3 @@
 export const goToProducts = (navigate, suffix = '') => {
-  navigate(`/produtos${suffix}`)
+  navigate(suffix ? `/estoque/produtos${suffix}` : '/estoque')
 }

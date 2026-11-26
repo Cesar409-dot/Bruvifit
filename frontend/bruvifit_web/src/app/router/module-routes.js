@@ -1,4 +1,3 @@
-import { ProductsPage } from '../../pages/produtos/ui/index.jsx'
 import { ProductCreatePage } from '../../pages/produtos/cadastro/ui/index.jsx'
 import { ProductDetailPage } from '../../pages/produtos/detalhe/ui/index.jsx'
 import { InventoryPage } from '../../pages/estoque/ui/index.jsx'
@@ -14,7 +13,6 @@ import { SettingsPage } from '../../pages/configuracao/ui/index.jsx'
 import { modules } from '../../shared/config/modules.js'
 
 const pageByPath = {
-  '/produtos': ProductsPage,
   '/estoque': InventoryPage,
   '/vendas': SalesPage,
   '/clientes': ClientsPage,
@@ -31,13 +29,13 @@ export const moduleRoutes = [
     component: pageByPath[module.path],
   })),
   {
-    path: '/produtos/novo',
-    label: 'Produtos',
+    path: '/estoque/produtos/novo',
+    label: 'Estoque',
     component: ProductCreatePage,
   },
   {
-    path: '/produtos/:id',
-    label: 'Produtos',
+    path: '/estoque/produtos/:id',
+    label: 'Estoque',
     component: ProductDetailPage,
   },
   {

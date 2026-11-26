@@ -50,6 +50,9 @@ public class AuthService {
                 throw new UsuarioInativoException("Usuário inativo");
             }
 
+            if (!Boolean.TRUE.equals(usuario.getAprovado())) {
+                throw new school.sptech.bruvifit_app.exception.UsuarioNaoAprovadoException("Usuário não aprovado.");
+            }
             return createSessionResponse(usuario);
 
         } catch (BadCredentialsException e) {
@@ -57,9 +60,15 @@ public class AuthService {
         }
     }
 
+    public String sessionId(String token) { return jwtTokenProvider.getSessionId(token); }
+
     public LoginResponse createSessionResponse(Usuario usuario) {
+        return createSessionResponse(usuario, null);
+    }
+
+    public LoginResponse createSessionResponse(Usuario usuario, String sessionId) {
         var roles = Collections.singletonList("ROLE_" + usuario.getCargo().name());
-        String token = jwtTokenProvider.createToken(usuario.getEmail(), roles);
+        String token = jwtTokenProvider.createToken(usuario.getEmail(), roles, sessionId);
         return new LoginResponse(token, jwtTokenProvider.getValidityInMilliseconds(),
                 usuario.getId(), usuario.getNome(), usuario.getEmail(), roles);
     }

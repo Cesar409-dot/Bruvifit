@@ -58,3 +58,10 @@
   font-size: 13px;
   color: var(--cor-texto);
 }
+
+.profile { position: relative; }
+.profileTrigger { display: flex; align-items: center; gap: var(--espaco-16); border: 0; background: transparent; padding: 8px 0; cursor: pointer; }
+.profileMenu { position: absolute; top: 100%; right: 0; min-width: 190px; padding: 6px; border: 1px solid var(--cor-borda-suave); border-radius: 8px; background: var(--cor-superficie); box-shadow: var(--sombra-card); z-index: 20; }
+.profileMenu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--cor-texto); text-align: left; font: inherit; cursor: pointer; }
+.profileMenu button:hover, .profileMenu button:focus-visible { background: var(--cor-verde-suave); }
+.profileTrigger:focus-visible { outline: 2px solid var(--cor-primaria); outline-offset: 3px; border-radius: 8px; }

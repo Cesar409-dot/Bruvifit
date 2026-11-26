@@ -6,8 +6,15 @@ let currentSession = null;
 let snapshot = 'anonymous';
 const listeners = new Set();
 let expiryTimer = null;
+let generation = 0;
+let userRevision = 0;
+let logoutBlocked = false;
+try { logoutBlocked = localStorage.getItem('bruvifit_logout_pending') === '1'; } catch { /* storage unavailable */ }
+let pendingLogout = logoutBlocked;
+
 
 function notify() {
+  userRevision++;
   listeners.forEach((listener) => listener());
 }
 
@@ -41,6 +48,16 @@ function removeLegacySession() {
 }
 
 export const session = {
+  generation: () => generation,
+  userSnapshot: () => userRevision,
+  isLogoutBlocked: () => logoutBlocked,
+  hasPendingLogout: () => pendingLogout,
+  beginLogin() { generation++; return generation; },
+  completeLogin() { logoutBlocked = false; pendingLogout = false; try { localStorage.removeItem('bruvifit_logout_pending'); } catch { /* unavailable */ } },
+  beginLogout() { generation++; logoutBlocked = true; pendingLogout = true; try { localStorage.setItem('bruvifit_logout_pending','1'); } catch { /* unavailable */ } this.clearSession(); },
+  finishLogout() { logoutBlocked = true; pendingLogout = false; try { localStorage.removeItem('bruvifit_logout_pending'); } catch { /* unavailable */ } },
+  updateUser({ usuarioId, nome, email, roles }) { if (currentSession) { this.setSession({ ...currentSession, usuarioId, nome, email, roles }); } },
+
   subscribe(callback) {
     listeners.add(callback);
     return () => listeners.delete(callback);
@@ -72,7 +89,8 @@ export const session = {
     return !!this.getToken();
   },
 
-  setSession({ token, usuarioId, nome, email, roles, expiraEm }) {
+  setSession({ token, usuarioId, nome, email, roles, expiraEm }, expectedGeneration = generation) {
+    if (expectedGeneration !== generation || logoutBlocked) return false;
     removeLegacySession();
     if (expiryTimer) clearTimeout(expiryTimer);
     currentSession = {
@@ -96,9 +114,11 @@ export const session = {
       expiryTimer.unref?.();
     }
     notify();
+    return true;
   },
 
   clearSession({ expired = false } = {}) {
+    generation++;
     if (expiryTimer) clearTimeout(expiryTimer);
     expiryTimer = null;
     currentSession = null;

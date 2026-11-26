@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { validarEmail } from '../../../utils/validators.js';
 import { login as apiLogin } from '../api/authRepository.js';
-import { session } from '../../../shared/auth/session.js';
 
 const TAMANHO_SENHA_MIN = 6;
 const TAMANHO_SENHA_MAX = 100;
@@ -39,16 +38,9 @@ export function useAccessForm({ sessionExpired = false } = {}) {
 
   async function attemptLogin() {
     try {
-      const data = await apiLogin((email || '').trim(), password);
+      await apiLogin((email || '').trim(), password);
 
-      session.setSession({
-        token: data.token,
-        usuarioId: data.usuarioId,
-        nome: data.nome,
-        email: data.email,
-        roles: data.roles,
-        expiraEm: data.expiraEm,
-      });
+
 
       setMessage('');
       return true;

@@ -197,3 +197,5 @@
     flex: 0 0 auto;
   }
 }
+
+.link > svg { width: 19px; height: 19px; flex: none; color: currentColor; }

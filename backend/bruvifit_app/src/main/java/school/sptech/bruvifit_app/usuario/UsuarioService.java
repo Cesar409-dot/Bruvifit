@@ -33,6 +33,17 @@ public class UsuarioService {
         this.refreshTokenService = refreshTokenService;
     }
 
+    @Transactional
+    public Usuario atualizarPerfilAtual(String emailAtual, String nome, String novoEmail) {
+        Usuario usuario=repository.findByEmail(emailAtual)
+                .filter(u -> Boolean.TRUE.equals(u.getAtivo()) && Boolean.TRUE.equals(u.getAprovado()))
+                .orElseThrow(() -> new school.sptech.bruvifit_app.exception.CredenciaisInvalidasException("Sessão inválida."));
+        String email=novoEmail.trim().toLowerCase(java.util.Locale.ROOT);
+        if (repository.existsByEmailAndIdNot(email,usuario.getId())) throw new ConflitoDeDadosException("E-mail já cadastrado.");
+        usuario.setNome(nome.trim());usuario.setEmail(email);usuario.setAtualizadoEm(LocalDateTime.now());
+        return repository.save(usuario);
+    }
+
     public List<UsuarioResponse> listar() {
         List<Usuario> usuarios = repository.findAll();
         List<UsuarioResponse> usuariosResponse = new ArrayList<>();

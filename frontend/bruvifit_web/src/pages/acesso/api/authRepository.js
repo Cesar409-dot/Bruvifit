@@ -1,23 +1,2 @@
-import { apiClient } from '../../../shared/api/axios-client.js';
-
-const LOGIN_ENDPOINT = '/api/auth/login';
-
-export async function login(email, senha) {
-  const response = await apiClient.post(LOGIN_ENDPOINT, { email, senha });
-  if (typeof response.data?.token !== 'string' || !response.data.token.trim()
-    || response.data.tipo !== 'Bearer') {
-    throw Object.assign(new Error('Resposta de login inválida: o servidor não retornou um token Bearer.'), {
-      code: 'ERR_INVALID_LOGIN_RESPONSE',
-    });
-  }
-  return response.data;
-}
-
-export async function restoreSession() {
-  const response = await apiClient.post('/api/auth/refresh', {});
-  if (typeof response.data?.token !== 'string' || !response.data.token.trim()
-    || response.data.tipo !== 'Bearer' || !Array.isArray(response.data.roles)) {
-    throw Object.assign(new Error('Resposta de renovação de sessão inválida.'), { code: 'ERR_INVALID_REFRESH_RESPONSE' });
-  }
-  return response.data;
-}
+// Compatibility entry point for the existing access feature.
+export { login, restoreSession, refreshCurrentUser, logout, logoutAndRedirect, saveOwnProfile, bootstrapSession } from '../../../shared/auth/auth-repository.js'

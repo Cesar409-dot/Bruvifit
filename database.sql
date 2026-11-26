@@ -2,7 +2,7 @@
 CREATE DATABASE IF NOT EXISTS bruvifit
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
-
+SELECT USER(), CURRENT_USER();
 USE bruvifit;
 
 -- Use TINYINT without (1): Connector/J may expose TINYINT(1) as BIT,
@@ -123,6 +123,163 @@ CREATE TABLE fornecedor (
     PRIMARY KEY (id),
     UNIQUE KEY uk_fornecedor_cnpj (cnpj),
     UNIQUE KEY uk_fornecedor_email (email)
+);
+
+USE bruvifit;
+
+INSERT INTO fornecedor (
+    nome,
+    cnpj,
+    contato,
+    email,
+    ativo,
+    razao_social,
+    nome_contato,
+    cep,
+    logradouro,
+    complemento,
+    cidade,
+    uf
+) VALUES
+(
+    'FitWear Textil',
+    '12345678000195',
+    '11900000001',
+    'comercial@fitwear.example',
+    1,
+    'FitWear Industria Textil Ltda',
+    'Mariana Almeida',
+    '03010000',
+    'Rua dos Tecidos, 150',
+    'Galpao 01',
+    'Sao Paulo',
+    'SP'
+),
+(
+    'Active Sport',
+    '23456789000195',
+    '11900000002',
+    'vendas@activesport.example',
+    1,
+    'Active Sport Confeccoes Ltda',
+    'Ricardo Santos',
+    '07010000',
+    'Rua das Industrias, 320',
+    'Bloco B',
+    'Guarulhos',
+    'SP'
+),
+(
+    'PowerFit Confeccoes',
+    '34567890000195',
+    '19900000003',
+    'contato@powerfit.example',
+    1,
+    'PowerFit Confeccoes Esportivas Ltda',
+    'Fernanda Lima',
+    '13010000',
+    'Avenida Industrial, 450',
+    NULL,
+    'Campinas',
+    'SP'
+),
+(
+    'FlexMove Brasil',
+    '45678901000195',
+    '47900000004',
+    'comercial@flexmove.example',
+    1,
+    'FlexMove Brasil Industria Textil Ltda',
+    'Carlos Ferreira',
+    '89010000',
+    'Rua das Malhas, 280',
+    'Galpao 02',
+    'Blumenau',
+    'SC'
+),
+(
+    'Urban Fitness',
+    '56789012000195',
+    '21900000005',
+    'vendas@urbanfitness.example',
+    1,
+    'Urban Fitness Moda Esportiva Ltda',
+    'Patricia Gomes',
+    '20010000',
+    'Avenida Comercial, 120',
+    'Sala 05',
+    'Rio de Janeiro',
+    'RJ'
+),
+(
+    'Prime Accessories',
+    '67890123000195',
+    '11900000006',
+    'contato@primeaccessories.example',
+    1,
+    'Prime Accessories Distribuidora Ltda',
+    'Bruno Oliveira',
+    '09010000',
+    'Rua do Comercio, 95',
+    NULL,
+    'Santo Andre',
+    'SP'
+),
+(
+    'Performance Textil',
+    '78901234000195',
+    '31900000007',
+    'vendas@performancetextil.example',
+    1,
+    'Performance Industria Textil Ltda',
+    'Juliana Ribeiro',
+    '30110000',
+    'Avenida dos Fabricantes, 600',
+    'Galpao 03',
+    'Belo Horizonte',
+    'MG'
+),
+(
+    'Evolution Sports',
+    '89012345000195',
+    '41900000008',
+    'comercial@evolutionsports.example',
+    1,
+    'Evolution Sports Distribuidora Ltda',
+    'Rafael Martins',
+    '80010000',
+    'Rua Industrial, 210',
+    'Bloco A',
+    'Curitiba',
+    'PR'
+),
+(
+    'MaxFit Atacado',
+    '90123456000195',
+    '11900000009',
+    'contato@maxfit.example',
+    0,
+    'MaxFit Comercio Atacadista Ltda',
+    'Camila Souza',
+    '06010000',
+    'Rua dos Distribuidores, 180',
+    NULL,
+    'Osasco',
+    'SP'
+),
+(
+    'StrongWear',
+    '10234567000195',
+    '15900000010',
+    'vendas@strongwear.example',
+    0,
+    'StrongWear Confeccoes Ltda',
+    'Andre Carvalho',
+    '18010000',
+    'Avenida Textil, 750',
+    'Galpao 04',
+    'Sorocaba',
+    'SP'
 );
 
 CREATE TABLE produto (

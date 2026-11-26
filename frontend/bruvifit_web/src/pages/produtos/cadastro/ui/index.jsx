@@ -1,3 +1,4 @@
+import { ProductsPage } from '../../ui/index.jsx'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createProduct } from '../api/create-product.js'
@@ -76,7 +77,7 @@ export function ProductCreatePage() {
           minimum: getNumber(variant.minimum),
         }))
       }
-      navigate(`/produtos/${saved[0].id}`, { replace: true, state: { flash: 'criado', variantCount: saved.length } })
+      navigate(`/estoque/produtos/${saved[0].id}`, { replace: true, state: { flash: 'criado', variantCount: saved.length } })
     } catch (error) {
       setFeedback({ type: 'error', message: errorMessage(error) })
     } finally {
@@ -136,6 +137,7 @@ export function ProductCreatePage() {
 
       {feedback && <div className={`${styles.toast} ${styles.toastError}`} role="alert"><span>{feedback.message}</span><button type="button" className={styles.toastClose} onClick={() => setFeedback(null)} aria-label="Fechar">×</button></div>}
       <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => goToProducts(navigate)} disabled={isSaving}>Cancelar</button><button type="submit" form="product-form" className={styles.primary} disabled={isSaving}>{isSaving ? 'Cadastrando…' : 'Cadastrar produto'}</button></div>
+      <ProductsPage embedded />
     </main>
   )
 }

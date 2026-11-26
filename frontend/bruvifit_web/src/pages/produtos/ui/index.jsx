@@ -31,7 +31,8 @@ function Button({ children, variant = 'primary', className = '', type = 'button'
   )
 }
 
-export function ProductsPage() {
+export function ProductsPage({ embedded = false }) {
+  const Container = embedded ? 'section' : 'main'
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -122,12 +123,12 @@ export function ProductsPage() {
   }
 
   return (
-    <main className={styles.productsPage}>
-      <PageHeader
+    <Container className={styles.productsPage}>
+      {!embedded && <PageHeader
         titulo="Produtos"
         subtitulo="Gerencie os produtos cadastrados"
         acoes={<Button onClick={() => goToProducts(navigate, '/novo')}><img src={addIcon} alt="" />Novo produto</Button>}
-      />
+      />}
 
       {feedback ? (
         <StatusPanel variante={feedback.tone === 'error' ? 'erro' : 'sucesso'} titulo={feedback.title}>
@@ -137,7 +138,7 @@ export function ProductsPage() {
       ) : null}
 
 
-      <section className={styles.metrics} aria-label="Resumo dos produtos">
+      {!embedded && <section className={styles.metrics} aria-label="Resumo dos produtos">
         {[
            ['Total produtos', products.length],
           ['Produtos ativos', activeCount],
@@ -146,7 +147,7 @@ export function ProductsPage() {
         ].map(([label, value], index) => (
           <StatCard key={label} rotulo={label} valor={loading || feedback?.tone === 'error' ? '—' : value} destaque={index === 0} />
         ))}
-      </section>
+      </section>}
 
       <section className={styles.panel} aria-labelledby="product-filters-title">
         <h2 id="product-filters-title">Busca e filtros</h2>
@@ -431,6 +432,6 @@ export function ProductsPage() {
           </section>
         </div>
       )}
-    </main>
+    </Container>
   )
 }

@@ -1,10 +1,12 @@
+import { session } from '../../../shared/auth/session.js'
+import { saveOwnProfile } from '../../../shared/auth/auth-repository.js'
 import { useState } from 'react'
 import { Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { PageHeader } from '../../../components/layout/PageHeader.jsx'
 import { Button } from '../../../components/ui/Button.jsx'
 import { StatusPanel } from '../../../components/ui/StatusPanel.jsx'
 import { TextField } from '../../../components/ui/TextField.jsx'
-import { loadSettings, PROFILE_PLACEHOLDER_EXAMPLES, saveSettings, validatePassword, validateProfile } from '../model/settings-model.js'
+import { validatePassword, validateProfile } from '../model/settings-model.js'
 import { SettingsTabs } from './SettingsTabs.jsx'
 import { SettingsConfirmationDialog } from './SettingsConfirmationDialog.jsx'
 import styles from './settings.module.css'
@@ -12,16 +14,14 @@ import styles from './settings.module.css'
 const emptyPassword = { atual: '', nova: '', confirmacao: '' }
 
 export function PerfilSegurancaPage() {
-  const [profile, setProfile] = useState(() => loadSettings('perfil'))
-  const [savedProfile, setSavedProfile] = useState(() => loadSettings('perfil'))
+  const [profile, setProfile] = useState(() => ({ nome: session.getUser()?.nome || '', email: session.getUser()?.email || '', telefone: '' }))
+  const [savedProfile, setSavedProfile] = useState(() => ({ nome: session.getUser()?.nome || '', email: session.getUser()?.email || '', telefone: '' }))
   const [profileErrors, setProfileErrors] = useState({})
   const [password, setPassword] = useState(emptyPassword)
   const [passwordError, setPasswordError] = useState('')
   const [visible, setVisible] = useState({})
   const [feedback, setFeedback] = useState(null)
   const [discardOpen, setDiscardOpen] = useState(false)
-  const [sessionAction, setSessionAction] = useState('')
-  const [otherSessionActive, setOtherSessionActive] = useState(true)
   const hasUnsavedChanges = Object.keys(savedProfile).some((field) => profile[field] !== savedProfile[field])
     || Object.values(password).some(Boolean)
 
@@ -31,11 +31,7 @@ export function PerfilSegurancaPage() {
     setFeedback(null)
   }
 
-  function clearProfileExampleOnFocus(field) {
-    if (profile[field] === PROFILE_PLACEHOLDER_EXAMPLES[field]) updateProfile(field, '')
-  }
-
-  function saveProfile(event) {
+  async function saveProfile(event) {
     event.preventDefault()
     const errors = validateProfile(profile)
     setProfileErrors(errors)
@@ -44,10 +40,11 @@ export function PerfilSegurancaPage() {
       return
     }
     try {
-      const saved = saveSettings('perfil', profile)
+      const result = await saveOwnProfile(profile)
+      const saved = { ...profile, nome: result.nome, email: result.email }
       setSavedProfile(saved)
       setProfile(saved)
-      setFeedback({ tone: 'success', title: 'Perfil salvo localmente', message: 'As alterações foram guardadas neste navegador; nada foi enviado ao backend.' })
+      setFeedback({ tone: 'success', title: 'Perfil atualizado', message: 'Os dados foram salvos no sistema.' })
     } catch {
       setFeedback({ tone: 'error', title: 'Não foi possível salvar', message: 'Os dados continuam preenchidos. Tente novamente.' })
     }
@@ -68,7 +65,7 @@ export function PerfilSegurancaPage() {
       setDiscardOpen(true)
       return
     }
-    setFeedback({ tone: 'info', title: 'Nenhuma alteração para descartar', message: 'Os dados do perfil permanecem iguais aos valores salvos neste navegador.' })
+    setFeedback({ tone: 'info', title: 'Nenhuma alteração para descartar', message: 'Os dados do perfil permanecem iguais aos valores salvos no sistema.' })
   }
 
   function discardChanges(showFeedback = true) {
@@ -77,13 +74,7 @@ export function PerfilSegurancaPage() {
     setPassword(emptyPassword)
     setPasswordError('')
     setDiscardOpen(false)
-    setFeedback(showFeedback ? { tone: 'info', title: 'Alterações descartadas', message: 'O perfil salvo neste navegador foi restaurado.' } : null)
-  }
-
-  function finishSessionAction() {
-    setOtherSessionActive(false)
-    setSessionAction('')
-    setFeedback({ tone: 'info', title: 'Sessão demonstrativa encerrada', message: 'Apenas a sessão ilustrativa foi removida desta tela. Nenhuma sessão real foi alterada.' })
+    setFeedback(showFeedback ? { tone: 'info', title: 'Alterações descartadas', message: 'O último perfil carregado do sistema foi restaurado.' } : null)
   }
 
   function setPasswordVisibility(field) {
@@ -110,9 +101,9 @@ export function PerfilSegurancaPage() {
         <section className={styles.panel} aria-labelledby="profile-info-title">
           <h2 id="profile-info-title">Dados pessoais</h2>
           <div className={styles.grid3}>
-            <TextField id="profile-name" label="Nome" obrigatorio value={profile.nome} onChange={(event) => updateProfile('nome', event.target.value)} onFocus={() => clearProfileExampleOnFocus('nome')} erro={profileErrors.nome} placeholder="Nome completo" maxLength={80} />
-            <TextField id="profile-email" label="E-mail" obrigatorio type="email" value={profile.email} onChange={(event) => updateProfile('email', event.target.value)} onFocus={() => clearProfileExampleOnFocus('email')} erro={profileErrors.email} placeholder="nome@empresa.com.br" maxLength={120} />
-            <TextField id="profile-phone" label="Telefone" type="tel" value={profile.telefone} onChange={(event) => updateProfile('telefone', event.target.value)} onFocus={() => clearProfileExampleOnFocus('telefone')} erro={profileErrors.telefone} placeholder="(00) 00000-0000" maxLength={20} />
+            <TextField id="profile-name" label="Nome" obrigatorio value={profile.nome} onChange={(event) => updateProfile('nome', event.target.value)} erro={profileErrors.nome} placeholder="Nome completo" maxLength={45} />
+            <TextField id="profile-email" label="E-mail" obrigatorio type="email" value={profile.email} onChange={(event) => updateProfile('email', event.target.value)} erro={profileErrors.email} placeholder="nome@empresa.com.br" maxLength={45} />
+            <TextField id="profile-phone" label="Telefone (não disponível no cadastro atual)" disabled type="tel" value={profile.telefone} onChange={(event) => updateProfile('telefone', event.target.value)} erro={profileErrors.telefone} placeholder="(00) 00000-0000" maxLength={20} />
           </div>
         </section>
       </form>
@@ -152,24 +143,11 @@ export function PerfilSegurancaPage() {
           <div className={`${styles.sessionRow} ${styles.currentSession}`}>
             <div className={styles.sessionInfo}>
               <strong>Este dispositivo</strong>
-              <span>Navegador web · São Paulo / SP · Sessão atual</span>
+              <span>Navegador web · Sessão atual</span>
             </div>
             <span className={styles.currentLabel}>Atual</span>
           </div>
-          {otherSessionActive ? (
-            <div className={styles.sessionRow}>
-              <div className={styles.sessionInfo}>
-                <strong>Outro dispositivo</strong>
-                <span>Navegador web · Sessão ilustrativa</span>
-              </div>
-              <Button variant="outline" onClick={() => setSessionAction('single')}>Encerrar sessão</Button>
-            </div>
-          ) : (
-            <p className={styles.noSessions}>Nenhuma outra sessão ativa.</p>
-          )}
-        </div>
-        <div className={styles.sessionActions}>
-          {otherSessionActive ? <Button variant="outline" onClick={() => setSessionAction('all')}>Encerrar outras sessões</Button> : null}
+          <p className={styles.noSessions}>A consulta de outras sessões não está disponível nesta tela.</p>
         </div>
       </section>
       <SettingsConfirmationDialog
@@ -179,15 +157,7 @@ export function PerfilSegurancaPage() {
         onCancel={() => setDiscardOpen(false)}
         onConfirm={() => discardChanges()}
       />
-      <SettingsConfirmationDialog
-        open={Boolean(sessionAction)}
-        title={sessionAction === 'single' ? 'Encerrar sessão ilustrativa?' : 'Encerrar outras sessões?'}
-        description="Esta tela usa sessões ilustrativas. A confirmação remove a sessão de demonstração exibida aqui; não altera sessões reais."
-        cancelLabel={sessionAction === 'single' ? 'Manter sessão' : 'Manter sessões'}
-        confirmLabel={sessionAction === 'single' ? 'Encerrar sessão' : 'Encerrar sessões'}
-        onCancel={() => setSessionAction('')}
-        onConfirm={finishSessionAction}
-      />
+
     </main>
   )
 }

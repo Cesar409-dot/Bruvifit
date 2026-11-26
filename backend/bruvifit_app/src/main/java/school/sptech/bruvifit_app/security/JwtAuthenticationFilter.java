@@ -21,8 +21,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
+    private final RefreshTokenRepository sessions;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService, RefreshTokenRepository sessions) {
+        this.sessions = sessions;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
     }
@@ -36,6 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && jwtTokenProvider.validateAccessToken(token)) {
             try {
                 String email = jwtTokenProvider.getEmail(token);
+                if (!sessions.isAccessSessionValid(jwtTokenProvider.getSessionId(token), email, java.time.LocalDateTime.now())) {
+                    filterChain.doFilter(request,response);
+                    return;
+                }
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authentication =
@@ -43,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (UsernameNotFoundException e) {
+            } catch (UsernameNotFoundException | io.jsonwebtoken.JwtException | IllegalArgumentException e) {
                 // Usuario removido/inativado apos a emissao do token: segue sem autenticacao (resulta em 401)
                 SecurityContextHolder.clearContext();
             }

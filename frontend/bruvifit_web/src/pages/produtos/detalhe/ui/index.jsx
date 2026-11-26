@@ -34,7 +34,7 @@ function ProductDetailNotFound({ id, isValidId, navigate }) {
           className={styles.primary}
           onClick={() => goToProducts(navigate)}
         >
-          Voltar para produtos
+          Voltar para Estoque
         </button>
       </div>
     </div>
@@ -253,7 +253,7 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
       <div className={styles.headingRow}>
         <div>
           <h1 className={styles.title}>{form.name || 'Produto'}</h1>
-          <p className={styles.subtitle}>Produtos / {form.sku || '—'} / Detalhe e edição</p>
+          <p className={styles.subtitle}>Estoque / {form.sku || '—'} / Detalhe e edição</p>
         </div>
       </div>
 
@@ -476,7 +476,7 @@ function ProductDetailForm({ product: loadedProduct, variants: loadedVariants, n
                  )
               ) : (
                 <StatusPanel variante="info" titulo="Descartar alterações não salvas">
-                  Se continuar, você voltará para a página de Produtos sem gravar as mudanças feitas aqui.
+                  Se continuar, você voltará para a página de Estoque sem gravar as mudanças feitas aqui.
                 </StatusPanel>
               )}
               {feedback?.tone === 'erro' ? <StatusPanel variante="erro" titulo={feedback.title}>{feedback.text}</StatusPanel> : null}

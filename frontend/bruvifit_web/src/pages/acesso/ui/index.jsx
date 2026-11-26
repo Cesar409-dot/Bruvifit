@@ -1,3 +1,4 @@
+import { logoutAndRedirect } from '../api/authRepository.js'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAccessForm } from '../model/use-access-form.js';
 import logo from '../../../assets/BRUVI_logo_sem_fundo.png';
@@ -121,6 +122,7 @@ export function AccessPage() {
             </div>
           </form>
 
+      {new URLSearchParams(location.search).get('motivo') === 'logout-pendente' && <div className={styles.message} role="alert">O acesso local foi bloqueado, mas não foi possível confirmar a revogação no servidor. <button type="button" onClick={() => logoutAndRedirect(navigate)}>Tentar encerrar novamente</button></div>}
           {message ? <p className={styles.message} role="status">{message}</p> : null}
 
           {/*<aside className={styles.note}>

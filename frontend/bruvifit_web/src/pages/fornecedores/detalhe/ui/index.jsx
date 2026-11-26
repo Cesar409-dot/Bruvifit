@@ -68,7 +68,7 @@ export function SupplierDetail({ data }) {
           <thead><tr><th scope="col">Produto</th><th scope="col">ID</th><th scope="col">Custo de compra</th><th scope="col">Prazo de entrega</th><th scope="col">Ação</th></tr></thead>
           <tbody>{products.map((product) => <tr key={product.id}>
             <td><strong>{present(product.produtoNome)}</strong></td><td>{product.produtoId}</td><td>{money(product.custoCompra)}</td><td>{product.prazoEntregaDias == null ? 'Não informado' : product.prazoEntregaDias + ' dias'}</td>
-            <td><Link to={'/produtos/' + product.produtoId}>Ver produto</Link></td>
+            <td><Link to={'/estoque/produtos/' + product.produtoId}>Ver produto</Link></td>
           </tr>)}</tbody></table></div> : <p className={styles.tableNote}>Nenhum produto associado a este fornecedor.</p>}
       </Card>
       <Card titulo={supplier.ativo ? 'Inativar fornecedor' : 'Fornecedor inativo'}>

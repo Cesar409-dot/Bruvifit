@@ -80,6 +80,32 @@ export function InventoryPage() {
   const [page, setPage] = useState(1)
 
   const summary = useMemo(() => inventorySummary(products), [products])
+  const monetaryValueRef = useRef(null)
+  const monetaryText = loading || error ? '—' : summary.value == null ? 'Não informado' : money.format(summary.value)
+
+  useEffect(() => {
+    const element = monetaryValueRef.current
+    if (!element) return undefined
+    let active = true
+    let previousWidth = -1
+    const fit = () => {
+      if (!active || element.clientWidth === 0) return
+      element.style.fontSize = '24px'
+      if (element.scrollWidth > element.clientWidth) {
+        element.style.fontSize = `${24 * (element.clientWidth - 1) / element.scrollWidth}px`
+      }
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width !== previousWidth) {
+        previousWidth = entry.contentRect.width
+        fit()
+      }
+    })
+    observer.observe(element.parentElement)
+    fit()
+    document.fonts?.ready.then(fit)
+    return () => { active = false; observer.disconnect() }
+  }, [monetaryText])
   const filteredProducts = useMemo(() => filterInventory(products, appliedFilters), [products, appliedFilters])
   const visibleProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize)
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
@@ -105,13 +131,16 @@ export function InventoryPage() {
         subtitulo="Controle de estoque em tempo real"
         acoes={(
           <div className={styles.headerActions}>
+            <Button onClick={() => navigate('/estoque/produtos/novo')}>
+              <img src="/assets/2fd53.svg" width={18} height={18} alt="" /> Novo produto
+            </Button>
             <Button onClick={() => navigate('/estoque/ajuste')}>
               <Plus size={18} aria-hidden="true" /> Ajustar estoque
             </Button>
             <Button variant="outline" onClick={() => navigate('/estoque/historico')}>
               <History size={18} aria-hidden="true" /> Histórico de movimentações
             </Button>
-            <Button variant="outline" onClick={() => navigate('/estoque/estados')}>Estados de interface</Button>
+
           </div>
         )}
       />
@@ -126,11 +155,13 @@ export function InventoryPage() {
           ['Produtos em estoque', loading || error ? '—' : summary.productsInStock ?? 'Não informado'],
           ['Estoque baixo', loading || error ? '—' : summary.low ?? 'Não informado'],
           ['Sem estoque', loading || error ? '—' : summary.empty ?? 'Não informado'],
-          ['Valor do estoque', loading || error ? '—' : summary.value == null ? 'Não informado' : money.format(summary.value)],
+          ['Produtos ativos', loading || error ? '—' : allProducts.filter(p => p.status === 'Ativo').length],
+          ['Produtos inativos', loading || error ? '—' : allProducts.filter(p => p.status === 'Inativo').length],
+          ['Valor do estoque', monetaryText],
         ].map(([label, value, featured]) => (
           <article className={`${styles.metric} ${featured ? styles.featured : ''}`} key={label}>
             <p>{label}</p>
-            <strong>{value}</strong>
+            <strong className={label === 'Valor do estoque' ? styles.monetaryValue : undefined} ref={label === 'Valor do estoque' ? monetaryValueRef : undefined}>{value}</strong>
           </article>
         ))}
       </section>

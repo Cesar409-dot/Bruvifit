@@ -54,19 +54,30 @@ public class RefreshTokenService {
         RefreshToken current = repository.findByTokenHash(hash(rawToken)).orElseThrow(RefreshTokenService::unauthorized);
         LocalDateTime now = LocalDateTime.now();
         Usuario usuario = current.getUsuario();
-        if (current.isRevoked() || !current.getExpiresAt().isAfter(now) || !Boolean.TRUE.equals(usuario.getAtivo())) {
+        if (current.isRevoked() || !current.getExpiresAt().isAfter(now) || !Boolean.TRUE.equals(usuario.getAtivo()) || !Boolean.TRUE.equals(usuario.getAprovado())) {
             throw unauthorized();
         }
 
         current.setExpiresAt(now.plus(Duration.ofMillis(validityInMilliseconds)));
         repository.save(current);
-        return new RefreshedSession(rawToken, authService.createSessionResponse(usuario));
+        return new RefreshedSession(rawToken, authService.createSessionResponse(usuario, hash(rawToken)));
     }
 
     @Transactional
     public void revokeForUser(Integer usuarioId) {
         repository.revokeAllForUser(usuarioId);
     }
+
+    @Transactional
+    public void revokeSession(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) return;
+        repository.findByTokenHash(hash(rawToken)).ifPresent(token -> {
+            token.setRevoked(true);
+            repository.save(token);
+        });
+    }
+
+    public String sessionId(String rawToken) { return hash(rawToken); }
 
     private static String newOpaqueToken() {
         byte[] randomBytes = new byte[48];

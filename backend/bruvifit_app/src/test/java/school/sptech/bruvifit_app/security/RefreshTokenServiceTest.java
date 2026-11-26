@@ -42,7 +42,7 @@ class RefreshTokenServiceTest {
         RefreshToken storedToken = new RefreshToken("stored-sha256-hash", usuario, LocalDateTime.now().plusDays(1));
         LoginResponse response = new LoginResponse("new-access", 900_000L, 5, "Ana", "ana@example.com", java.util.List.of("ROLE_GERENTE"));
         when(repository.findByTokenHash(anyString())).thenReturn(Optional.of(storedToken));
-        when(authService.createSessionResponse(usuario)).thenReturn(response);
+        when(authService.createSessionResponse(org.mockito.ArgumentMatchers.eq(usuario), anyString())).thenReturn(response);
 
         RefreshTokenService.RefreshedSession refreshed = service.refreshSession(rawToken);
 
@@ -88,6 +88,7 @@ class RefreshTokenServiceTest {
         usuario.setEmail("ana@example.com");
         usuario.setCargo(Usuario.Cargo.GERENTE);
         usuario.setAtivo(true);
+        usuario.setAprovado(true);
         return usuario;
     }
 }

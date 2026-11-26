@@ -8,7 +8,6 @@ import { ClientePerfilPage } from './pages/clientes/detalhe/ui/index.jsx';
 import { EstadosClientesPage } from './pages/clientes/estados/ui/index.jsx';
 import { EmBrevePage } from './pages/EmBrevePage.jsx';
 import { AppLayout } from './components/layout/AppLayout.jsx';
-import { ProductsPage } from './pages/produtos/ui/index.jsx';
 import { ProductCreatePage } from './pages/produtos/cadastro/ui/index.jsx';
 import { ProductDetailPage } from './pages/produtos/detalhe/ui/index.jsx';
 import { SuppliersPage } from './pages/fornecedores/ui/index.jsx';
@@ -21,7 +20,6 @@ import { ReportsPage, ReportDetailPage } from './pages/relatorios/ui/index.jsx';
 import { LancamentoPage } from './pages/financeiro/ui/LancamentoPage.jsx';
 import { InventoryPage } from './pages/estoque/ui/index.jsx';
 import { InventoryAdjustmentPage } from './pages/estoque/ajuste/ui/index.jsx';
-import { InventoryStatesPage } from './pages/estoque/estados/ui/index.jsx';
 import { InventoryHistoryPage } from './pages/estoque/historico/ui/index.jsx';
 import { SalesPage } from './pages/vendas/ui/index.jsx';
 import { NewSalePage } from './pages/vendas/nova/ui/index.jsx';
@@ -32,6 +30,7 @@ import { canAccessModule } from './shared/auth/permissions.js';
 import { DadosDaLojaPage } from './pages/configuracao/ui/DadosDaLojaPage.jsx';
 import { PerfilSegurancaPage } from './pages/configuracao/ui/PerfilSegurancaPage.jsx';
 import { PreferenciasSistemaPage } from './pages/configuracao/ui/PreferenciasSistemaPage.jsx';
+import { restoreSession } from './shared/auth/auth-repository.js';
 import { DashboardPage } from './pages/dashboard/ui/index.jsx';
 
 function ScrollToTop() {
@@ -46,7 +45,7 @@ function ScrollToTop() {
 
 function getSectionLabel(pathname) {
   if (pathname.startsWith('/dashboard')) return 'Dashboard';
-  if (pathname.startsWith('/produtos')) return 'Produtos';
+  if (pathname.startsWith('/produtos')) return 'Estoque';
   if (pathname.startsWith('/fornecedores')) return 'Fornecedores';
   if (pathname.startsWith('/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/clientes') || pathname === '/estados') return 'Clientes';
@@ -72,13 +71,16 @@ function Shell({ children }) {
 function ProtectedRoutes() {
   const authState = useSyncExternalStore(session.subscribe, session.getSnapshot);
   const currentUser = session.getUser();
+  const hasUser = currentUser !== null;
   const { pathname } = useLocation();
+  useEffect(() => {
+    const generation = session.generation();
+    if (authState === 'expired' && hasUser) restoreSession().catch(() => { if (generation === session.generation()) session.clearSession(); });
+  }, [authState, hasUser]);
 
-  if (authState === 'expired') {
-    return <Navigate to="/acesso?motivo=sessao-expirada" replace />;
-  }
+  if (authState === 'expired' && !currentUser) return <Navigate to="/acesso?motivo=sessao-expirada" replace />;
 
-  if (!session.isAuthenticated()) {
+  if (!session.isAuthenticated() && authState !== 'expired') {
     return <Navigate to="/acesso" replace />;
   }
 
@@ -87,11 +89,12 @@ function ProtectedRoutes() {
     return <AccessDenied />;
   }
 
-  if (pathname === '/estoque/estados') return <InventoryStatesPage />;
+  if (pathname === '/estoque/estados') return <Navigate to="/estoque" replace />;
   if (pathname === '/vendas/estados') return <Navigate to="/vendas" replace />;
 
   return (
     <ClientesProvider><Shell>
+      {authState === 'expired' && <p role="status">Renovando sessão…</p>}
       <Routes>
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -100,9 +103,10 @@ function ProtectedRoutes() {
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
         <Route path="/estados" element={<EstadosClientesPage />} />
 
-        <Route path="/produtos" element={<ProductsPage />} />
-        <Route path="/produtos/novo" element={<ProductCreatePage />} />
-        <Route path="/produtos/:id" element={<ProductDetailPage />} />
+        <Route path="/produtos" element={<Navigate to="/estoque" replace />} />
+        <Route path="/produtos/*" element={<LegacyProductRoute />} />
+        <Route path="/estoque/produtos/novo" element={<ProductCreatePage />} />
+        <Route path="/estoque/produtos/:id" element={<ProductDetailPage />} />
 
         <Route path="/estoque/ajuste" element={<InventoryAdjustmentPage />} />
         <Route path="/estoque/historico" element={<InventoryHistoryPage />} />
@@ -138,11 +142,17 @@ function ProtectedRoutes() {
   );
 }
 
+function LegacyProductRoute() {
+  const location = useLocation();
+  return <Navigate to={location.pathname.replace('/produtos', '/estoque/produtos') + location.search + location.hash} state={location.state} replace />;
+}
+
 function AccessDenied() {
   return <main role="alert"><h1>Acesso negado</h1><p>Seu perfil não tem permissão para acessar esta página.</p></main>;
 }
 
 export default function App() {
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
   return (
     <>
       <ScrollToTop />
