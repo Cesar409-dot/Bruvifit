@@ -32,7 +32,7 @@ class DashboardServiceTest {
                 Mockito.mock(EstoqueRepository.class),
                 Mockito.mock(PedidoRepository.class),
                 financeiroRepository,
-                Mockito.mock(AlertaRepository.class));
+                Mockito.mock(AlertaRepository.class), Mockito.mock(school.sptech.bruvifit_app.relatorio.RelatorioRepository.class));
     }
 
     @Test
@@ -167,5 +167,48 @@ class DashboardServiceTest {
         assertEquals("Aluguel da loja", lista.get(1).getDescricao());
         assertEquals("DESPESA", lista.get(1).getTipo());
         assertNull(lista.get(1).getForma());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints={7,28,90})
+    void gerencialRateiaPedidosSemDuplicar(int dias) {
+        var consultas=Mockito.mock(school.sptech.bruvifit_app.relatorio.RelatorioRepository.class);
+        var alertas=Mockito.mock(AlertaRepository.class);
+        var service=new DashboardService(Mockito.mock(ProdutoRepository.class),Mockito.mock(EstoqueRepository.class),
+            Mockito.mock(PedidoRepository.class),repositoryMock(),alertas,consultas);
+        var fim=LocalDate.of(2026,11,24); var inicio=fim.minusDays(dias-1);
+        java.util.Map<String,Object> a=new java.util.HashMap<>(java.util.Map.of("pedido",1,"data",fim.atTime(23,59,59),"total",new BigDecimal("90.00"),"item",1,"produto",1,"nome","A","categoria","A","quantidade",2,"subtotal",new BigDecimal("60.00")));
+        var b=new java.util.HashMap<>(a); b.put("item",2); b.put("produto",2); b.put("nome","B"); b.put("categoria","B"); b.put("subtotal",new BigDecimal("40.00"));
+        Mockito.when(consultas.query(Mockito.contains("FROM pedido"),Mockito.anyMap())).thenReturn(List.of(a,b));
+        Mockito.when(consultas.query(Mockito.contains("FROM produto p WHERE"),Mockito.anyMap())).thenReturn(List.of(java.util.Map.of("products",2L,"units",10L,"empty",0L,"low",1L)));
+        var all=service.getGerencial(inicio,fim,null,null);
+        var filtered=service.getGerencial(inicio,fim,"A","PIX");
+        var metrics=(java.util.Map<?,?>)all.get("metrics"); var selected=(java.util.Map<?,?>)filtered.get("metrics");
+        assertEquals(new BigDecimal("90.00"),metrics.get("revenue")); assertEquals(1L,metrics.get("sales"));
+        assertEquals(new BigDecimal("54.00"),selected.get("revenue")); assertEquals(1L,selected.get("sales"));
+        assertEquals(all.get("stock"),filtered.get("stock"));
+        var weeks=(List<java.util.Map<String,Object>>)filtered.get("evolution");
+        assertEquals(new BigDecimal("54.00"),weeks.stream().map(r->(BigDecimal)r.get("revenue")).reduce(BigDecimal.ZERO,BigDecimal::add));
+        var days=(List<java.util.Map<String,Object>>)filtered.get("weekdaySales");
+        assertEquals(1L,days.stream().mapToLong(r->(Long)r.get("count")).sum());
+        assertTrue(((List<?>)all.get("margins")).isEmpty());
+        assertTrue(all.containsKey("lowTurnover"));
+        assertNull(all.get("lowTurnover"));
+        assertTrue(((java.util.Map<?,?>)all.get("limitations")).get("turnover").toString().contains("data de cadastro"));
+        Mockito.verify(alertas,Mockito.never()).save(Mockito.any());
+        Mockito.verify(consultas,Mockito.times(2)).query(Mockito.contains("data_pedido < :fim"),Mockito.argThat(p -> p.get("fim").equals(fim.plusDays(1).atStartOfDay())));
+    }
+
+    @Test
+    void gerencialVazioEValidacao() {
+        var consultas=Mockito.mock(school.sptech.bruvifit_app.relatorio.RelatorioRepository.class);
+        Mockito.when(consultas.query(Mockito.contains("FROM produto p WHERE"),Mockito.anyMap())).thenReturn(List.of(java.util.Map.of("products",0,"units",0,"empty",0,"low",0)));
+        var service=new DashboardService(Mockito.mock(ProdutoRepository.class),Mockito.mock(EstoqueRepository.class),Mockito.mock(PedidoRepository.class),repositoryMock(),Mockito.mock(AlertaRepository.class),consultas);
+        var date=LocalDate.of(2026,1,1);
+        var result=service.getGerencial(date,date,null,null);
+        assertEquals(BigDecimal.ZERO,((java.util.Map<?,?>)result.get("metrics")).get("average"));
+        assertTrue(((List<?>)result.get("topProducts")).isEmpty());
+        assertThrows(IllegalArgumentException.class,()->service.getGerencial(date.plusDays(1),date,null,null));
+        assertThrows(IllegalArgumentException.class,()->service.getGerencial(date,date,null,"inexistente"));
     }
 }

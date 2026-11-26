@@ -279,24 +279,27 @@
 
 .tableWrap {
   width: 100%;
-  overflow-x: auto;
+  min-width: 0;
+  overflow: visible;
 }
 
 .tableWrap table {
   width: 100%;
+  min-width: 0;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
 }
 
 .tableWrap th {
-  height: 42px;
-  padding: 0 10px;
+  padding: 8px 6px;
   color: var(--cor-texto-secundario);
   background: var(--cor-verde-suave);
   font-size: 12px;
   font-weight: 700;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .tableWrap th:first-child { border-radius: 6px 0 0 6px; }
@@ -305,14 +308,19 @@
 .tableWrap td:not(:first-child) { text-align: right; }
 
 .tableWrap td {
-  height: 40px;
   border-bottom: 1px solid var(--cor-borda-suave);
-  padding: 5px 10px;
+  padding: 8px 6px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .tableWrap tbody tr:last-child td { border-bottom: 0; }
-.tableWrap td:last-child { color: var(--cor-primaria); font-weight: 700; white-space: nowrap; }
-.tableWrap td:nth-child(2) { min-width: 76px; }
+.tableWrap td:last-child { color: var(--cor-primaria); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tableWrap th:first-child { width: 42%; }
+.tableWrap th:nth-child(2) { width: 26%; }
+.tableWrap th:last-child { width: 32%; }
+.tableWrap td:first-child { white-space: normal; }
+.tableWrap td:nth-child(2) { min-width: 0; font-variant-numeric: tabular-nums; }
 
 .progress {
   display: block;
@@ -434,5 +442,4 @@
 @media (max-width: 420px) {
   .categoryChart { grid-template-columns: 1fr; }
   .legend { width: 100%; }
-  .tableWrap table { min-width: 390px; }
 }

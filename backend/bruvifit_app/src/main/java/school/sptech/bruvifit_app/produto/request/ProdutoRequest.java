@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public class ProdutoRequest {
+    public static final String CATEGORIAS_VALIDAS = "Camisetas|Calças|Acessórios";
 
     @NotBlank
     @Size(min = 1, max = 45)
@@ -19,7 +20,7 @@ public class ProdutoRequest {
     private String descricao;
 
     @NotBlank(message = "Selecione uma categoria.")
-    @Pattern(regexp = "Camisetas|Calças|Acessórios", message = "Categoria inválida. Use Camisetas, Calças ou Acessórios.")
+    @Pattern(regexp = CATEGORIAS_VALIDAS, message = "Categoria inválida. Use Camisetas, Calças ou Acessórios.")
     private String categoria;
 
     @Size(max = 45)
