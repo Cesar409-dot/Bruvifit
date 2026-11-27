@@ -27,9 +27,7 @@ import { SaleReviewPage } from './pages/vendas/revisao/ui/index.jsx';
 import { SaleDetailPage } from './pages/vendas/detalhe/ui/index.jsx';
 import { session } from './shared/auth/session.js';
 import { canAccessModule } from './shared/auth/permissions.js';
-import { DadosDaLojaPage } from './pages/configuracao/ui/DadosDaLojaPage.jsx';
-import { PerfilSegurancaPage } from './pages/configuracao/ui/PerfilSegurancaPage.jsx';
-import { PreferenciasSistemaPage } from './pages/configuracao/ui/PreferenciasSistemaPage.jsx';
+import { SettingsPage } from './pages/configuracao/ui/index.jsx';
 import { restoreSession } from './shared/auth/auth-repository.js';
 import { DashboardPage } from './pages/dashboard/ui/index.jsx';
 
@@ -116,9 +114,9 @@ function ProtectedRoutes() {
         <Route path="/vendas/:id/editar" element={<NewSalePage />} />
         <Route path="/vendas/:id" element={<SaleDetailPage />} />
         <Route path="/vendas" element={<SalesPage />} />
-        <Route path="/configuracao/perfil-seguranca" element={<PerfilSegurancaPage />} />
-        <Route path="/configuracao/preferencias" element={<PreferenciasSistemaPage />} />
-        <Route path="/configuracao" element={<DadosDaLojaPage />} />
+        <Route path="/configuracao/perfil-seguranca" element={<Navigate to="/configuracao#dados-pessoais" replace />} />
+        <Route path="/configuracao/preferencias" element={<Navigate to="/configuracao" replace />} />
+        <Route path="/configuracao" element={<SettingsPage />} />
         <Route path="/fornecedores" element={<SuppliersPage />} />
         <Route path="/fornecedores/novo" element={<SupplierFormPage />} />
         <Route path="/fornecedores/:id/editar" element={<SupplierFormPage />} />

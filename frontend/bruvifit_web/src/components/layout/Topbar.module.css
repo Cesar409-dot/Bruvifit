@@ -65,3 +65,20 @@
 .profileMenu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--cor-texto); text-align: left; font: inherit; cursor: pointer; }
 .profileMenu button:hover, .profileMenu button:focus-visible { background: var(--cor-verde-suave); }
 .profileTrigger:focus-visible { outline: 2px solid var(--cor-primaria); outline-offset: 3px; border-radius: 8px; }
+
+@media (max-width: 720px) {
+  :global(body:has([data-settings-page])) .topbar {
+    height: auto;
+    min-height: var(--topbar-altura);
+    padding: var(--espaco-8) var(--espaco-16);
+    flex-wrap: wrap;
+    gap: var(--espaco-8);
+  }
+  :global(body:has([data-settings-page])) .right { margin-left: auto; }
+  :global(body:has([data-settings-page])) .userName {
+    max-width: 45vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

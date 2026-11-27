@@ -1,7 +1,17 @@
 import { apiClient, renewSession } from '../api/axios-client.js'
 import { session } from './session.js'
 
-export async function refreshCurrentUser() {
+let profileRequest
+export function refreshCurrentUser() {
+  const generation = session.generation()
+  if (!profileRequest || profileRequest.generation !== generation) {
+    const request = { generation }
+    request.promise = loadCurrentUser().finally(() => { if (profileRequest === request) profileRequest = null })
+    profileRequest = request
+  }
+  return profileRequest.promise
+}
+async function loadCurrentUser() {
   const generation = session.generation()
   const { data } = await apiClient.get('/api/auth/me')
   if (!Number.isInteger(data?.usuarioId) || typeof data.nome !== 'string' || typeof data.email !== 'string' || !Array.isArray(data.roles)) throw new Error('Resposta de perfil inválida.')
@@ -35,10 +45,18 @@ export function logout() {
 }
 export async function saveOwnProfile(profile) {
   const generation = session.generation()
-  const { data } = await apiClient.put('/api/auth/me', { nome: profile.nome, email: profile.email })
+  const { data } = await apiClient.put('/api/auth/me', { nome: profile.nome.trim(), email: profile.email.trim() })
   if (!data?.token || data.tipo !== 'Bearer' || !Array.isArray(data.roles)) throw new Error('Resposta de perfil inválida.')
   if (!session.setSession(data, generation)) throw new Error('Sessão encerrada.')
   return session.getUser()
+}
+export async function changeOwnPassword(password) {
+  const generation = session.generation()
+  await apiClient.post('/api/auth/me/senha', password)
+  if (generation === session.generation()) {
+    session.beginLogout()
+    session.finishLogout()
+  }
 }
 export async function bootstrapSession() {
   if (session.isLogoutBlocked()) {

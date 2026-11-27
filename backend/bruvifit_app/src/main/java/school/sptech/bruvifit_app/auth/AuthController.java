@@ -90,8 +90,12 @@ public class AuthController {
                 "roles",java.util.List.of("ROLE_"+u.getCargo().name()));
     }
 
-    public record ProfileRequest(@jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max=45) String nome,
-                                 @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Email @jakarta.validation.constraints.Size(max=45) String email) {}
+    public record ProfileRequest(
+            @jakarta.validation.constraints.NotBlank(message="Informe o nome.")
+            @jakarta.validation.constraints.Size(max=45, message="O nome deve ter no máximo 45 caracteres.") String nome,
+            @jakarta.validation.constraints.NotBlank(message="Informe o e-mail.")
+            @jakarta.validation.constraints.Email(message="Informe um e-mail válido.")
+            @jakarta.validation.constraints.Size(max=45, message="O e-mail deve ter no máximo 45 caracteres.") String email) {}
 
     @PutMapping("/me")
     public LoginResponse updateMe(@Valid @RequestBody ProfileRequest request,
@@ -100,6 +104,23 @@ public class AuthController {
         if (auth == null || !auth.isAuthenticated()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         var u=usuarioService.atualizarPerfilAtual(auth.getName(),request.nome(),request.email());
         return authService.createSessionResponse(u, authService.sessionId(bearer.substring(7)));
+    }
+
+    public record PasswordRequest(
+            @jakarta.validation.constraints.NotBlank(message="Informe a senha atual.") String atual,
+            @jakarta.validation.constraints.NotBlank(message="Informe a nova senha.")
+            @school.sptech.bruvifit_app.usuario.validation.SenhaSegura String nova,
+            @jakarta.validation.constraints.NotBlank(message="Confirme a nova senha.") String confirmacao) {
+        @Override public String toString() { return "PasswordRequest[REDACTED]"; }
+    }
+
+    @PostMapping("/me/senha")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody PasswordRequest request,
+            org.springframework.security.core.Authentication auth) {
+        var usuario = currentUser(auth);
+        usuarioService.alterarSenhaAtual(usuario.getEmail(), request.atual(), request.nova(), request.confirmacao());
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString()).build();
     }
 
     private ResponseCookie refreshCookie(String token) {

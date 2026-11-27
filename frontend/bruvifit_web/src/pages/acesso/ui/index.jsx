@@ -79,6 +79,7 @@ export function AccessPage() {
           <h2 id="access-title">Bem-vindo de volta</h2>
           <p className={styles.subtitle}>Entre no sistema interno para acompanhar sua operação.</p>
 
+          {new URLSearchParams(location.search).get('motivo') === 'senha-alterada' && <p role="status">Senha alterada com sucesso. Entre novamente com a nova senha.</p>}
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
             <label className={styles.label} htmlFor="email">E-mail</label>
             <input

@@ -35,6 +35,7 @@ public class UsuarioService {
 
     @Transactional
     public Usuario atualizarPerfilAtual(String emailAtual, String nome, String novoEmail) {
+        if (nome == null || nome.isBlank() || nome.length() > 45) throw new IllegalArgumentException("Informe um nome de até 45 caracteres.");
         Usuario usuario=repository.findByEmail(emailAtual)
                 .filter(u -> Boolean.TRUE.equals(u.getAtivo()) && Boolean.TRUE.equals(u.getAprovado()))
                 .orElseThrow(() -> new school.sptech.bruvifit_app.exception.CredenciaisInvalidasException("Sessão inválida."));
@@ -42,6 +43,30 @@ public class UsuarioService {
         if (repository.existsByEmailAndIdNot(email,usuario.getId())) throw new ConflitoDeDadosException("E-mail já cadastrado.");
         usuario.setNome(nome.trim());usuario.setEmail(email);usuario.setAtualizadoEm(LocalDateTime.now());
         return repository.save(usuario);
+    }
+
+    @Transactional
+    public void alterarSenhaAtual(String emailAtual, String atual, String nova, String confirmacao) {
+        if (atual == null || atual.isBlank() || nova == null || nova.isBlank()
+                || confirmacao == null || confirmacao.isBlank()) {
+            throw new IllegalArgumentException("Preencha todos os campos de senha.");
+        }
+        var requisitos = school.sptech.bruvifit_app.usuario.validation.SenhaSeguraValidator.requisitosPendentes(nova);
+        if (!requisitos.isEmpty()) throw new IllegalArgumentException(String.join(" ", requisitos));
+        // BCrypt accepts at most 72 UTF-8 bytes; reject instead of truncating silently.
+        if (nova.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("A nova senha deve ter no máximo 72 bytes em UTF-8.");
+        }
+        if (!nova.equals(confirmacao)) throw new IllegalArgumentException("A confirmação deve ser igual à nova senha.");
+        Usuario usuario = repository.findByEmailForUpdate(emailAtual)
+                .filter(u -> Boolean.TRUE.equals(u.getAtivo()) && Boolean.TRUE.equals(u.getAprovado()))
+                .orElseThrow(() -> new school.sptech.bruvifit_app.exception.CredenciaisInvalidasException("Sessão inválida."));
+        if (!passwordEncoder.matches(atual, usuario.getSenhaHash())) throw new IllegalArgumentException("Senha atual incorreta.");
+        if (passwordEncoder.matches(nova, usuario.getSenhaHash())) throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+        usuario.setSenhaHash(passwordEncoder.encode(nova));
+        usuario.setAtualizadoEm(LocalDateTime.now());
+        repository.save(usuario);
+        refreshTokenService.revokeForUser(usuario.getId());
     }
 
     public List<UsuarioResponse> listar() {

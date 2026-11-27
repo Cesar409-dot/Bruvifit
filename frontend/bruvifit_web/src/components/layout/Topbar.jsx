@@ -35,7 +35,7 @@ export function Topbar({ sectionLabel = 'Clientes' }) {
           <span className={styles.avatar} aria-hidden="true">{user?.nome ? iniciais(user.nome) : '…'}</span>
         </button>
         {open && <div id="profile-actions" className={styles.profileMenu}>
-          <button data-profile-action type="button" onClick={() => { setOpen(false); navigate('/configuracao/perfil-seguranca') }}><UserRound size={17} />Visualizar perfil</button>
+          <button data-profile-action type="button" onClick={() => { setOpen(false); navigate('/configuracao#dados-pessoais') }}><UserRound size={17} />Visualizar perfil</button>
           <button type="button" onClick={() => logoutAndRedirect(navigate)}><LogOut size={17} />Sair</button>
         </div>}
       </div>
