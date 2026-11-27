@@ -45,8 +45,6 @@ export function AccessPage() {
     togglePassword,
     validate,
     attemptLogin,
-    showRecoveryMessage,
-    showSignupMessage,
   } = useAccessForm({ sessionExpired });
 
   async function handleSubmit(event) {
@@ -117,9 +115,6 @@ export function AccessPage() {
               <button type="submit" className={`${styles.button} ${styles.primary}`}>
                 Entrar <ArrowIcon />
               </button>
-              <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={showRecoveryMessage}>
-                Esqueci minha senha
-              </button>
             </div>
           </form>
 
@@ -136,12 +131,6 @@ export function AccessPage() {
             </div>
           </aside>*/}
 
-          <div className={styles.signupRow}>
-            <p>Ainda não tem acesso?</p>
-            <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={showSignupMessage}>
-              Criar conta
-            </button>
-          </div>
         </div>
       </section>
     </main>

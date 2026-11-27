@@ -215,17 +215,6 @@
   background: var(--cor-primaria-hover);
 }
 
-.secondary {
-  border-color: var(--cor-borda);
-  background: var(--cor-superficie);
-  color: var(--cor-primaria);
-}
-
-.secondary:hover {
-  border-color: var(--cor-borda);
-  background: var(--cor-verde-suave);
-}
-
 .message {
   margin: 16px 0 0;
   color: var(--cor-primaria);
@@ -264,16 +253,6 @@
   color: var(--cor-texto-secundario);
   font-size: 12px;
   line-height: 1.55;
-}
-
-.signupRow {
-  margin-top: 30px;
-}
-
-.signupRow p {
-  margin: 0 0 11px;
-  color: var(--cor-texto-secundario);
-  font-size: 14px;
 }
 
 .footer {

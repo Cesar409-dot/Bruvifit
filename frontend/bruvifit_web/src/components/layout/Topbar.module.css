@@ -38,6 +38,20 @@
   background: var(--cor-verde-suave);
 }
 
+.notifications { position: relative; }
+.notificationBadge { position: absolute; top: 2px; right: 1px; min-width: 17px; height: 17px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; background: #b42318; color: white; font-size: 10px; font-weight: 700; line-height: 1; }
+.notificationMenu { position: absolute; right: 0; top: calc(100% + 8px); width: min(360px, calc(100vw - 32px)); max-height: 420px; overflow: auto; border: 1px solid var(--cor-borda-suave); border-radius: 10px; background: var(--cor-superficie); box-shadow: var(--sombra-card); z-index: 30; }
+.notificationMenu > header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--cor-borda-suave); background: var(--cor-superficie); }
+.notificationMenu > header span, .notificationMenu li small { color: var(--cor-texto-secundario); font-size: 12px; }
+.notificationMenu ul { list-style: none; padding: 0; margin: 0; }
+.notificationMenu li { border-bottom: 1px solid var(--cor-borda-suave); }
+.notificationMenu li:last-child { border-bottom: 0; }
+.notificationMenu li button { width: 100%; display: grid; gap: 5px; padding: 13px 16px; border: 0; background: transparent; color: var(--cor-texto); text-align: left; cursor: pointer; font: inherit; }
+.notificationMenu li button:hover, .unreadNotification button { background: var(--cor-verde-suave); }
+.notificationMenu li button span { font-size: 13px; }
+.emptyNotifications, .notificationError { margin: 0; padding: 18px 16px; color: var(--cor-texto-secundario); font-size: 13px; }
+.notificationError { color: #b42318; }
+
 .userName {
   font-family: var(--fonte-corpo);
   font-weight: 600;

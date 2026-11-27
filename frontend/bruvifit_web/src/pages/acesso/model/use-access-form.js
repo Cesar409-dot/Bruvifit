@@ -82,14 +82,6 @@ export function useAccessForm({ sessionExpired = false } = {}) {
     setShowPassword((visible) => !visible);
   }
 
-  function showRecoveryMessage() {
-    setMessage('Para recuperar o acesso, entre em contato com o administrador.');
-  }
-
-  function showSignupMessage() {
-    setMessage('Peça ao administrador a liberação de uma conta para o sistema.');
-  }
-
   return {
     email,
     password,
@@ -100,7 +92,5 @@ export function useAccessForm({ sessionExpired = false } = {}) {
     togglePassword,
     validate,
     attemptLogin,
-    showRecoveryMessage,
-    showSignupMessage,
   };
 }
