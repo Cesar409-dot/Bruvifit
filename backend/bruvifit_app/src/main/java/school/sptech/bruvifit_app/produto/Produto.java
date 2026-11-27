@@ -57,6 +57,9 @@ public class Produto {
     @Column(name = "produto_pai_id")
     private Integer produtoPaiId;
 
+    @Column(name = "responsavel_id")
+    private Integer responsavelId;
+
     public Produto() {
     }
 
@@ -171,4 +174,8 @@ public class Produto {
     public void setProdutoPaiId(Integer produtoPaiId) {
         this.produtoPaiId = produtoPaiId;
     }
+
+    public Integer getResponsavelId() { return responsavelId; }
+
+    public void setResponsavelId(Integer responsavelId) { this.responsavelId = responsavelId; }
 }

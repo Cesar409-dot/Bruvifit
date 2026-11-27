@@ -10,14 +10,18 @@ public class AlertaResponse {
     private String nivel;
     private LocalDateTime criadoEm;
     private Boolean ativo;
+    private Integer produtoId;
+    private Boolean lida;
 
-    public AlertaResponse(Integer id, String titulo, String descricao, String nivel, LocalDateTime criadoEm, Boolean ativo) {
+    public AlertaResponse(Integer id, String titulo, String descricao, String nivel, LocalDateTime criadoEm, Boolean ativo, Integer produtoId, Boolean lida) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
         this.nivel = nivel;
         this.criadoEm = criadoEm;
         this.ativo = ativo;
+        this.produtoId = produtoId;
+        this.lida = lida;
     }
 
     public Integer getId() {
@@ -43,4 +47,7 @@ public class AlertaResponse {
     public Boolean getAtivo() {
         return ativo;
     }
+
+    public Integer getProdutoId() { return produtoId; }
+    public Boolean getLida() { return lida; }
 }

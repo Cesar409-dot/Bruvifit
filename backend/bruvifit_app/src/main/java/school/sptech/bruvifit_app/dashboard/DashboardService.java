@@ -15,6 +15,7 @@ import school.sptech.bruvifit_app.financeiro.FinanceiroRepository;
 import school.sptech.bruvifit_app.pedido.PedidoRepository;
 import school.sptech.bruvifit_app.produto.Produto;
 import school.sptech.bruvifit_app.produto.ProdutoRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -59,19 +60,21 @@ public class DashboardService {
     public Map<String, Object> getIndicadores() {
         Map<String, Object> indicadores = new HashMap<>();
 
-        long totalProdutos = produtoRepository.count();
-        indicadores.put("totalProdutos", totalProdutos);
-
-        List<Produto> produtosEstoqueBaixo = produtoRepository.findProdutosEstoqueBaixo();
-        indicadores.put("produtosEstoqueBaixo", produtosEstoqueBaixo.size());
-
-        List<Produto> produtosSemEstoque = produtoRepository.findProdutosSemEstoque();
-        indicadores.put("produtosSemEstoque", produtosSemEstoque.size());
+        String emailUsuario = emailUsuarioAtual();
+        List<Produto> produtos = emailUsuario == null
+                ? produtoRepository.findAll()
+                : produtoRepository.findByResponsavelEmail(emailUsuario);
+        indicadores.put("totalProdutos", produtos.size());
+        indicadores.put("produtosEstoqueBaixo", produtos.stream()
+                .filter(p -> p.getSaldoEstoque() != null && p.getEstoqueMinimo() != null
+                        && p.getSaldoEstoque() <= p.getEstoqueMinimo()).count());
+        indicadores.put("produtosSemEstoque", produtos.stream()
+                .filter(p -> Integer.valueOf(0).equals(p.getSaldoEstoque())).count());
 
         long totalPedidos = pedidoRepository.countByClienteAtivo();
         indicadores.put("totalPedidos", totalPedidos);
 
-        long totalAlertas = alertaRepository.countByAtivo(true);
+        long totalAlertas = contarAlertasAtivosDoUsuario();
         indicadores.put("totalAlertasAtivos", totalAlertas);
 
         return indicadores;
@@ -308,12 +311,18 @@ public class DashboardService {
                 .limit(3).toList();
         var days=new ArrayList<Map<String,Object>>(); String[] names={"Seg","Ter","Qua","Qui","Sex","Sáb","Dom"};
         for(int i=0;i<7;i++) days.add(Map.of("day",names[i],"count",weekdays[i]));
+        String emailUsuario = emailUsuarioAtual();
+        String filtroResponsavel = "";
+        if (emailUsuario != null) {
+            params.put("emailUsuario", emailUsuario);
+            filtroResponsavel = " WHERE p.responsavel_id=(SELECT u.id FROM usuario u WHERE u.email=:emailUsuario)";
+        }
         var stock=consultas.query("""
             SELECT COUNT(*) products, CASE WHEN COUNT(*)=COUNT(p.saldo_estoque) THEN COALESCE(SUM(p.saldo_estoque),0) ELSE NULL END units,
               COALESCE(SUM(CASE WHEN p.saldo_estoque=0 THEN 1 ELSE 0 END),0) AS `empty`,
-              COALESCE(SUM(CASE WHEN p.saldo_estoque>0 AND p.saldo_estoque<p.estoque_minimo THEN 1 ELSE 0 END),0) low
-            FROM produto p WHERE 1=1
-            """,Map.of()).get(0);
+              COALESCE(SUM(CASE WHEN p.saldo_estoque IS NOT NULL AND p.estoque_minimo IS NOT NULL AND p.saldo_estoque<=p.estoque_minimo THEN 1 ELSE 0 END),0) low
+            FROM produto p
+            """ + filtroResponsavel,params).get(0);
         var result=new LinkedHashMap<String,Object>();
         result.put("allHistory",historico); result.put("granularity",historico ? "MES" : "SEMANA");
         result.put("inicio",inicio); result.put("fim",fim);
@@ -321,7 +330,7 @@ public class DashboardService {
         result.put("evolution",evolution); result.put("categories",categories); result.put("totalUnits",units);
         result.put("topProducts",top); result.put("margins",margins); result.put("weekdaySales",days);
         result.put("lowTurnover",null);
-        result.put("stock",stock); result.put("activeAlerts",alertaRepository.countByAtivo(true));
+        result.put("stock",stock); result.put("activeAlerts",contarAlertasAtivosDoUsuario());
         result.put("categoryOptions",categoriasValidas);
         result.put("paymentOptions",school.sptech.bruvifit_app.pedido.PedidoService.PAGAMENTOS);
         result.put("limitations",Map.of("turnover","Baixo giro indisponível: não há data de cadastro confiável dos produtos para verificar a idade mínima de 30 dias."));
@@ -331,5 +340,17 @@ public class DashboardService {
     private BigDecimal toBigDecimal(Object valor) {
         if (valor == null) return ZERO;
         return new BigDecimal(String.valueOf(valor));
+    }
+
+    private long contarAlertasAtivosDoUsuario() {
+        String emailUsuario = emailUsuarioAtual();
+        return emailUsuario == null ? alertaRepository.countByAtivo(true)
+                : alertaRepository.countAtivosDoUsuarioPorEmail(emailUsuario);
+    }
+
+    private String emailUsuarioAtual() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())
+                ? null : auth.getName();
     }
 }

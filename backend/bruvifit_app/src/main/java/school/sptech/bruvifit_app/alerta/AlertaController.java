@@ -31,11 +31,22 @@ public class AlertaController {
                     a.getDescricao(),
                     a.getNivel(),
                     a.getCriadoEm(),
-                    a.getAtivo()
+                    a.getAtivo(), a.getProdutoId(), a.getLida()
             ));
         }
 
         return ResponseEntity.status(200).body(resposta);
+    }
+
+    @GetMapping("/notificacoes")
+    public ResponseEntity<List<AlertaResponse>> listarNotificacoes() {
+        return ResponseEntity.ok(service.listarNotificacoesDoUsuarioAtual().stream()
+                .map(school.sptech.bruvifit_app.alerta.AlertaMapper::toResponse).toList());
+    }
+
+    @PatchMapping("/{id}/lida")
+    public ResponseEntity<AlertaResponse> marcarComoLida(@PathVariable Integer id) {
+        return ResponseEntity.ok(school.sptech.bruvifit_app.alerta.AlertaMapper.toResponse(service.marcarComoLida(id)));
     }
 
     @GetMapping("/{id}")

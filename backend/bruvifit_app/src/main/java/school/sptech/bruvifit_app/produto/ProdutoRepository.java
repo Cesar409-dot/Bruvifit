@@ -17,13 +17,13 @@ public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
 
     Page<Produto> findByAtivoTrue(Pageable pageable);
 
-    @Query("SELECT p FROM Produto p WHERE p.saldoEstoque < p.estoqueMinimo")
+    @Query("SELECT p FROM Produto p WHERE p.saldoEstoque <= p.estoqueMinimo")
     Page<Produto> findBySaldoEstoqueLessThanEqualEstoqueMinimo(Pageable pageable);
 
     @Query("SELECT p FROM Produto p WHERE p.saldoEstoque = 0")
     List<Produto> findProdutosSemEstoque();
 
-    @Query("SELECT p FROM Produto p WHERE p.saldoEstoque > 0 AND p.saldoEstoque < p.estoqueMinimo")
+    @Query("SELECT p FROM Produto p WHERE p.saldoEstoque <= p.estoqueMinimo")
     List<Produto> findProdutosEstoqueBaixo();
 
     boolean existsBySku(String sku);
@@ -31,4 +31,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
     boolean existsBySkuAndIdNot(String sku, Integer id);
 
     List<Produto> findByProdutoPaiId(Integer produtoPaiId);
+
+    List<Produto> findByResponsavelId(Integer responsavelId);
+
+    @Query("SELECT p FROM Produto p WHERE p.responsavelId = (SELECT u.id FROM Usuario u WHERE u.email = :email)")
+    List<Produto> findByResponsavelEmail(@org.springframework.data.repository.query.Param("email") String email);
 }

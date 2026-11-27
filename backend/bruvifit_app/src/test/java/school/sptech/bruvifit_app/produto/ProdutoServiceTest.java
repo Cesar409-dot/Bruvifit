@@ -1,6 +1,8 @@
 package school.sptech.bruvifit_app.produto;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.aop.framework.ProxyFactory;
@@ -16,6 +18,11 @@ import school.sptech.bruvifit_app.produto.request.ProdutoStatusRequest;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import school.sptech.bruvifit_app.alerta.AlertaService;
+import school.sptech.bruvifit_app.usuario.Usuario;
+import school.sptech.bruvifit_app.usuario.UsuarioRepository;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +32,20 @@ import org.springframework.http.MediaType;
 
 class ProdutoServiceTest {
     private final ProdutoRepository repository = mock(ProdutoRepository.class);
-    private final ProdutoService service = new ProdutoService(repository);
+    private final UsuarioRepository usuarios = mock(UsuarioRepository.class);
+    private final AlertaService alertas = mock(AlertaService.class);
+    private final ProdutoService service = new ProdutoService(repository, usuarios, alertas);
+
+    @BeforeEach
+    void autenticarUsuarioDeTeste() {
+        Usuario usuario = new Usuario(); usuario.setId(1); usuario.setEmail("admin@bruvifit.test");
+        when(usuarios.findByEmail("admin@bruvifit.test")).thenReturn(Optional.of(usuario));
+        SecurityContextHolder.getContext().setAuthentication(
+                UsernamePasswordAuthenticationToken.authenticated("admin@bruvifit.test", "", List.of()));
+    }
+
+    @AfterEach
+    void limparAutenticacaoDeTeste() { SecurityContextHolder.clearContext(); }
 
     @Test
     void putSemSaldoPreservaQuantidadeExistente() {

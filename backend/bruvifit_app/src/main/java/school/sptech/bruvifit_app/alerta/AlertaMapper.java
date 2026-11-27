@@ -23,7 +23,7 @@ public class AlertaMapper {
                 alerta.getDescricao(),
                 alerta.getNivel(),
                 alerta.getCriadoEm(),
-                alerta.getAtivo()
+                alerta.getAtivo(), alerta.getProdutoId(), alerta.getLida()
         );
     }
 

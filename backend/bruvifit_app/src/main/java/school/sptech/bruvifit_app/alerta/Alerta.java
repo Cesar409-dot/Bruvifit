@@ -32,6 +32,15 @@ public class Alerta {
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
+    @Column(name = "usuario_id")
+    private Integer usuarioId;
+
+    @Column(name = "produto_id")
+    private Integer produtoId;
+
+    @Column(name = "lida", nullable = false)
+    private Boolean lida = false;
+
     public Alerta() {
     }
 
@@ -91,4 +100,11 @@ public class Alerta {
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
     }
+
+    public Integer getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
+    public Integer getProdutoId() { return produtoId; }
+    public void setProdutoId(Integer produtoId) { this.produtoId = produtoId; }
+    public Boolean getLida() { return lida; }
+    public void setLida(Boolean lida) { this.lida = lida; }
 }

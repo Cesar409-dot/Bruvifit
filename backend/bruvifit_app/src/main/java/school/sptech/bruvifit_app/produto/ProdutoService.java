@@ -13,14 +13,22 @@ import school.sptech.bruvifit_app.produto.response.ProdutoResponse;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.core.context.SecurityContextHolder;
+import school.sptech.bruvifit_app.alerta.AlertaService;
+import school.sptech.bruvifit_app.usuario.UsuarioRepository;
+import school.sptech.bruvifit_app.exception.CredenciaisInvalidasException;
 
 @Service
 public class ProdutoService {
 
     private final ProdutoRepository repository;
+    private final UsuarioRepository usuarios;
+    private final AlertaService alertas;
 
-    public ProdutoService(ProdutoRepository repository) {
+    public ProdutoService(ProdutoRepository repository, UsuarioRepository usuarios, AlertaService alertas) {
         this.repository = repository;
+        this.usuarios = usuarios;
+        this.alertas = alertas;
     }
 
     public List<ProdutoResponse> listar() {
@@ -39,12 +47,14 @@ public class ProdutoService {
     @Transactional
     public ResponseEntity<Produto> cadastrar(ProdutoRequest produtoRequest) {
         Produto produto = ProdutoMapper.toEntity(produtoRequest);
+        produto.setResponsavelId(usuarioAtualId());
         normalizarSku(produto);
         if (produto.getSku() != null && repository.existsBySku(produto.getSku())) {
             throw new ConflitoDeDadosException("SKU já cadastrado");
         }
         produto.setAtivo(true);
         Produto produtoCadastrado = repository.save(produto);
+        alertas.sincronizarEstoqueBaixo(produtoCadastrado);
         return ResponseEntity.status(201).body(produtoCadastrado);
     }
 
@@ -54,12 +64,15 @@ public class ProdutoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
         Produto produto = ProdutoMapper.toEntity(produtoRequest);
         produto.setProdutoPaiId(pai.getProdutoPaiId() == null ? pai.getId() : pai.getProdutoPaiId());
+        produto.setResponsavelId(pai.getResponsavelId());
         normalizarSku(produto);
         if (produto.getSku() != null && repository.existsBySku(produto.getSku())) {
             throw new ConflitoDeDadosException("SKU já cadastrado");
         }
         produto.setAtivo(true);
-        return ResponseEntity.status(201).body(repository.save(produto));
+        Produto salvo = repository.save(produto);
+        alertas.sincronizarEstoqueBaixo(salvo);
+        return ResponseEntity.status(201).body(salvo);
     }
 
     public List<ProdutoResponse> listarVariacoes(Integer produtoId) {
@@ -87,7 +100,9 @@ public class ProdutoService {
                     }
                     ProdutoMapper.updateEntity(produto, produtoRequest);
                     normalizarSku(produto);
-                    return ResponseEntity.ok(repository.save(produto));
+                    Produto salvo = repository.save(produto);
+                    alertas.sincronizarEstoqueBaixo(salvo);
+                    return ResponseEntity.ok(salvo);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -106,5 +121,15 @@ public class ProdutoService {
         if (produto.getSku() != null && produto.getSku().isBlank()) {
             produto.setSku(null);
         }
+    }
+
+    private Integer usuarioAtualId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            throw new CredenciaisInvalidasException("Autenticação obrigatória para cadastrar produto.");
+        }
+        return usuarios.findByEmail(auth.getName())
+                .orElseThrow(() -> new CredenciaisInvalidasException("Usuário autenticado não encontrado."))
+                .getId();
     }
 }

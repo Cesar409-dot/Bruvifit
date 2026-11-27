@@ -6,15 +6,18 @@ import school.sptech.bruvifit_app.estoque.request.EstoqueRequest;
 import school.sptech.bruvifit_app.estoque.response.EstoqueResponse;
 import school.sptech.bruvifit_app.exception.*;
 import school.sptech.bruvifit_app.produto.*;
+import school.sptech.bruvifit_app.alerta.AlertaService;
 import java.time.LocalDateTime;
 import java.util.*;
 @Service
 public class EstoqueService {
     private final EstoqueRepository repository;
     private final ProdutoRepository produtos;
-    public EstoqueService(EstoqueRepository repository, ProdutoRepository produtos) {
+    private final AlertaService alertas;
+    public EstoqueService(EstoqueRepository repository, ProdutoRepository produtos, AlertaService alertas) {
         this.repository = repository;
         this.produtos = produtos;
+        this.alertas = alertas;
     }
     @Transactional(readOnly = true)
     public List<EstoqueResponse> listar() {
@@ -98,6 +101,7 @@ public class EstoqueService {
         if (saldoPos > Integer.MAX_VALUE) throw new ConflitoDeDadosException("Saldo excede o limite permitido.");
         produto.setSaldoEstoque((int) saldoPos);
         produtos.save(produto);
+        alertas.sincronizarEstoqueBaixo(produto);
         Estoque movimento = new Estoque(null, tipo, quantidade, (int) saldoPos, LocalDateTime.now(), produto.getId(), pedidoId);
         movimento.setMotivo(motivo);
         movimento.setResponsavel(responsavel);
